@@ -18,7 +18,7 @@ func NewPortainerMCPServer(serverURL, token string) *PortainerMCPServer {
 			server.WithResourceCapabilities(true, true),
 			server.WithLogging(),
 		),
-		cli: client.NewPortainerClient(serverURL, token),
+		cli: client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(true)),
 	}
 }
 

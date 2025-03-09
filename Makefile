@@ -17,3 +17,6 @@ push: build
 
 run:
 	go run cmd/portainer/portainer.go -server 1 -token 2
+
+test:
+	go test -v ./...
