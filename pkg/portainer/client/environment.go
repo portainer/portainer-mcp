@@ -3,7 +3,7 @@ package client
 import (
 	"fmt"
 
-	"github.com/deviantony/mcp-go/pkg/portainer/models"
+	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
 )
 
 // GetEnvironments retrieves all environments from the Portainer server.

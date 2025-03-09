@@ -1,7 +1,7 @@
 package mcp
 
 import (
-	"github.com/deviantony/mcp-go/pkg/portainer/client"
+	"github.com/deviantony/portainer-mcp/pkg/portainer/client"
 	"github.com/mark3labs/mcp-go/server"
 )
 

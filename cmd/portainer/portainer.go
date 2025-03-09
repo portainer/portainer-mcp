@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/deviantony/mcp-go/internal/mcp"
+	"github.com/deviantony/portainer-mcp/internal/mcp"
 )
 
 func main() {
