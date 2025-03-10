@@ -4,9 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"strconv"
-	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -64,19 +61,13 @@ func (s *PortainerMCPServer) handleUpdateEnvironment() server.ToolHandlerFunc {
 		id := request.Params.Arguments["id"].(float64)
 		tagIds := request.Params.Arguments["tagIds"].(string)
 
-		tagIdsInt := []int{}
-		for _, tagId := range strings.Split(tagIds, ",") {
-			tagIdInt, err := strconv.Atoi(tagId)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "invalid tag ID: %v\n", err)
-				return mcp.NewToolResultError(fmt.Sprintf("invalid tag ID: %v", err)), nil
-			}
-			tagIdsInt = append(tagIdsInt, tagIdInt)
+		tagIdsInt, err := ParseCommaSeparatedInts(tagIds)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("invalid tag IDs: %v", err)), nil
 		}
 
-		err := s.cli.UpdateEnvironment(int(id), tagIdsInt)
+		err = s.cli.UpdateEnvironment(int(id), tagIdsInt)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error updating environment: %v\n", err)
 			return mcp.NewToolResultError(fmt.Sprintf("error updating environment: %v", err)), nil
 		}
 

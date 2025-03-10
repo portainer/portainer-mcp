@@ -19,11 +19,13 @@ func TestConvertEdgeGroupToGroup(t *testing.T) {
 				ID:        1,
 				Name:      "Production Servers",
 				Endpoints: []int64{1, 2, 3},
+				TagIds:    []int64{1, 2},
 			},
 			want: Group{
 				ID:             1,
 				Name:           "Production Servers",
 				EnvironmentIds: []int{1, 2, 3},
+				TagIds:         []int{1, 2},
 			},
 		},
 		{
@@ -32,11 +34,13 @@ func TestConvertEdgeGroupToGroup(t *testing.T) {
 				ID:        2,
 				Name:      "Empty Group",
 				Endpoints: []int64{},
+				TagIds:    []int64{},
 			},
 			want: Group{
 				ID:             2,
 				Name:           "Empty Group",
 				EnvironmentIds: []int{},
+				TagIds:         []int{},
 			},
 		},
 		{
@@ -50,6 +54,22 @@ func TestConvertEdgeGroupToGroup(t *testing.T) {
 				ID:             3,
 				Name:           "Single Server",
 				EnvironmentIds: []int{4},
+				TagIds:         []int{},
+			},
+		},
+		{
+			name: "edge group with no tags",
+			edgeGroup: &models.EdgegroupsDecoratedEdgeGroup{
+				ID:        4,
+				Name:      "No Tags Group",
+				Endpoints: []int64{5},
+				TagIds:    []int64{},
+			},
+			want: Group{
+				ID:             4,
+				Name:           "No Tags Group",
+				EnvironmentIds: []int{5},
+				TagIds:         []int{},
 			},
 		},
 	}

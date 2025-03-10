@@ -10,6 +10,7 @@ type (
 		ID             int    `json:"id"`
 		Name           string `json:"name"`
 		EnvironmentIds []int  `json:"environment_ids"`
+		TagIds         []int  `json:"tag_ids"`
 	}
 )
 
@@ -18,5 +19,6 @@ func ConvertEdgeGroupToGroup(e *models.EdgegroupsDecoratedEdgeGroup) Group {
 		ID:             int(e.ID),
 		Name:           e.Name,
 		EnvironmentIds: utils.Int64ToIntSlice(e.Endpoints),
+		TagIds:         utils.Int64ToIntSlice(e.TagIds),
 	}
 }

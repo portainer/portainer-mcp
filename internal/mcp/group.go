@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -41,9 +39,16 @@ func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
 			mcp.Description("The name of the environment group, re-use the existing name to keep the same group name"),
 		),
 		mcp.WithString("environmentIds",
-			mcp.Required(),
 			mcp.Description("The IDs of the environments that are part of the group, separated by commas."+
-				"Must include all the environment IDs that are part of the group"),
+				"Optional, provide this if you want to associate environments with the group based on their IDs."+
+				"Specify either this parameter or the tagIds parameter, but not both."+
+				"Must include all the environment IDs that are part of the group - this includes new environments and the existing environments that are already associated with the group."),
+		),
+		mcp.WithString("tagIds",
+			mcp.Description("The IDs of the tags that are associated with the group, separated by commas."+
+				"Optional, provide this if you want to associate environments with the group based on their tags."+
+				"Specify either this parameter or the environmentIds parameter, but not both."+
+				"Must include all the tag IDs that are associated with the group - this includes new tags and the existing tags that are already associated with the group."),
 		),
 	)
 
@@ -80,14 +85,10 @@ func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFu
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		name := request.Params.Arguments["name"].(string)
 		environmentIdsStr := request.Params.Arguments["environmentIds"].(string)
-		environmentIds := []int{}
 
-		for _, idStr := range strings.Split(environmentIdsStr, ",") {
-			id, err := strconv.Atoi(idStr)
-			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("invalid environment ID: %v", err)), nil
-			}
-			environmentIds = append(environmentIds, id)
+		environmentIds, err := ParseCommaSeparatedInts(environmentIdsStr)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("invalid environment IDs: %v", err)), nil
 		}
 
 		id, err := s.cli.CreateEnvironmentGroup(name, environmentIds)
@@ -104,17 +105,22 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentGroup() server.ToolHandlerFu
 		id := request.Params.Arguments["id"].(float64)
 		name := request.Params.Arguments["name"].(string)
 		environmentIdsStr := request.Params.Arguments["environmentIds"].(string)
-		environmentIds := []int{}
+		tagIdsStr := request.Params.Arguments["tagIds"].(string)
 
-		for _, idStr := range strings.Split(environmentIdsStr, ",") {
-			id, err := strconv.Atoi(idStr)
-			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("invalid environment ID: %v", err)), nil
-			}
-			environmentIds = append(environmentIds, id)
+		environmentIds, err := ParseCommaSeparatedInts(environmentIdsStr)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("invalid environment IDs: %v", err)), nil
 		}
 
-		err := s.cli.UpdateEnvironmentGroup(int(id), name, environmentIds)
+		tagIds := []int{}
+		if tagIdsStr != "" {
+			tagIds, err = ParseCommaSeparatedInts(tagIdsStr)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("invalid tag IDs: %v", err)), nil
+			}
+		}
+
+		err = s.cli.UpdateEnvironmentGroup(int(id), name, environmentIds, tagIds)
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("error updating environment group: %v", err)), nil
 		}

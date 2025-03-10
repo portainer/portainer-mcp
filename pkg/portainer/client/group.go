@@ -52,11 +52,12 @@ func (c *PortainerClient) CreateEnvironmentGroup(name string, environmentIds []i
 //   - id: The ID of the environment group to update
 //   - name: The new name for the environment group
 //   - environmentIds: A slice of environment IDs to include in the group
+//   - tagIds: A slice of tag IDs to include in the group
 //
 // Returns:
 //   - An error if the operation fails
-func (c *PortainerClient) UpdateEnvironmentGroup(id int, name string, environmentIds []int) error {
-	err := c.cli.UpdateEdgeGroup(int64(id), name, utils.IntToInt64Slice(environmentIds))
+func (c *PortainerClient) UpdateEnvironmentGroup(id int, name string, environmentIds []int, tagIds []int) error {
+	err := c.cli.UpdateEdgeGroup(int64(id), name, utils.IntToInt64Slice(environmentIds), utils.IntToInt64Slice(tagIds))
 	if err != nil {
 		return fmt.Errorf("failed to update environment group: %w", err)
 	}

@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -123,14 +121,10 @@ func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
 		name := request.Params.Arguments["name"].(string)
 		file := request.Params.Arguments["file"].(string)
 		environmentGroupIdsStr := request.Params.Arguments["environmentGroupIds"].(string)
-		environmentGroupIds := []int{}
 
-		for _, idStr := range strings.Split(environmentGroupIdsStr, ",") {
-			id, err := strconv.Atoi(idStr)
-			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("invalid environment group ID: %v", err)), nil
-			}
-			environmentGroupIds = append(environmentGroupIds, id)
+		environmentGroupIds, err := ParseCommaSeparatedInts(environmentGroupIdsStr)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("invalid environment group IDs: %v", err)), nil
 		}
 
 		id, err := s.cli.CreateStack(name, file, environmentGroupIds)
@@ -147,17 +141,13 @@ func (s *PortainerMCPServer) handleUpdateStack() server.ToolHandlerFunc {
 		id := request.Params.Arguments["id"].(float64)
 		file := request.Params.Arguments["file"].(string)
 		environmentGroupIdsStr := request.Params.Arguments["environmentGroupIds"].(string)
-		environmentGroupIds := []int{}
 
-		for _, idStr := range strings.Split(environmentGroupIdsStr, ",") {
-			id, err := strconv.Atoi(idStr)
-			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("invalid environment group ID: %v", err)), nil
-			}
-			environmentGroupIds = append(environmentGroupIds, id)
+		environmentGroupIds, err := ParseCommaSeparatedInts(environmentGroupIdsStr)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("invalid environment group IDs: %v", err)), nil
 		}
 
-		err := s.cli.UpdateStack(int(id), file, environmentGroupIds)
+		err = s.cli.UpdateStack(int(id), file, environmentGroupIds)
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("error updating stack: %v", err)), nil
 		}
