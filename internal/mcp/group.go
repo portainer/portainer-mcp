@@ -66,7 +66,7 @@ func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ResourceHandler
 
 		data, err := json.Marshal(edgeGroups)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal environment groups: %w", err)
 		}
 
 		return []interface{}{

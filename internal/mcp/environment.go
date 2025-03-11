@@ -41,7 +41,7 @@ func (s *PortainerMCPServer) handleGetEnvironments() server.ResourceHandlerFunc 
 
 		data, err := json.Marshal(environments)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal environments: %w", err)
 		}
 
 		return []interface{}{

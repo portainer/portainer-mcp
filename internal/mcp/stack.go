@@ -88,7 +88,7 @@ func (s *PortainerMCPServer) handleGetStacks() server.ResourceHandlerFunc {
 
 		data, err := json.Marshal(stacks)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal stacks: %w", err)
 		}
 
 		return []interface{}{

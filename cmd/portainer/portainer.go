@@ -23,6 +23,7 @@ func main() {
 	server.AddEnvironmentGroupFeatures()
 	server.AddTagFeatures()
 	server.AddStackFeatures()
+	server.AddSettingsFeatures()
 
 	err := server.Start()
 	if err != nil {

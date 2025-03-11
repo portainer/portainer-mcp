@@ -37,7 +37,7 @@ func (s *PortainerMCPServer) handleGetEnvironmentTags() server.ResourceHandlerFu
 
 		data, err := json.Marshal(environmentTags)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal environment tags: %w", err)
 		}
 
 		return []interface{}{
