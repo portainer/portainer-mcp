@@ -83,8 +83,15 @@ func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ResourceHandler
 
 func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name := request.Params.Arguments["name"].(string)
-		environmentIdsStr := request.Params.Arguments["environmentIds"].(string)
+		name, ok := request.Params.Arguments["name"].(string)
+		if !ok {
+			return mcp.NewToolResultError("environment group name is required"), nil
+		}
+
+		environmentIdsStr, ok := request.Params.Arguments["environmentIds"].(string)
+		if !ok {
+			return mcp.NewToolResultError("environment IDs are required"), nil
+		}
 
 		environmentIds, err := ParseCommaSeparatedInts(environmentIdsStr)
 		if err != nil {
@@ -102,8 +109,16 @@ func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFu
 
 func (s *PortainerMCPServer) handleUpdateEnvironmentGroup() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id := request.Params.Arguments["id"].(float64)
-		name := request.Params.Arguments["name"].(string)
+		id, ok := request.Params.Arguments["id"].(float64)
+		if !ok {
+			return mcp.NewToolResultError("environment group ID is required"), nil
+		}
+
+		name, ok := request.Params.Arguments["name"].(string)
+		if !ok {
+			return mcp.NewToolResultError("environment group name is required"), nil
+		}
+
 		environmentIdsStr := request.Params.Arguments["environmentIds"].(string)
 		tagIdsStr := request.Params.Arguments["tagIds"].(string)
 

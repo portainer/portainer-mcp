@@ -105,7 +105,10 @@ func (s *PortainerMCPServer) handleGetStacks() server.ResourceHandlerFunc {
 
 func (s *PortainerMCPServer) handleGetStackFile() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id := request.Params.Arguments["id"].(float64)
+		id, ok := request.Params.Arguments["id"].(float64)
+		if !ok {
+			return mcp.NewToolResultError("stack ID is required"), nil
+		}
 
 		content, err := s.cli.GetStackFile(int(id))
 		if err != nil {
@@ -118,9 +121,20 @@ func (s *PortainerMCPServer) handleGetStackFile() server.ToolHandlerFunc {
 
 func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name := request.Params.Arguments["name"].(string)
-		file := request.Params.Arguments["file"].(string)
-		environmentGroupIdsStr := request.Params.Arguments["environmentGroupIds"].(string)
+		name, ok := request.Params.Arguments["name"].(string)
+		if !ok {
+			return mcp.NewToolResultError("stack name is required"), nil
+		}
+
+		file, ok := request.Params.Arguments["file"].(string)
+		if !ok {
+			return mcp.NewToolResultError("stack file is required"), nil
+		}
+
+		environmentGroupIdsStr, ok := request.Params.Arguments["environmentGroupIds"].(string)
+		if !ok {
+			return mcp.NewToolResultError("environment group IDs are required"), nil
+		}
 
 		environmentGroupIds, err := ParseCommaSeparatedInts(environmentGroupIdsStr)
 		if err != nil {
@@ -138,9 +152,20 @@ func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
 
 func (s *PortainerMCPServer) handleUpdateStack() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id := request.Params.Arguments["id"].(float64)
-		file := request.Params.Arguments["file"].(string)
-		environmentGroupIdsStr := request.Params.Arguments["environmentGroupIds"].(string)
+		id, ok := request.Params.Arguments["id"].(float64)
+		if !ok {
+			return mcp.NewToolResultError("stack ID is required"), nil
+		}
+
+		file, ok := request.Params.Arguments["file"].(string)
+		if !ok {
+			return mcp.NewToolResultError("stack file is required"), nil
+		}
+
+		environmentGroupIdsStr, ok := request.Params.Arguments["environmentGroupIds"].(string)
+		if !ok {
+			return mcp.NewToolResultError("environment group IDs are required"), nil
+		}
 
 		environmentGroupIds, err := ParseCommaSeparatedInts(environmentGroupIdsStr)
 		if err != nil {

@@ -58,8 +58,15 @@ func (s *PortainerMCPServer) handleGetEnvironments() server.ResourceHandlerFunc 
 
 func (s *PortainerMCPServer) handleUpdateEnvironment() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id := request.Params.Arguments["id"].(float64)
-		tagIds := request.Params.Arguments["tagIds"].(string)
+		id, ok := request.Params.Arguments["id"].(float64)
+		if !ok {
+			return mcp.NewToolResultError("environment ID is required"), nil
+		}
+
+		tagIds, ok := request.Params.Arguments["tagIds"].(string)
+		if !ok {
+			return mcp.NewToolResultError("tag IDs are required"), nil
+		}
 
 		tagIdsInt, err := ParseCommaSeparatedInts(tagIds)
 		if err != nil {

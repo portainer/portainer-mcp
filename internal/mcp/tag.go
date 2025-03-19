@@ -54,7 +54,10 @@ func (s *PortainerMCPServer) handleGetEnvironmentTags() server.ResourceHandlerFu
 
 func (s *PortainerMCPServer) handleCreateEnvironmentTag() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name := request.Params.Arguments["name"].(string)
+		name, ok := request.Params.Arguments["name"].(string)
+		if !ok {
+			return mcp.NewToolResultError("tag name is required"), nil
+		}
 
 		id, err := s.cli.CreateEnvironmentTag(name)
 		if err != nil {
