@@ -20,7 +20,7 @@ func (s *PortainerMCPServer) AddUserFeatures() {
 		mcp.WithDescription("Update an existing user"),
 		mcp.WithNumber("id",
 			mcp.Required(),
-			mcp.Description("The ID of the environment to update"),
+			mcp.Description("The ID of the user to update"),
 		),
 		mcp.WithString("role",
 			mcp.Required(),

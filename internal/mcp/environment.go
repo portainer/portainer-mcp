@@ -24,7 +24,8 @@ func (s *PortainerMCPServer) AddEnvironmentFeatures() {
 		),
 		mcp.WithString("tagIds",
 			mcp.Required(),
-			mcp.Description("The IDs of the tags to add to the environment, separated by commas"),
+			mcp.Description("The IDs of the tags that are associated with the environment, separated by commas."+
+				"Must include all the tag IDs that are associated with the environment - this includes new tags and the existing tags that are already associated with the environment."),
 		),
 	)
 

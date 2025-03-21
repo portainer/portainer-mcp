@@ -29,7 +29,7 @@ func (c *PortainerClient) GetUsers() ([]models.User, error) {
 //
 // Parameters:
 //   - id: The ID of the user to update
-//   - role: The new role for the user
+//   - role: The new role for the user. Must be one of: admin, user, edge_admin
 //
 // Returns:
 //   - An error if the operation fails
