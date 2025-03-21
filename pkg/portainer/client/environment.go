@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
+	"github.com/deviantony/portainer-mcp/pkg/portainer/utils"
 )
 
 // GetEnvironments retrieves all environments from the Portainer server.
@@ -34,12 +35,7 @@ func (c *PortainerClient) GetEnvironments() ([]models.Environment, error) {
 // Returns:
 //   - An error if the operation fails
 func (c *PortainerClient) UpdateEnvironment(id int, tagIds []int) error {
-	tagIdsInt64 := make([]int64, len(tagIds))
-	for i, tagId := range tagIds {
-		tagIdsInt64[i] = int64(tagId)
-	}
-
-	err := c.cli.UpdateEndpoint(int64(id), tagIdsInt64)
+	err := c.cli.UpdateEndpoint(int64(id), utils.IntToInt64Slice(tagIds))
 	if err != nil {
 		return fmt.Errorf("failed to update environment: %w", err)
 	}

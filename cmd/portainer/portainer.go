@@ -24,6 +24,7 @@ func main() {
 	server.AddTagFeatures()
 	server.AddStackFeatures()
 	server.AddSettingsFeatures()
+	server.AddUserFeatures()
 
 	err := server.Start()
 	if err != nil {
