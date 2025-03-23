@@ -7,14 +7,12 @@ import (
 	"github.com/portainer/client-api-go/v2/pkg/models"
 )
 
-type (
-	Stack struct {
-		ID                  int    `json:"id"`
-		Name                string `json:"name"`
-		CreatedAt           string `json:"created_at"`
-		EnvironmentGroupIds []int  `json:"group_ids"`
-	}
-)
+type Stack struct {
+	ID                  int    `json:"id"`
+	Name                string `json:"name"`
+	CreatedAt           string `json:"created_at"`
+	EnvironmentGroupIds []int  `json:"group_ids"`
+}
 
 func ConvertEdgeStackToStack(e *models.PortainereeEdgeStack) Stack {
 	createdAt := time.Unix(e.CreationDate, 0).Format(time.RFC3339)

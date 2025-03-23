@@ -5,15 +5,13 @@ import (
 	"github.com/portainer/client-api-go/v2/pkg/models"
 )
 
-type (
-	Environment struct {
-		ID     int    `json:"id"`
-		Name   string `json:"name"`
-		Status string `json:"status"`
-		Type   string `json:"type"`
-		TagIds []int  `json:"tag_ids"`
-	}
-)
+type Environment struct {
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	Type   string `json:"type"`
+	TagIds []int  `json:"tag_ids"`
+}
 
 // Environment status constants
 const (

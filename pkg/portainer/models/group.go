@@ -5,14 +5,12 @@ import (
 	"github.com/portainer/client-api-go/v2/pkg/models"
 )
 
-type (
-	Group struct {
-		ID             int    `json:"id"`
-		Name           string `json:"name"`
-		EnvironmentIds []int  `json:"environment_ids"`
-		TagIds         []int  `json:"tag_ids"`
-	}
-)
+type Group struct {
+	ID             int    `json:"id"`
+	Name           string `json:"name"`
+	EnvironmentIds []int  `json:"environment_ids"`
+	TagIds         []int  `json:"tag_ids"`
+}
 
 func ConvertEdgeGroupToGroup(e *models.EdgegroupsDecoratedEdgeGroup) Group {
 	return Group{

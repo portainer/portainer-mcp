@@ -25,6 +25,7 @@ func main() {
 	server.AddStackFeatures()
 	server.AddSettingsFeatures()
 	server.AddUserFeatures()
+	server.AddAccessGroupFeatures()
 
 	err := server.Start()
 	if err != nil {

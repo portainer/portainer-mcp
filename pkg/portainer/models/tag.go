@@ -6,13 +6,11 @@ import (
 	"github.com/portainer/client-api-go/v2/pkg/models"
 )
 
-type (
-	EnvironmentTag struct {
-		ID             int    `json:"id"`
-		Name           string `json:"name"`
-		EnvironmentIds []int  `json:"environment_ids"`
-	}
-)
+type EnvironmentTag struct {
+	ID             int    `json:"id"`
+	Name           string `json:"name"`
+	EnvironmentIds []int  `json:"environment_ids"`
+}
 
 func ConvertTagToEnvironmentTag(e *models.PortainerTag) EnvironmentTag {
 	environmentIDs := make([]int, 0, len(e.Endpoints))

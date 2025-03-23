@@ -25,6 +25,7 @@ func (s *PortainerMCPServer) AddUserFeatures() {
 		mcp.WithString("role",
 			mcp.Required(),
 			mcp.Description("The role of the user. Can be admin, user or edge_admin"),
+			mcp.Enum("admin", "user", "edge_admin"),
 		),
 	)
 
