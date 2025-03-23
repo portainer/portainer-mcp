@@ -5,7 +5,7 @@ go 1.23.5
 replace github.com/portainer/client-api-go/v2 => ./sdk/client-api-go
 
 require (
-	github.com/mark3labs/mcp-go v0.10.0
+	github.com/mark3labs/mcp-go v0.15.0
 	github.com/portainer/client-api-go/v2 v2.27.1
 	github.com/stretchr/testify v1.10.0
 )
@@ -32,6 +32,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go.mongodb.org/mongo-driver v1.14.0 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect

@@ -80,7 +80,7 @@ func (s *PortainerMCPServer) AddStackFeatures() {
 }
 
 func (s *PortainerMCPServer) handleGetStacks() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]interface{}, error) {
+	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		stacks, err := s.cli.GetStacks()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get stacks: %w", err)
@@ -91,13 +91,11 @@ func (s *PortainerMCPServer) handleGetStacks() server.ResourceHandlerFunc {
 			return nil, fmt.Errorf("failed to marshal stacks: %w", err)
 		}
 
-		return []interface{}{
+		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
-				ResourceContents: mcp.ResourceContents{
-					URI:      "portainer://stacks",
-					MIMEType: "application/json",
-				},
-				Text: string(data),
+				URI:      "portainer://stacks",
+				MIMEType: "application/json",
+				Text:     string(data),
 			},
 		}, nil
 	}
@@ -107,12 +105,12 @@ func (s *PortainerMCPServer) handleGetStackFile() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id, ok := request.Params.Arguments["id"].(float64)
 		if !ok {
-			return mcp.NewToolResultError("stack ID is required"), nil
+			return nil, fmt.Errorf("stack ID is required")
 		}
 
 		content, err := s.cli.GetStackFile(int(id))
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("failed to get stack file: %v", err)), nil
+			return nil, fmt.Errorf("failed to get stack file. Error: %w", err)
 		}
 
 		return mcp.NewToolResultText(content), nil
@@ -123,27 +121,27 @@ func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		name, ok := request.Params.Arguments["name"].(string)
 		if !ok {
-			return mcp.NewToolResultError("stack name is required"), nil
+			return nil, fmt.Errorf("stack name is required")
 		}
 
 		file, ok := request.Params.Arguments["file"].(string)
 		if !ok {
-			return mcp.NewToolResultError("stack file is required"), nil
+			return nil, fmt.Errorf("stack file is required")
 		}
 
 		environmentGroupIdsStr, ok := request.Params.Arguments["environmentGroupIds"].(string)
 		if !ok {
-			return mcp.NewToolResultError("environment group IDs are required"), nil
+			return nil, fmt.Errorf("environment group IDs are required")
 		}
 
 		environmentGroupIds, err := ParseCommaSeparatedInts(environmentGroupIdsStr)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid environment group IDs: %v", err)), nil
+			return nil, fmt.Errorf("invalid environment group IDs. Error: %w", err)
 		}
 
 		id, err := s.cli.CreateStack(name, file, environmentGroupIds)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("error creating stack: %v", err)), nil
+			return nil, fmt.Errorf("error creating stack. Error: %w", err)
 		}
 
 		return mcp.NewToolResultText(fmt.Sprintf("Stack created successfully with ID: %d", id)), nil
@@ -154,27 +152,27 @@ func (s *PortainerMCPServer) handleUpdateStack() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id, ok := request.Params.Arguments["id"].(float64)
 		if !ok {
-			return mcp.NewToolResultError("stack ID is required"), nil
+			return nil, fmt.Errorf("stack ID is required")
 		}
 
 		file, ok := request.Params.Arguments["file"].(string)
 		if !ok {
-			return mcp.NewToolResultError("stack file is required"), nil
+			return nil, fmt.Errorf("stack file is required")
 		}
 
 		environmentGroupIdsStr, ok := request.Params.Arguments["environmentGroupIds"].(string)
 		if !ok {
-			return mcp.NewToolResultError("environment group IDs are required"), nil
+			return nil, fmt.Errorf("environment group IDs are required")
 		}
 
 		environmentGroupIds, err := ParseCommaSeparatedInts(environmentGroupIdsStr)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid environment group IDs: %v", err)), nil
+			return nil, fmt.Errorf("invalid environment group IDs. Error: %w", err)
 		}
 
 		err = s.cli.UpdateStack(int(id), file, environmentGroupIds)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("error updating stack: %v", err)), nil
+			return nil, fmt.Errorf("error updating stack. Error: %w", err)
 		}
 
 		return mcp.NewToolResultText("Stack updated successfully"), nil

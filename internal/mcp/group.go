@@ -58,7 +58,7 @@ func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
 }
 
 func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]interface{}, error) {
+	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		edgeGroups, err := s.cli.GetEnvironmentGroups()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get environment groups: %w", err)
@@ -69,13 +69,11 @@ func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ResourceHandler
 			return nil, fmt.Errorf("failed to marshal environment groups: %w", err)
 		}
 
-		return []interface{}{
+		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
-				ResourceContents: mcp.ResourceContents{
-					URI:      "portainer://environment-groups",
-					MIMEType: "application/json",
-				},
-				Text: string(data),
+				URI:      "portainer://environment-groups",
+				MIMEType: "application/json",
+				Text:     string(data),
 			},
 		}, nil
 	}
@@ -85,22 +83,22 @@ func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFu
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		name, ok := request.Params.Arguments["name"].(string)
 		if !ok {
-			return mcp.NewToolResultError("environment group name is required"), nil
+			return nil, fmt.Errorf("environment group name is required")
 		}
 
 		environmentIdsStr, ok := request.Params.Arguments["environmentIds"].(string)
 		if !ok {
-			return mcp.NewToolResultError("environment IDs are required"), nil
+			return nil, fmt.Errorf("environment IDs are required")
 		}
 
 		environmentIds, err := ParseCommaSeparatedInts(environmentIdsStr)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid environment IDs: %v", err)), nil
+			return nil, fmt.Errorf("invalid environment IDs. Error: %w", err)
 		}
 
 		id, err := s.cli.CreateEnvironmentGroup(name, environmentIds)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("error creating environment group: %v", err)), nil
+			return nil, fmt.Errorf("error creating environment group. Error: %w", err)
 		}
 
 		return mcp.NewToolResultText(fmt.Sprintf("Environment group created successfully with ID: %d", id)), nil
@@ -111,12 +109,12 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentGroup() server.ToolHandlerFu
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id, ok := request.Params.Arguments["id"].(float64)
 		if !ok {
-			return mcp.NewToolResultError("environment group ID is required"), nil
+			return nil, fmt.Errorf("environment group ID is required")
 		}
 
 		name, ok := request.Params.Arguments["name"].(string)
 		if !ok {
-			return mcp.NewToolResultError("environment group name is required"), nil
+			return nil, fmt.Errorf("environment group name is required")
 		}
 
 		environmentIdsStr := request.Params.Arguments["environmentIds"].(string)
@@ -124,20 +122,20 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentGroup() server.ToolHandlerFu
 
 		environmentIds, err := ParseCommaSeparatedInts(environmentIdsStr)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid environment IDs: %v", err)), nil
+			return nil, fmt.Errorf("invalid environment IDs. Error: %w", err)
 		}
 
 		tagIds := []int{}
 		if tagIdsStr != "" {
 			tagIds, err = ParseCommaSeparatedInts(tagIdsStr)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("invalid tag IDs: %v", err)), nil
+				return nil, fmt.Errorf("invalid tag IDs. Error: %w", err)
 			}
 		}
 
 		err = s.cli.UpdateEnvironmentGroup(int(id), name, environmentIds, tagIds)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("error updating environment group: %v", err)), nil
+			return nil, fmt.Errorf("error updating environment group. Error: %w", err)
 		}
 
 		return mcp.NewToolResultText("Environment group updated successfully"), nil

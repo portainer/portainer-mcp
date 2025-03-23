@@ -36,7 +36,7 @@ func (s *PortainerMCPServer) AddTeamFeatures() {
 }
 
 func (s *PortainerMCPServer) handleGetTeams() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]interface{}, error) {
+	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		teams, err := s.cli.GetTeams()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get teams: %w", err)
@@ -47,13 +47,11 @@ func (s *PortainerMCPServer) handleGetTeams() server.ResourceHandlerFunc {
 			return nil, fmt.Errorf("failed to marshal teams: %w", err)
 		}
 
-		return []interface{}{
+		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
-				ResourceContents: mcp.ResourceContents{
-					URI:      "portainer://teams",
-					MIMEType: "application/json",
-				},
-				Text: string(data),
+				URI:      "portainer://teams",
+				MIMEType: "application/json",
+				Text:     string(data),
 			},
 		}, nil
 	}
@@ -63,31 +61,31 @@ func (s *PortainerMCPServer) handleUpdateTeam() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id, ok := request.Params.Arguments["id"].(float64)
 		if !ok {
-			return mcp.NewToolResultError("team ID is required"), nil
+			return nil, fmt.Errorf("team ID is required")
 		}
 
 		name := request.Params.Arguments["name"].(string)
 		userIds := request.Params.Arguments["userIds"].(string)
 		if name == "" && userIds == "" {
-			return mcp.NewToolResultError("team name or user IDs are required"), nil
+			return nil, fmt.Errorf("team name or user IDs are required")
 		}
 
 		if name != "" {
 			err := s.cli.UpdateTeam(int(id), name)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("failed to update team: %v", err)), nil
+				return nil, fmt.Errorf("failed to update team. Error: %w", err)
 			}
 		}
 
 		if userIds != "" {
 			userIdsList, err := ParseCommaSeparatedInts(userIds)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("invalid user IDs: %v", err)), nil
+				return nil, fmt.Errorf("invalid user IDs. Error: %w", err)
 			}
 
 			err = s.cli.UpdateTeamMembers(int(id), userIdsList)
 			if err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("failed to update team members: %v", err)), nil
+				return nil, fmt.Errorf("failed to update team members. Error: %w", err)
 			}
 		}
 

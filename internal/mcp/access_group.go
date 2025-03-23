@@ -48,7 +48,7 @@ func (s *PortainerMCPServer) AddAccessGroupFeatures() {
 }
 
 func (s *PortainerMCPServer) handleGetAccessGroups() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]interface{}, error) {
+	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		accessGroups, err := s.cli.GetAccessGroups()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get access groups: %w", err)
@@ -59,13 +59,11 @@ func (s *PortainerMCPServer) handleGetAccessGroups() server.ResourceHandlerFunc 
 			return nil, fmt.Errorf("failed to marshal access groups: %w", err)
 		}
 
-		return []interface{}{
+		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
-				ResourceContents: mcp.ResourceContents{
-					URI:      "portainer://access-groups",
-					MIMEType: "application/json",
-				},
-				Text: string(data),
+				URI:      "portainer://access-groups",
+				MIMEType: "application/json",
+				Text:     string(data),
 			},
 		}, nil
 	}

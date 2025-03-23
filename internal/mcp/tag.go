@@ -29,7 +29,7 @@ func (s *PortainerMCPServer) AddTagFeatures() {
 }
 
 func (s *PortainerMCPServer) handleGetEnvironmentTags() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]interface{}, error) {
+	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		environmentTags, err := s.cli.GetEnvironmentTags()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get environment tags: %w", err)
@@ -40,13 +40,11 @@ func (s *PortainerMCPServer) handleGetEnvironmentTags() server.ResourceHandlerFu
 			return nil, fmt.Errorf("failed to marshal environment tags: %w", err)
 		}
 
-		return []interface{}{
+		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
-				ResourceContents: mcp.ResourceContents{
-					URI:      "portainer://environment-tags",
-					MIMEType: "application/json",
-				},
-				Text: string(data),
+				URI:      "portainer://environment-tags",
+				MIMEType: "application/json",
+				Text:     string(data),
 			},
 		}, nil
 	}
@@ -56,12 +54,12 @@ func (s *PortainerMCPServer) handleCreateEnvironmentTag() server.ToolHandlerFunc
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		name, ok := request.Params.Arguments["name"].(string)
 		if !ok {
-			return mcp.NewToolResultError("tag name is required"), nil
+			return nil, fmt.Errorf("tag name is required")
 		}
 
 		id, err := s.cli.CreateEnvironmentTag(name)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("error creating environment tag: %v", err)), nil
+			return nil, fmt.Errorf("error creating environment tag. Error: %w", err)
 		}
 
 		return mcp.NewToolResultText(fmt.Sprintf("Environment tag created successfully with ID: %d", id)), nil

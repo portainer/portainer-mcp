@@ -34,7 +34,7 @@ func (s *PortainerMCPServer) AddEnvironmentFeatures() {
 }
 
 func (s *PortainerMCPServer) handleGetEnvironments() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]interface{}, error) {
+	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		environments, err := s.cli.GetEnvironments()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get environments: %w", err)
@@ -45,13 +45,11 @@ func (s *PortainerMCPServer) handleGetEnvironments() server.ResourceHandlerFunc 
 			return nil, fmt.Errorf("failed to marshal environments: %w", err)
 		}
 
-		return []interface{}{
+		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
-				ResourceContents: mcp.ResourceContents{
-					URI:      "portainer://environments",
-					MIMEType: "application/json",
-				},
-				Text: string(data),
+				URI:      "portainer://environments",
+				MIMEType: "application/json",
+				Text:     string(data),
 			},
 		}, nil
 	}
@@ -61,22 +59,22 @@ func (s *PortainerMCPServer) handleUpdateEnvironment() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id, ok := request.Params.Arguments["id"].(float64)
 		if !ok {
-			return mcp.NewToolResultError("environment ID is required"), nil
+			return nil, fmt.Errorf("environment ID is required")
 		}
 
 		tagIds, ok := request.Params.Arguments["tagIds"].(string)
 		if !ok {
-			return mcp.NewToolResultError("tag IDs are required"), nil
+			return nil, fmt.Errorf("tag IDs are required")
 		}
 
 		tagIdsInt, err := ParseCommaSeparatedInts(tagIds)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid tag IDs: %v", err)), nil
+			return nil, fmt.Errorf("invalid tag IDs. Error: %w", err)
 		}
 
 		err = s.cli.UpdateEnvironment(int(id), tagIdsInt)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("error updating environment: %v", err)), nil
+			return nil, fmt.Errorf("error updating environment. Error: %w", err)
 		}
 
 		return mcp.NewToolResultText("Environment updated successfully"), nil

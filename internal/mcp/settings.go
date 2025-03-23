@@ -20,7 +20,7 @@ func (s *PortainerMCPServer) AddSettingsFeatures() {
 }
 
 func (s *PortainerMCPServer) handleGetSettings() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]interface{}, error) {
+	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		settings, err := s.cli.GetSettings()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get settings: %w", err)
@@ -31,13 +31,11 @@ func (s *PortainerMCPServer) handleGetSettings() server.ResourceHandlerFunc {
 			return nil, fmt.Errorf("failed to marshal settings: %w", err)
 		}
 
-		return []interface{}{
+		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
-				ResourceContents: mcp.ResourceContents{
-					URI:      "portainer://settings",
-					MIMEType: "application/json",
-				},
-				Text: string(data),
+				URI:      "portainer://settings",
+				MIMEType: "application/json",
+				Text:     string(data),
 			},
 		}, nil
 	}

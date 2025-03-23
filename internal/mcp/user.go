@@ -34,7 +34,7 @@ func (s *PortainerMCPServer) AddUserFeatures() {
 }
 
 func (s *PortainerMCPServer) handleGetUsers() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]interface{}, error) {
+	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		users, err := s.cli.GetUsers()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get users: %w", err)
@@ -45,13 +45,11 @@ func (s *PortainerMCPServer) handleGetUsers() server.ResourceHandlerFunc {
 			return nil, fmt.Errorf("failed to marshal users: %w", err)
 		}
 
-		return []interface{}{
+		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
-				ResourceContents: mcp.ResourceContents{
-					URI:      "portainer://users",
-					MIMEType: "application/json",
-				},
-				Text: string(data),
+				URI:      "portainer://users",
+				MIMEType: "application/json",
+				Text:     string(data),
 			},
 		}, nil
 	}
@@ -61,21 +59,21 @@ func (s *PortainerMCPServer) handleUpdateUser() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id, ok := request.Params.Arguments["id"].(float64)
 		if !ok {
-			return mcp.NewToolResultError("user ID is required"), nil
+			return nil, fmt.Errorf("user ID is required")
 		}
 
 		role, ok := request.Params.Arguments["role"].(string)
 		if !ok {
-			return mcp.NewToolResultError("role is required"), nil
+			return nil, fmt.Errorf("role is required")
 		}
 
 		if role != "admin" && role != "user" && role != "edge_admin" {
-			return mcp.NewToolResultError("invalid role: must be admin, user or edge_admin"), nil
+			return nil, fmt.Errorf("invalid role: must be admin, user or edge_admin")
 		}
 
 		err := s.cli.UpdateUser(int(id), role)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("error updating user: %v", err)), nil
+			return nil, fmt.Errorf("error updating user. Error: %w", err)
 		}
 
 		return mcp.NewToolResultText("User updated successfully"), nil
