@@ -18,3 +18,13 @@ func IntToInt64Slice(ints []int) []int64 {
 	}
 	return int64s
 }
+
+// IntToInt64Map converts a map with int keys to a map with int64 keys.
+// The string values remain unchanged.
+func IntToInt64Map(intMap map[int]string) map[int64]string {
+	int64Map := make(map[int64]string, len(intMap))
+	for key, value := range intMap {
+		int64Map[int64(key)] = value
+	}
+	return int64Map
+}

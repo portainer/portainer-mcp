@@ -95,3 +95,83 @@ func TestIntToInt64Slice(t *testing.T) {
 		})
 	}
 }
+
+func TestIntToInt64Map(t *testing.T) {
+	tests := []struct {
+		name  string
+		input map[int]string
+		want  map[int64]string
+	}{
+		{
+			name:  "empty map",
+			input: map[int]string{},
+			want:  map[int64]string{},
+		},
+		{
+			name: "single key-value pair",
+			input: map[int]string{
+				1: "one",
+			},
+			want: map[int64]string{
+				int64(1): "one",
+			},
+		},
+		{
+			name: "multiple key-value pairs",
+			input: map[int]string{
+				1: "one",
+				2: "two",
+				3: "three",
+			},
+			want: map[int64]string{
+				int64(1): "one",
+				int64(2): "two",
+				int64(3): "three",
+			},
+		},
+		{
+			name: "negative keys",
+			input: map[int]string{
+				-1: "minus one",
+				0:  "zero",
+				1:  "one",
+			},
+			want: map[int64]string{
+				int64(-1): "minus one",
+				int64(0):  "zero",
+				int64(1):  "one",
+			},
+		},
+		{
+			name: "large numbers",
+			input: map[int]string{
+				1000000: "million",
+				9999999: "big number",
+			},
+			want: map[int64]string{
+				int64(1000000): "million",
+				int64(9999999): "big number",
+			},
+		},
+		{
+			name: "empty strings",
+			input: map[int]string{
+				1: "",
+				2: "",
+			},
+			want: map[int64]string{
+				int64(1): "",
+				int64(2): "",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IntToInt64Map(tt.input)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("IntToInt64Map() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

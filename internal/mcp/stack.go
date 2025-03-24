@@ -134,7 +134,7 @@ func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
 			return nil, fmt.Errorf("environment group IDs are required")
 		}
 
-		environmentGroupIds, err := ParseCommaSeparatedInts(environmentGroupIdsStr)
+		environmentGroupIds, err := parseCommaSeparatedInts(environmentGroupIdsStr)
 		if err != nil {
 			return nil, fmt.Errorf("invalid environment group IDs. Error: %w", err)
 		}
@@ -165,7 +165,7 @@ func (s *PortainerMCPServer) handleUpdateStack() server.ToolHandlerFunc {
 			return nil, fmt.Errorf("environment group IDs are required")
 		}
 
-		environmentGroupIds, err := ParseCommaSeparatedInts(environmentGroupIdsStr)
+		environmentGroupIds, err := parseCommaSeparatedInts(environmentGroupIdsStr)
 		if err != nil {
 			return nil, fmt.Errorf("invalid environment group IDs. Error: %w", err)
 		}

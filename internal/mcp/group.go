@@ -91,7 +91,7 @@ func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFu
 			return nil, fmt.Errorf("environment IDs are required")
 		}
 
-		environmentIds, err := ParseCommaSeparatedInts(environmentIdsStr)
+		environmentIds, err := parseCommaSeparatedInts(environmentIdsStr)
 		if err != nil {
 			return nil, fmt.Errorf("invalid environment IDs. Error: %w", err)
 		}
@@ -120,14 +120,14 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentGroup() server.ToolHandlerFu
 		environmentIdsStr := request.Params.Arguments["environmentIds"].(string)
 		tagIdsStr := request.Params.Arguments["tagIds"].(string)
 
-		environmentIds, err := ParseCommaSeparatedInts(environmentIdsStr)
+		environmentIds, err := parseCommaSeparatedInts(environmentIdsStr)
 		if err != nil {
 			return nil, fmt.Errorf("invalid environment IDs. Error: %w", err)
 		}
 
 		tagIds := []int{}
 		if tagIdsStr != "" {
-			tagIds, err = ParseCommaSeparatedInts(tagIdsStr)
+			tagIds, err = parseCommaSeparatedInts(tagIdsStr)
 			if err != nil {
 				return nil, fmt.Errorf("invalid tag IDs. Error: %w", err)
 			}

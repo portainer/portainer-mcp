@@ -67,7 +67,7 @@ func (s *PortainerMCPServer) handleUpdateEnvironment() server.ToolHandlerFunc {
 			return nil, fmt.Errorf("tag IDs are required")
 		}
 
-		tagIdsInt, err := ParseCommaSeparatedInts(tagIds)
+		tagIdsInt, err := parseCommaSeparatedInts(tagIds)
 		if err != nil {
 			return nil, fmt.Errorf("invalid tag IDs. Error: %w", err)
 		}

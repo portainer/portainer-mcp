@@ -78,7 +78,7 @@ func (s *PortainerMCPServer) handleUpdateTeam() server.ToolHandlerFunc {
 		}
 
 		if userIds != "" {
-			userIdsList, err := ParseCommaSeparatedInts(userIds)
+			userIdsList, err := parseCommaSeparatedInts(userIds)
 			if err != nil {
 				return nil, fmt.Errorf("invalid user IDs. Error: %w", err)
 			}
