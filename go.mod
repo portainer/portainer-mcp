@@ -2,7 +2,7 @@ module github.com/deviantony/portainer-mcp
 
 go 1.23.5
 
-replace github.com/portainer/client-api-go/v2 => ./sdk/client-api-go
+replace github.com/portainer/client-api-go/v2 => ../client-api-go
 
 require (
 	github.com/mark3labs/mcp-go v0.15.0
