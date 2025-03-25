@@ -40,6 +40,23 @@ func (c *PortainerClient) UpdateTeam(id int, name string) error {
 	return c.cli.UpdateTeam(id, name)
 }
 
+// CreateTeam creates a new team.
+//
+// Parameters:
+//   - name: The name of the team
+//
+// Returns:
+//   - The ID of the created team
+//   - An error if the operation fails
+func (c *PortainerClient) CreateTeam(name string) (int, error) {
+	id, err := c.cli.CreateTeam(name)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create team: %w", err)
+	}
+
+	return int(id), nil
+}
+
 // UpdateTeamMembers updates the members of a team.
 //
 // Parameters:

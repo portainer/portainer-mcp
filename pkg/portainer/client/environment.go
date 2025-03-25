@@ -34,8 +34,12 @@ func (c *PortainerClient) GetEnvironments() ([]models.Environment, error) {
 //
 // Returns:
 //   - An error if the operation fails
-func (c *PortainerClient) UpdateEnvironment(id int, tagIds []int) error {
-	err := c.cli.UpdateEndpoint(int64(id), utils.IntToInt64Slice(tagIds))
+func (c *PortainerClient) UpdateEnvironment(id int, tagIds []int, userAccesses map[int]string, teamAccesses map[int]string) error {
+	err := c.cli.UpdateEndpoint(int64(id),
+		utils.IntToInt64Slice(tagIds),
+		utils.IntToInt64Map(userAccesses),
+		utils.IntToInt64Map(teamAccesses),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to update environment: %w", err)
 	}

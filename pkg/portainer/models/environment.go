@@ -6,11 +6,13 @@ import (
 )
 
 type Environment struct {
-	ID     int    `json:"id"`
-	Name   string `json:"name"`
-	Status string `json:"status"`
-	Type   string `json:"type"`
-	TagIds []int  `json:"tag_ids"`
+	ID           int            `json:"id"`
+	Name         string         `json:"name"`
+	Status       string         `json:"status"`
+	Type         string         `json:"type"`
+	TagIds       []int          `json:"tag_ids"`
+	UserAccesses map[int]string `json:"user_accesses"`
+	TeamAccesses map[int]string `json:"team_accesses"`
 }
 
 // Environment status constants
@@ -34,11 +36,13 @@ const (
 
 func ConvertEndpointToEnvironment(e *models.PortainereeEndpoint) Environment {
 	return Environment{
-		ID:     int(e.ID),
-		Name:   e.Name,
-		Status: convertEnvironmentStatus(e),
-		Type:   convertEnvironmentType(e),
-		TagIds: utils.Int64ToIntSlice(e.TagIds),
+		ID:           int(e.ID),
+		Name:         e.Name,
+		Status:       convertEnvironmentStatus(e),
+		Type:         convertEnvironmentType(e),
+		TagIds:       utils.Int64ToIntSlice(e.TagIds),
+		UserAccesses: convertAccesses(e.UserAccessPolicies),
+		TeamAccesses: convertAccesses(e.TeamAccessPolicies),
 	}
 }
 

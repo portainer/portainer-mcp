@@ -193,7 +193,7 @@ func parseAccessMap(entries []any) (map[int]string, error) {
 			return nil, fmt.Errorf("invalid access entry: %v", entry)
 		}
 
-		id, ok := entryMap["id"].(int)
+		id, ok := entryMap["id"].(float64)
 		if !ok {
 			return nil, fmt.Errorf("invalid ID: %v", entryMap["id"])
 		}
@@ -203,7 +203,7 @@ func parseAccessMap(entries []any) (map[int]string, error) {
 			return nil, fmt.Errorf("invalid access: %v", entryMap["access"])
 		}
 
-		accessMap[id] = access
+		accessMap[int(id)] = access
 	}
 
 	return accessMap, nil
@@ -340,7 +340,6 @@ func (s *PortainerMCPServer) handleUpdateAccessGroup() server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		// Create access group
 		accessGroup := models.AccessGroup{
 			ID:           int(id),
 			Name:         params.Name,
@@ -374,7 +373,7 @@ func (s *PortainerMCPServer) handleAddEnvironmentToAccessGroup() server.ToolHand
 			return nil, fmt.Errorf("failed to add environment to access group: %w", err)
 		}
 
-		return mcp.NewToolResultText(fmt.Sprintf("Environment added to access group successfully")), nil
+		return mcp.NewToolResultText("Environment added to access group successfully"), nil
 	}
 }
 
@@ -395,6 +394,6 @@ func (s *PortainerMCPServer) handleRemoveEnvironmentFromAccessGroup() server.Too
 			return nil, fmt.Errorf("failed to remove environment from access group: %w", err)
 		}
 
-		return mcp.NewToolResultText(fmt.Sprintf("Environment removed from access group successfully")), nil
+		return mcp.NewToolResultText("Environment removed from access group successfully"), nil
 	}
 }

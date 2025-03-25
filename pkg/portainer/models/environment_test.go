@@ -14,13 +14,21 @@ func TestConvertEndpointToEnvironment(t *testing.T) {
 		want     Environment
 	}{
 		{
-			name: "active docker-local environment",
+			name: "active docker-local environment with accesses",
 			endpoint: &models.PortainereeEndpoint{
 				ID:     1,
 				Name:   "local-docker",
 				Status: 1, // active
 				Type:   1, // docker-local
 				TagIds: []int64{1, 2},
+				UserAccessPolicies: models.PortainerUserAccessPolicies{
+					"1": models.PortainerAccessPolicy{RoleID: 1},
+					"2": models.PortainerAccessPolicy{RoleID: 3},
+				},
+				TeamAccessPolicies: models.PortainerTeamAccessPolicies{
+					"10": models.PortainerAccessPolicy{RoleID: 2},
+					"20": models.PortainerAccessPolicy{RoleID: 4},
+				},
 			},
 			want: Environment{
 				ID:     1,
@@ -28,23 +36,66 @@ func TestConvertEndpointToEnvironment(t *testing.T) {
 				Status: EnvironmentStatusActive,
 				Type:   EnvironmentTypeDockerLocal,
 				TagIds: []int{1, 2},
+				UserAccesses: map[int]string{
+					1: "environment_administrator",
+					2: "standard_user",
+				},
+				TeamAccesses: map[int]string{
+					10: "helpdesk_user",
+					20: "readonly_user",
+				},
 			},
 		},
 		{
-			name: "inactive kubernetes-agent environment",
+			name: "inactive kubernetes-agent environment with empty accesses",
 			endpoint: &models.PortainereeEndpoint{
-				ID:     2,
-				Name:   "k8s-agent",
-				Status: 2, // inactive
-				Type:   7, // kubernetes-edge-agent
-				TagIds: []int64{1},
+				ID:                 2,
+				Name:               "k8s-agent",
+				Status:             2, // inactive
+				Type:               7, // kubernetes-edge-agent
+				TagIds:             []int64{1},
+				UserAccessPolicies: models.PortainerUserAccessPolicies{},
+				TeamAccessPolicies: models.PortainerTeamAccessPolicies{},
 			},
 			want: Environment{
-				ID:     2,
-				Name:   "k8s-agent",
-				Status: EnvironmentStatusInactive,
-				Type:   EnvironmentTypeKubernetesEdgeAgent,
-				TagIds: []int{1},
+				ID:           2,
+				Name:         "k8s-agent",
+				Status:       EnvironmentStatusInactive,
+				Type:         EnvironmentTypeKubernetesEdgeAgent,
+				TagIds:       []int{1},
+				UserAccesses: map[int]string{},
+				TeamAccesses: map[int]string{},
+			},
+		},
+		{
+			name: "environment with invalid access IDs",
+			endpoint: &models.PortainereeEndpoint{
+				ID:     3,
+				Name:   "invalid-access",
+				Status: 1,
+				Type:   1,
+				TagIds: []int64{},
+				UserAccessPolicies: models.PortainerUserAccessPolicies{
+					"invalid": models.PortainerAccessPolicy{RoleID: 1},
+					"2":       models.PortainerAccessPolicy{RoleID: 3},
+				},
+				TeamAccessPolicies: models.PortainerTeamAccessPolicies{
+					"bad": models.PortainerAccessPolicy{RoleID: 2},
+					"20":  models.PortainerAccessPolicy{RoleID: 4},
+				},
+			},
+			want: Environment{
+				ID:     3,
+				Name:   "invalid-access",
+				Status: EnvironmentStatusActive,
+				Type:   EnvironmentTypeDockerLocal,
+				TagIds: []int{},
+				UserAccesses: map[int]string{
+					2: "standard_user",
+				},
+				TeamAccesses: map[int]string{
+					20: "readonly_user",
+				},
 			},
 		},
 	}

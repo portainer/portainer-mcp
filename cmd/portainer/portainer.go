@@ -17,6 +17,8 @@ func main() {
 		log.Fatal("Both -server and -token flags are required")
 	}
 
+	log.Printf("Starting Portainer MCP server with server URL: %s and token: %s", *serverFlag, *tokenFlag)
+
 	server := mcp.NewPortainerMCPServer(*serverFlag, *tokenFlag)
 
 	server.AddEnvironmentFeatures()
@@ -25,6 +27,7 @@ func main() {
 	server.AddStackFeatures()
 	server.AddSettingsFeatures()
 	server.AddUserFeatures()
+	server.AddTeamFeatures()
 	server.AddAccessGroupFeatures()
 
 	err := server.Start()

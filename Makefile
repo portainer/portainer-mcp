@@ -13,10 +13,11 @@ build: pre
 push: PLATFORM=darwin
 push: ARCH=arm64
 push: build
+	rm -f /share-tmp/portainer-mcp
 	cp dist/portainer /share-tmp/portainer-mcp
 
-run:
-	go run cmd/portainer/portainer.go -server 1 -token 2
+inspector: build
+	npx @modelcontextprotocol/inspector dist/portainer
 
 test:
 	go test -v ./...

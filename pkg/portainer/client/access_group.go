@@ -47,8 +47,8 @@ func (c *PortainerClient) CreateAccessGroup(accessGroup models.AccessGroup) (int
 
 	err = c.cli.UpdateEndpointGroup(groupID,
 		accessGroup.Name,
-		utils.IntToInt64Map(accessGroup.TeamAccesses),
 		utils.IntToInt64Map(accessGroup.UserAccesses),
+		utils.IntToInt64Map(accessGroup.TeamAccesses),
 	)
 	if err != nil {
 		return 0, fmt.Errorf("failed to update access group: %w", err)
@@ -67,8 +67,8 @@ func (c *PortainerClient) CreateAccessGroup(accessGroup models.AccessGroup) (int
 func (c *PortainerClient) UpdateAccessGroup(accessGroup models.AccessGroup) error {
 	err := c.cli.UpdateEndpointGroup(int64(accessGroup.ID),
 		accessGroup.Name,
-		utils.IntToInt64Map(accessGroup.TeamAccesses),
 		utils.IntToInt64Map(accessGroup.UserAccesses),
+		utils.IntToInt64Map(accessGroup.TeamAccesses),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update access group: %w", err)

@@ -16,6 +16,14 @@ func (s *PortainerMCPServer) AddTeamFeatures() {
 		mcp.WithMIMEType("application/json"),
 	)
 
+	createTeamTool := mcp.NewTool("createTeam",
+		mcp.WithDescription("Create a new team"),
+		mcp.WithString("name",
+			mcp.Required(),
+			mcp.Description("The name of the team"),
+		),
+	)
+
 	updateTeamTool := mcp.NewTool("updateTeam",
 		mcp.WithDescription("Update an existing team"),
 		mcp.WithNumber("id",
@@ -32,7 +40,24 @@ func (s *PortainerMCPServer) AddTeamFeatures() {
 	)
 
 	s.srv.AddResource(teamsResource, s.handleGetTeams())
+	s.srv.AddTool(createTeamTool, s.handleCreateTeam())
 	s.srv.AddTool(updateTeamTool, s.handleUpdateTeam())
+}
+
+func (s *PortainerMCPServer) handleCreateTeam() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		name := request.Params.Arguments["name"].(string)
+		if name == "" {
+			return nil, fmt.Errorf("team name is required")
+		}
+
+		id, err := s.cli.CreateTeam(name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create team: %w", err)
+		}
+
+		return mcp.NewToolResultText(fmt.Sprintf("Team created successfully with ID: %d", id)), nil
+	}
 }
 
 func (s *PortainerMCPServer) handleGetTeams() server.ResourceHandlerFunc {
