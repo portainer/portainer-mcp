@@ -16,15 +16,6 @@ func (s *PortainerMCPServer) AddStackFeatures() {
 		mcp.WithMIMEType("application/json"),
 	)
 
-	// It seems that ResourceTemplates are not loaded by Claude.ai
-
-	// stackFileResource := mcp.NewResourceTemplate(
-	// 	"portainer://stacks/{id}/file",
-	// 	"Compose file associated with a Portainer stack",
-	// 	mcp.WithTemplateDescription("Content of the stack file for a specific stack ID."),
-	// 	mcp.WithTemplateMIMEType("application/json"),
-	// )
-
 	getStackFileTool := mcp.NewTool("getStackFile",
 		mcp.WithDescription("Get the compose file for a specific stack ID"),
 		mcp.WithNumber("id",
@@ -47,10 +38,14 @@ func (s *PortainerMCPServer) AddStackFeatures() {
 				"The file must be a valid docker-compose.yml file."+
 				"example: services:\n web:\n image:nginx"),
 		),
-		mcp.WithString("environmentGroupIds",
+		mcp.WithArray("environmentGroupIds",
 			mcp.Required(),
-			mcp.Description("The IDs of the environment groups that the stack belongs to, separated by commas."+
-				"Must include at least one environment group ID"),
+			mcp.Description("The IDs of the environment groups that the stack belongs to."+
+				"Must include at least one environment group ID."+
+				"Example: [1, 2, 3]."),
+			mcp.Items(map[string]any{
+				"type": "number",
+			}),
 		),
 	)
 
@@ -66,10 +61,14 @@ func (s *PortainerMCPServer) AddStackFeatures() {
 				"The file must be a valid docker-compose.yml file."+
 				"example: version: 3\n services:\n web:\n image:nginx"),
 		),
-		mcp.WithString("environmentGroupIds",
+		mcp.WithArray("environmentGroupIds",
 			mcp.Required(),
-			mcp.Description("The IDs of the environment groups that the stack belongs to, separated by commas."+
-				"Must include at least one environment group ID"),
+			mcp.Description("The IDs of the environment groups that the stack belongs to."+
+				"Must include at least one environment group ID."+
+				"Example: [1, 2, 3]."),
+			mcp.Items(map[string]any{
+				"type": "number",
+			}),
 		),
 	)
 
@@ -129,17 +128,17 @@ func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
 			return nil, fmt.Errorf("stack file is required")
 		}
 
-		environmentGroupIdsStr, ok := request.Params.Arguments["environmentGroupIds"].(string)
+		environmentGroupIds, ok := request.Params.Arguments["environmentGroupIds"].([]any)
 		if !ok {
 			return nil, fmt.Errorf("environment group IDs are required")
 		}
 
-		environmentGroupIds, err := parseCommaSeparatedInts(environmentGroupIdsStr)
+		environmentGroupIdsInt, err := parseNumericArray(environmentGroupIds)
 		if err != nil {
 			return nil, fmt.Errorf("invalid environment group IDs. Error: %w", err)
 		}
 
-		id, err := s.cli.CreateStack(name, file, environmentGroupIds)
+		id, err := s.cli.CreateStack(name, file, environmentGroupIdsInt)
 		if err != nil {
 			return nil, fmt.Errorf("error creating stack. Error: %w", err)
 		}
@@ -160,17 +159,17 @@ func (s *PortainerMCPServer) handleUpdateStack() server.ToolHandlerFunc {
 			return nil, fmt.Errorf("stack file is required")
 		}
 
-		environmentGroupIdsStr, ok := request.Params.Arguments["environmentGroupIds"].(string)
+		environmentGroupIds, ok := request.Params.Arguments["environmentGroupIds"].([]any)
 		if !ok {
 			return nil, fmt.Errorf("environment group IDs are required")
 		}
 
-		environmentGroupIds, err := parseCommaSeparatedInts(environmentGroupIdsStr)
+		environmentGroupIdsInt, err := parseNumericArray(environmentGroupIds)
 		if err != nil {
 			return nil, fmt.Errorf("invalid environment group IDs. Error: %w", err)
 		}
 
-		err = s.cli.UpdateStack(int(id), file, environmentGroupIds)
+		err = s.cli.UpdateStack(int(id), file, environmentGroupIdsInt)
 		if err != nil {
 			return nil, fmt.Errorf("error updating stack. Error: %w", err)
 		}

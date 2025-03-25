@@ -22,9 +22,13 @@ func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
 			mcp.Required(),
 			mcp.Description("The name of the environment group"),
 		),
-		mcp.WithString("environmentIds",
+		mcp.WithArray("environmentIds",
 			mcp.Required(),
-			mcp.Description("The IDs of the environments to add to the group, separated by commas"),
+			mcp.Description("The IDs of the environments to add to the group."+
+				"Example: [1, 2, 3]."),
+			mcp.Items(map[string]any{
+				"type": "number",
+			}),
 		),
 	)
 
@@ -38,17 +42,25 @@ func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
 			mcp.Required(),
 			mcp.Description("The name of the environment group, re-use the existing name to keep the same group name"),
 		),
-		mcp.WithString("environmentIds",
-			mcp.Description("The IDs of the environments that are part of the group, separated by commas."+
+		mcp.WithArray("environmentIds",
+			mcp.Description("The IDs of the environments that are part of the group."+
 				"Optional, provide this if you want to associate environments with the group based on their IDs."+
 				"Specify either this parameter or the tagIds parameter, but not both."+
-				"Must include all the environment IDs that are part of the group - this includes new environments and the existing environments that are already associated with the group."),
+				"Must include all the environment IDs that are part of the group - this includes new environments and the existing environments that are already associated with the group."+
+				"Example: [1, 2, 3]."),
+			mcp.Items(map[string]any{
+				"type": "number",
+			}),
 		),
-		mcp.WithString("tagIds",
-			mcp.Description("The IDs of the tags that are associated with the group, separated by commas."+
+		mcp.WithArray("tagIds",
+			mcp.Description("The IDs of the tags that are associated with the group."+
 				"Optional, provide this if you want to associate environments with the group based on their tags."+
 				"Specify either this parameter or the environmentIds parameter, but not both."+
-				"Must include all the tag IDs that are associated with the group - this includes new tags and the existing tags that are already associated with the group."),
+				"Must include all the tag IDs that are associated with the group - this includes new tags and the existing tags that are already associated with the group."+
+				"Example: [1, 2, 3]."),
+			mcp.Items(map[string]any{
+				"type": "number",
+			}),
 		),
 	)
 
@@ -86,17 +98,17 @@ func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFu
 			return nil, fmt.Errorf("environment group name is required")
 		}
 
-		environmentIdsStr, ok := request.Params.Arguments["environmentIds"].(string)
+		environmentIds, ok := request.Params.Arguments["environmentIds"].([]any)
 		if !ok {
 			return nil, fmt.Errorf("environment IDs are required")
 		}
 
-		environmentIds, err := parseCommaSeparatedInts(environmentIdsStr)
+		environmentIdsInt, err := parseNumericArray(environmentIds)
 		if err != nil {
 			return nil, fmt.Errorf("invalid environment IDs. Error: %w", err)
 		}
 
-		id, err := s.cli.CreateEnvironmentGroup(name, environmentIds)
+		id, err := s.cli.CreateEnvironmentGroup(name, environmentIdsInt)
 		if err != nil {
 			return nil, fmt.Errorf("error creating environment group. Error: %w", err)
 		}
@@ -117,23 +129,23 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentGroup() server.ToolHandlerFu
 			return nil, fmt.Errorf("environment group name is required")
 		}
 
-		environmentIdsStr := request.Params.Arguments["environmentIds"].(string)
-		tagIdsStr := request.Params.Arguments["tagIds"].(string)
+		environmentIds := request.Params.Arguments["environmentIds"].([]any)
+		tagIds := request.Params.Arguments["tagIds"].([]any)
 
-		environmentIds, err := parseCommaSeparatedInts(environmentIdsStr)
+		environmentIdsInt, err := parseNumericArray(environmentIds)
 		if err != nil {
 			return nil, fmt.Errorf("invalid environment IDs. Error: %w", err)
 		}
 
-		tagIds := []int{}
-		if tagIdsStr != "" {
-			tagIds, err = parseCommaSeparatedInts(tagIdsStr)
+		tagIdsInt := []int{}
+		if len(tagIds) > 0 {
+			tagIdsInt, err = parseNumericArray(tagIds)
 			if err != nil {
 				return nil, fmt.Errorf("invalid tag IDs. Error: %w", err)
 			}
 		}
 
-		err = s.cli.UpdateEnvironmentGroup(int(id), name, environmentIds, tagIds)
+		err = s.cli.UpdateEnvironmentGroup(int(id), name, environmentIdsInt, tagIdsInt)
 		if err != nil {
 			return nil, fmt.Errorf("error updating environment group. Error: %w", err)
 		}

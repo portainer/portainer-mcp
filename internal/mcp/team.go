@@ -33,9 +33,13 @@ func (s *PortainerMCPServer) AddTeamFeatures() {
 		mcp.WithString("name",
 			mcp.Description("The new name of the team"),
 		),
-		mcp.WithString("userIds",
-			mcp.Description("The IDs of the users that are part of the team, separated by commas."+
-				"Must include all the user IDs that are part of the team - this includes new users and the existing users that are already associated with the team."),
+		mcp.WithArray("userIds",
+			mcp.Description("The IDs of the users that are part of the team."+
+				"Must include all the user IDs that are part of the team - this includes new users and the existing users that are already associated with the team."+
+				"Example: [1, 2, 3]."),
+			mcp.Items(map[string]any{
+				"type": "number",
+			}),
 		),
 	)
 
@@ -90,8 +94,8 @@ func (s *PortainerMCPServer) handleUpdateTeam() server.ToolHandlerFunc {
 		}
 
 		name := request.Params.Arguments["name"].(string)
-		userIds := request.Params.Arguments["userIds"].(string)
-		if name == "" && userIds == "" {
+		userIds := request.Params.Arguments["userIds"].([]any)
+		if name == "" && len(userIds) == 0 {
 			return nil, fmt.Errorf("team name or user IDs are required")
 		}
 
@@ -102,8 +106,8 @@ func (s *PortainerMCPServer) handleUpdateTeam() server.ToolHandlerFunc {
 			}
 		}
 
-		if userIds != "" {
-			userIdsList, err := parseCommaSeparatedInts(userIds)
+		if len(userIds) > 0 {
+			userIdsList, err := parseNumericArray(userIds)
 			if err != nil {
 				return nil, fmt.Errorf("invalid user IDs. Error: %w", err)
 			}

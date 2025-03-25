@@ -22,10 +22,14 @@ func (s *PortainerMCPServer) AddEnvironmentFeatures() {
 			mcp.Required(),
 			mcp.Description("The ID of the environment to update"),
 		),
-		mcp.WithString("tagIds",
+		mcp.WithArray("tagIds",
 			mcp.Required(),
-			mcp.Description("The IDs of the tags that are associated with the environment, separated by commas."+
-				"Must include all the tag IDs that are associated with the environment - this includes new tags and the existing tags that are already associated with the environment."),
+			mcp.Description("The IDs of the tags that are associated with the environment."+
+				"Must include all the tag IDs that are associated with the environment - this includes new tags and the existing tags that are already associated with the environment."+
+				"Example: [1, 2, 3]."),
+			mcp.Items(map[string]any{
+				"type": "number",
+			}),
 		),
 		mcp.WithArray("userAccesses",
 			mcp.Description("The user accesses that are associated with all the environments in the access group."+
@@ -102,12 +106,12 @@ func (s *PortainerMCPServer) handleUpdateEnvironment() server.ToolHandlerFunc {
 			return nil, fmt.Errorf("environment ID is required")
 		}
 
-		tagIds, ok := request.Params.Arguments["tagIds"].(string)
+		tagIds, ok := request.Params.Arguments["tagIds"].([]any)
 		if !ok {
 			return nil, fmt.Errorf("tag IDs are required")
 		}
 
-		tagIdsInt, err := parseCommaSeparatedInts(tagIds)
+		tagIdsInt, err := parseNumericArray(tagIds)
 		if err != nil {
 			return nil, fmt.Errorf("invalid tag IDs. Error: %w", err)
 		}
