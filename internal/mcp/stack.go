@@ -16,65 +16,15 @@ func (s *PortainerMCPServer) AddStackFeatures() {
 		mcp.WithMIMEType("application/json"),
 	)
 
-	getStackFileTool := mcp.NewTool("getStackFile",
-		mcp.WithDescription("Get the compose file for a specific stack ID"),
-		mcp.WithNumber("id",
-			mcp.Required(),
-			mcp.Description("The ID of the stack to get the compose file for"),
-		),
-	)
-
-	// Docker opiniated for POC purposes
-	createStackTool := mcp.NewTool("createStack",
-		mcp.WithDescription("Create a new stack"),
-		mcp.WithString("name",
-			mcp.Required(),
-			mcp.Description("Name of the stack."+
-				"Stack name must only consist of lowercase alpha characters, numbers, hyphens, or underscores as well as start with a lowercase character or number"),
-		),
-		mcp.WithString("file",
-			mcp.Required(),
-			mcp.Description("Content of the stack file."+
-				"The file must be a valid docker-compose.yml file."+
-				"example: services:\n web:\n image:nginx"),
-		),
-		mcp.WithArray("environmentGroupIds",
-			mcp.Required(),
-			mcp.Description("The IDs of the environment groups that the stack belongs to."+
-				"Must include at least one environment group ID."+
-				"Example: [1, 2, 3]."),
-			mcp.Items(map[string]any{
-				"type": "number",
-			}),
-		),
-	)
-
-	updateStackTool := mcp.NewTool("updateStack",
-		mcp.WithDescription("Update an existing stack"),
-		mcp.WithNumber("id",
-			mcp.Required(),
-			mcp.Description("The ID of the stack to update"),
-		),
-		mcp.WithString("file",
-			mcp.Required(),
-			mcp.Description("Content of the stack file."+
-				"The file must be a valid docker-compose.yml file."+
-				"example: version: 3\n services:\n web:\n image:nginx"),
-		),
-		mcp.WithArray("environmentGroupIds",
-			mcp.Required(),
-			mcp.Description("The IDs of the environment groups that the stack belongs to."+
-				"Must include at least one environment group ID."+
-				"Example: [1, 2, 3]."),
-			mcp.Items(map[string]any{
-				"type": "number",
-			}),
-		),
-	)
-
 	s.srv.AddResource(stacksResource, s.handleGetStacks())
+
+	createStackTool := s.tools[ToolCreateStack]
 	s.srv.AddTool(createStackTool, s.handleCreateStack())
+
+	updateStackTool := s.tools[ToolUpdateStack]
 	s.srv.AddTool(updateStackTool, s.handleUpdateStack())
+
+	getStackFileTool := s.tools[ToolGetStackFile]
 	s.srv.AddTool(getStackFileTool, s.handleGetStackFile())
 }
 

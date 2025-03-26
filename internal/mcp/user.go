@@ -16,20 +16,9 @@ func (s *PortainerMCPServer) AddUserFeatures() {
 		mcp.WithMIMEType("application/json"),
 	)
 
-	updateUserTool := mcp.NewTool("updateUser",
-		mcp.WithDescription("Update an existing user"),
-		mcp.WithNumber("id",
-			mcp.Required(),
-			mcp.Description("The ID of the user to update"),
-		),
-		mcp.WithString("role",
-			mcp.Required(),
-			mcp.Description("The role of the user. Can be admin, user or edge_admin"),
-			mcp.Enum("admin", "user", "edge_admin"),
-		),
-	)
-
 	s.srv.AddResource(usersResource, s.handleGetUsers())
+
+	updateUserTool := s.tools[ToolUpdateUser]
 	s.srv.AddTool(updateUserTool, s.handleUpdateUser())
 }
 

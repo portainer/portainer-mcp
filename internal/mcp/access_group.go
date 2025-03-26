@@ -17,139 +17,18 @@ func (s *PortainerMCPServer) AddAccessGroupFeatures() {
 		mcp.WithMIMEType("application/json"),
 	)
 
-	createAccessGroupTool := mcp.NewTool("createAccessGroup",
-		mcp.WithDescription("Create a new access group."+
-			"Use this tool when you want to define accesses on more than one environment."+
-			"Otherwise, define the accesses on the environment level."),
-		mcp.WithString("name",
-			mcp.Required(),
-			mcp.Description("The name of the access group"),
-		),
-		mcp.WithArray("environmentIds",
-			mcp.Description("The IDs of the environments that are part of the access group."+
-				"Must include all the environment IDs that are part of the group - this includes new environments and the existing environments that are already associated with the group."+
-				"Example: [1, 2, 3]."),
-			mcp.Items(map[string]any{
-				"type": "number",
-			}),
-		),
-		mcp.WithArray("userAccesses",
-			mcp.Description("The user accesses that are associated with all the environments in the access group."+
-				"The ID is the user ID of the user in Portainer."+
-				"Example: [{id: 1, access: 'environment_administrator'}, {id: 2, access: 'standard_user'}]."),
-			mcp.Items(map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"id": map[string]any{
-						"type":        "number",
-						"description": "The ID of the user",
-					},
-					"access": map[string]any{
-						"type":        "string",
-						"description": "The access level of the user. Can be environment_administrator, helpdesk_user, standard_user, readonly_user or operator_user",
-						"enum":        []string{"environment_administrator", "helpdesk_user", "standard_user", "readonly_user", "operator_user"},
-					},
-				},
-			}),
-		),
-		mcp.WithArray("teamAccesses",
-			mcp.Description("The team accesses that are associated with all the environments in the access group."+
-				"The ID is the team ID of the team in Portainer."+
-				"Example: [{id: 1, access: 'environment_administrator'}, {id: 2, access: 'standard_user'}]."),
-			mcp.Items(map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"id": map[string]any{
-						"type":        "number",
-						"description": "The ID of the team",
-					},
-					"access": map[string]any{
-						"type":        "string",
-						"description": "The access level of the team. Can be environment_administrator, helpdesk_user, standard_user, readonly_user or operator_user",
-						"enum":        []string{"environment_administrator", "helpdesk_user", "standard_user", "readonly_user", "operator_user"},
-					},
-				},
-			}),
-		),
-	)
-
-	updateAccessGroupTool := mcp.NewTool("updateAccessGroup",
-		mcp.WithDescription("Update an existing access group."),
-		mcp.WithNumber("id",
-			mcp.Required(),
-			mcp.Description("The ID of the access group to update"),
-		),
-		mcp.WithString("name",
-			mcp.Description("The name of the access group, re-use the existing name to keep the same group name"),
-		),
-		mcp.WithArray("userAccesses",
-			mcp.Description("The user accesses that are associated with all the environments in the access group."+
-				"The ID is the user ID of the user in Portainer."+
-				"Example: [{id: 1, access: 'environment_administrator'}, {id: 2, access: 'standard_user'}]."),
-			mcp.Items(map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"id": map[string]any{
-						"type":        "number",
-						"description": "The ID of the user",
-					},
-					"access": map[string]any{
-						"type":        "string",
-						"description": "The access level of the user. Can be environment_administrator, helpdesk_user, standard_user, readonly_user or operator_user",
-						"enum":        []string{"environment_administrator", "helpdesk_user", "standard_user", "readonly_user", "operator_user"},
-					},
-				},
-			}),
-		),
-		mcp.WithArray("teamAccesses",
-			mcp.Description("The team accesses that are associated with all the environments in the access group."+
-				"The ID is the team ID of the team in Portainer."+
-				"Example: [{id: 1, access: 'environment_administrator'}, {id: 2, access: 'standard_user'}]."),
-			mcp.Items(map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"id": map[string]any{
-						"type":        "number",
-						"description": "The ID of the team",
-					},
-					"access": map[string]any{
-						"type":        "string",
-						"description": "The access level of the team. Can be environment_administrator, helpdesk_user, standard_user, readonly_user or operator_user",
-						"enum":        []string{"environment_administrator", "helpdesk_user", "standard_user", "readonly_user", "operator_user"},
-					},
-				},
-			}),
-		),
-	)
-
-	addEnvironmentToAccessGroupTool := mcp.NewTool("addEnvironmentToAccessGroup",
-		mcp.WithDescription("Add an environment to an access group."),
-		mcp.WithNumber("id",
-			mcp.Required(),
-			mcp.Description("The ID of the access group to update"),
-		),
-		mcp.WithNumber("environmentId",
-			mcp.Required(),
-			mcp.Description("The ID of the environment to add to the access group"),
-		),
-	)
-
-	removeEnvironmentFromAccessGroupTool := mcp.NewTool("removeEnvironmentFromAccessGroup",
-		mcp.WithDescription("Remove an environment from an access group."),
-		mcp.WithNumber("id",
-			mcp.Required(),
-			mcp.Description("The ID of the access group to update"),
-		),
-		mcp.WithNumber("environmentId",
-			mcp.Required(),
-			mcp.Description("The ID of the environment to remove from the access group"),
-		),
-	)
-
 	s.srv.AddResource(accessGroupResource, s.handleGetAccessGroups())
+
+	createAccessGroupTool := s.tools[ToolCreateAccessGroup]
 	s.srv.AddTool(createAccessGroupTool, s.handleCreateAccessGroup())
+
+	updateAccessGroupTool := s.tools[ToolUpdateAccessGroup]
 	s.srv.AddTool(updateAccessGroupTool, s.handleUpdateAccessGroup())
+
+	addEnvironmentToAccessGroupTool := s.tools[ToolAddEnvironmentToAccessGroup]
 	s.srv.AddTool(addEnvironmentToAccessGroupTool, s.handleAddEnvironmentToAccessGroup())
+
+	removeEnvironmentFromAccessGroupTool := s.tools[ToolRemoveEnvironmentFromAccessGroup]
 	s.srv.AddTool(removeEnvironmentFromAccessGroupTool, s.handleRemoveEnvironmentFromAccessGroup())
 }
 

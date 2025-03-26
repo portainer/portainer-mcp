@@ -16,16 +16,10 @@ func (s *PortainerMCPServer) AddTagFeatures() {
 		mcp.WithMIMEType("application/json"),
 	)
 
-	createTagTool := mcp.NewTool("createEnvironmentTag",
-		mcp.WithDescription("Create a new environment tag"),
-		mcp.WithString("name",
-			mcp.Required(),
-			mcp.Description("Name of the tag"),
-		),
-	)
-
 	s.srv.AddResource(environmentTagsResource, s.handleGetEnvironmentTags())
-	s.srv.AddTool(createTagTool, s.handleCreateEnvironmentTag())
+
+	createEnvironmentTagTool := s.tools[ToolCreateEnvironmentTag]
+	s.srv.AddTool(createEnvironmentTagTool, s.handleCreateEnvironmentTag())
 }
 
 func (s *PortainerMCPServer) handleGetEnvironmentTags() server.ResourceHandlerFunc {

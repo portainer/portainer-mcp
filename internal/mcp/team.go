@@ -16,35 +16,12 @@ func (s *PortainerMCPServer) AddTeamFeatures() {
 		mcp.WithMIMEType("application/json"),
 	)
 
-	createTeamTool := mcp.NewTool("createTeam",
-		mcp.WithDescription("Create a new team"),
-		mcp.WithString("name",
-			mcp.Required(),
-			mcp.Description("The name of the team"),
-		),
-	)
-
-	updateTeamTool := mcp.NewTool("updateTeam",
-		mcp.WithDescription("Update an existing team"),
-		mcp.WithNumber("id",
-			mcp.Required(),
-			mcp.Description("The ID of the team to update"),
-		),
-		mcp.WithString("name",
-			mcp.Description("The new name of the team"),
-		),
-		mcp.WithArray("userIds",
-			mcp.Description("The IDs of the users that are part of the team."+
-				"Must include all the user IDs that are part of the team - this includes new users and the existing users that are already associated with the team."+
-				"Example: [1, 2, 3]."),
-			mcp.Items(map[string]any{
-				"type": "number",
-			}),
-		),
-	)
-
 	s.srv.AddResource(teamsResource, s.handleGetTeams())
+
+	createTeamTool := s.tools[ToolCreateTeam]
 	s.srv.AddTool(createTeamTool, s.handleCreateTeam())
+
+	updateTeamTool := s.tools[ToolUpdateTeam]
 	s.srv.AddTool(updateTeamTool, s.handleUpdateTeam())
 }
 

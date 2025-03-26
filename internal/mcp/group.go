@@ -15,57 +15,12 @@ func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
 		mcp.WithResourceDescription("Lists all available environment groups"),
 		mcp.WithMIMEType("application/json"),
 	)
-
-	createEnvironmentGroupTool := mcp.NewTool("createEnvironmentGroup",
-		mcp.WithDescription("Create a new environment group"),
-		mcp.WithString("name",
-			mcp.Required(),
-			mcp.Description("The name of the environment group"),
-		),
-		mcp.WithArray("environmentIds",
-			mcp.Required(),
-			mcp.Description("The IDs of the environments to add to the group."+
-				"Example: [1, 2, 3]."),
-			mcp.Items(map[string]any{
-				"type": "number",
-			}),
-		),
-	)
-
-	updateEnvironmentGroupTool := mcp.NewTool("updateEnvironmentGroup",
-		mcp.WithDescription("Update an existing environment group"),
-		mcp.WithNumber("id",
-			mcp.Required(),
-			mcp.Description("The ID of the environment group to update"),
-		),
-		mcp.WithString("name",
-			mcp.Required(),
-			mcp.Description("The name of the environment group, re-use the existing name to keep the same group name"),
-		),
-		mcp.WithArray("environmentIds",
-			mcp.Description("The IDs of the environments that are part of the group."+
-				"Optional, provide this if you want to associate environments with the group based on their IDs."+
-				"Specify either this parameter or the tagIds parameter, but not both."+
-				"Must include all the environment IDs that are part of the group - this includes new environments and the existing environments that are already associated with the group."+
-				"Example: [1, 2, 3]."),
-			mcp.Items(map[string]any{
-				"type": "number",
-			}),
-		),
-		mcp.WithArray("tagIds",
-			mcp.Description("The IDs of the tags that are associated with the group."+
-				"Optional, provide this if you want to associate environments with the group based on their tags."+
-				"Specify either this parameter or the environmentIds parameter, but not both."+
-				"Must include all the tag IDs that are associated with the group - this includes new tags and the existing tags that are already associated with the group."+
-				"Example: [1, 2, 3]."),
-			mcp.Items(map[string]any{
-				"type": "number",
-			}),
-		),
-	)
-
 	s.srv.AddResource(environmentGroupsResource, s.handleGetEnvironmentGroups())
+
+	createEnvironmentGroupTool := s.tools[ToolCreateEnvironmentGroup]
 	s.srv.AddTool(createEnvironmentGroupTool, s.handleCreateEnvironmentGroup())
+
+	updateEnvironmentGroupTool := s.tools[ToolUpdateEnvironmentGroup]
 	s.srv.AddTool(updateEnvironmentGroupTool, s.handleUpdateEnvironmentGroup())
 }
 
