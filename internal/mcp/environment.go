@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -46,42 +47,37 @@ func (s *PortainerMCPServer) handleGetEnvironments() server.ResourceHandlerFunc 
 
 func (s *PortainerMCPServer) handleUpdateEnvironment() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id, ok := request.Params.Arguments["id"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("environment ID is required")
-		}
+		parser := toolgen.NewParameterParser(request)
 
-		tagIds, ok := request.Params.Arguments["tagIds"].([]any)
-		if !ok {
-			return nil, fmt.Errorf("tag IDs are required")
-		}
-
-		tagIdsInt, err := parseNumericArray(tagIds)
+		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, fmt.Errorf("invalid tag IDs. Error: %w", err)
+			return nil, err
 		}
 
-		// Parse optional user accesses
-		userAccessesMap := map[int]string{}
-		if userAccesses, ok := request.Params.Arguments["userAccesses"].([]any); ok {
-			var err error
-			userAccessesMap, err = parseAccessMap(userAccesses)
-			if err != nil {
-				return nil, fmt.Errorf("invalid user accesses: %w", err)
-			}
+		tagIds, err := parser.GetArrayOfIntegers("tagIds", true)
+		if err != nil {
+			return nil, err
 		}
 
-		// Parse optional team accesses
-		teamAccessesMap := map[int]string{}
-		if teamAccesses, ok := request.Params.Arguments["teamAccesses"].([]any); ok {
-			var err error
-			teamAccessesMap, err = parseAccessMap(teamAccesses)
-			if err != nil {
-				return nil, fmt.Errorf("invalid team accesses: %w", err)
-			}
+		userAccesses, err := parser.GetArrayOfObjects("userAccesses", false)
+		if err != nil {
+			return nil, err
+		}
+		userAccessesMap, err := parseAccessMap(userAccesses)
+		if err != nil {
+			return nil, fmt.Errorf("invalid user accesses: %w", err)
 		}
 
-		err = s.cli.UpdateEnvironment(int(id), tagIdsInt, userAccessesMap, teamAccessesMap)
+		teamAccesses, err := parser.GetArrayOfObjects("teamAccesses", false)
+		if err != nil {
+			return nil, err
+		}
+		teamAccessesMap, err := parseAccessMap(teamAccesses)
+		if err != nil {
+			return nil, fmt.Errorf("invalid team accesses: %w", err)
+		}
+
+		err = s.cli.UpdateEnvironment(id, tagIds, userAccessesMap, teamAccessesMap)
 		if err != nil {
 			return nil, fmt.Errorf("error updating environment. Error: %w", err)
 		}

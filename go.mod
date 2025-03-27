@@ -8,6 +8,7 @@ require (
 	github.com/mark3labs/mcp-go v0.15.0
 	github.com/portainer/client-api-go/v2 v2.27.1
 	github.com/stretchr/testify v1.10.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -38,6 +39,5 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 
 )

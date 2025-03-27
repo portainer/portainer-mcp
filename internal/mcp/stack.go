@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -52,12 +53,14 @@ func (s *PortainerMCPServer) handleGetStacks() server.ResourceHandlerFunc {
 
 func (s *PortainerMCPServer) handleGetStackFile() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id, ok := request.Params.Arguments["id"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("stack ID is required")
+		parser := toolgen.NewParameterParser(request)
+
+		id, err := parser.GetInt("id", true)
+		if err != nil {
+			return nil, err
 		}
 
-		content, err := s.cli.GetStackFile(int(id))
+		content, err := s.cli.GetStackFile(id)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get stack file. Error: %w", err)
 		}
@@ -68,27 +71,24 @@ func (s *PortainerMCPServer) handleGetStackFile() server.ToolHandlerFunc {
 
 func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name, ok := request.Params.Arguments["name"].(string)
-		if !ok {
-			return nil, fmt.Errorf("stack name is required")
-		}
+		parser := toolgen.NewParameterParser(request)
 
-		file, ok := request.Params.Arguments["file"].(string)
-		if !ok {
-			return nil, fmt.Errorf("stack file is required")
-		}
-
-		environmentGroupIds, ok := request.Params.Arguments["environmentGroupIds"].([]any)
-		if !ok {
-			return nil, fmt.Errorf("environment group IDs are required")
-		}
-
-		environmentGroupIdsInt, err := parseNumericArray(environmentGroupIds)
+		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, fmt.Errorf("invalid environment group IDs. Error: %w", err)
+			return nil, err
 		}
 
-		id, err := s.cli.CreateStack(name, file, environmentGroupIdsInt)
+		file, err := parser.GetString("file", true)
+		if err != nil {
+			return nil, err
+		}
+
+		environmentGroupIds, err := parser.GetArrayOfIntegers("environmentGroupIds", true)
+		if err != nil {
+			return nil, err
+		}
+
+		id, err := s.cli.CreateStack(name, file, environmentGroupIds)
 		if err != nil {
 			return nil, fmt.Errorf("error creating stack. Error: %w", err)
 		}
@@ -99,27 +99,24 @@ func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
 
 func (s *PortainerMCPServer) handleUpdateStack() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id, ok := request.Params.Arguments["id"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("stack ID is required")
-		}
+		parser := toolgen.NewParameterParser(request)
 
-		file, ok := request.Params.Arguments["file"].(string)
-		if !ok {
-			return nil, fmt.Errorf("stack file is required")
-		}
-
-		environmentGroupIds, ok := request.Params.Arguments["environmentGroupIds"].([]any)
-		if !ok {
-			return nil, fmt.Errorf("environment group IDs are required")
-		}
-
-		environmentGroupIdsInt, err := parseNumericArray(environmentGroupIds)
+		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, fmt.Errorf("invalid environment group IDs. Error: %w", err)
+			return nil, err
 		}
 
-		err = s.cli.UpdateStack(int(id), file, environmentGroupIdsInt)
+		file, err := parser.GetString("file", true)
+		if err != nil {
+			return nil, err
+		}
+
+		environmentGroupIds, err := parser.GetArrayOfIntegers("environmentGroupIds", true)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.cli.UpdateStack(id, file, environmentGroupIds)
 		if err != nil {
 			return nil, fmt.Errorf("error updating stack. Error: %w", err)
 		}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -46,21 +47,23 @@ func (s *PortainerMCPServer) handleGetUsers() server.ResourceHandlerFunc {
 
 func (s *PortainerMCPServer) handleUpdateUser() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id, ok := request.Params.Arguments["id"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("user ID is required")
+		parser := toolgen.NewParameterParser(request)
+
+		id, err := parser.GetInt("id", true)
+		if err != nil {
+			return nil, err
 		}
 
-		role, ok := request.Params.Arguments["role"].(string)
-		if !ok {
-			return nil, fmt.Errorf("role is required")
+		role, err := parser.GetString("role", true)
+		if err != nil {
+			return nil, err
 		}
 
-		if role != "admin" && role != "user" && role != "edge_admin" {
-			return nil, fmt.Errorf("invalid role: must be admin, user or edge_admin")
+		if !isValidUserRole(role) {
+			return nil, fmt.Errorf("invalid role %s: must be one of: %v", role, AllUserRoles)
 		}
 
-		err := s.cli.UpdateUser(int(id), role)
+		err = s.cli.UpdateUser(id, role)
 		if err != nil {
 			return nil, fmt.Errorf("error updating user. Error: %w", err)
 		}

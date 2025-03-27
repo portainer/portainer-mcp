@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -27,9 +28,11 @@ func (s *PortainerMCPServer) AddTeamFeatures() {
 
 func (s *PortainerMCPServer) handleCreateTeam() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name := request.Params.Arguments["name"].(string)
-		if name == "" {
-			return nil, fmt.Errorf("team name is required")
+		parser := toolgen.NewParameterParser(request)
+
+		name, err := parser.GetString("name", true)
+		if err != nil {
+			return nil, err
 		}
 
 		id, err := s.cli.CreateTeam(name)
@@ -65,31 +68,36 @@ func (s *PortainerMCPServer) handleGetTeams() server.ResourceHandlerFunc {
 
 func (s *PortainerMCPServer) handleUpdateTeam() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id, ok := request.Params.Arguments["id"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("team ID is required")
+		parser := toolgen.NewParameterParser(request)
+
+		id, err := parser.GetInt("id", true)
+		if err != nil {
+			return nil, err
 		}
 
-		name := request.Params.Arguments["name"].(string)
-		userIds := request.Params.Arguments["userIds"].([]any)
+		name, err := parser.GetString("name", false)
+		if err != nil {
+			return nil, err
+		}
+
+		userIds, err := parser.GetArrayOfIntegers("userIds", false)
+		if err != nil {
+			return nil, err
+		}
+
 		if name == "" && len(userIds) == 0 {
 			return nil, fmt.Errorf("team name or user IDs are required")
 		}
 
 		if name != "" {
-			err := s.cli.UpdateTeam(int(id), name)
+			err := s.cli.UpdateTeam(id, name)
 			if err != nil {
 				return nil, fmt.Errorf("failed to update team. Error: %w", err)
 			}
 		}
 
 		if len(userIds) > 0 {
-			userIdsList, err := parseNumericArray(userIds)
-			if err != nil {
-				return nil, fmt.Errorf("invalid user IDs. Error: %w", err)
-			}
-
-			err = s.cli.UpdateTeamMembers(int(id), userIdsList)
+			err = s.cli.UpdateTeamMembers(id, userIds)
 			if err != nil {
 				return nil, fmt.Errorf("failed to update team members. Error: %w", err)
 			}

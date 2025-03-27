@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -46,9 +47,11 @@ func (s *PortainerMCPServer) handleGetEnvironmentTags() server.ResourceHandlerFu
 
 func (s *PortainerMCPServer) handleCreateEnvironmentTag() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name, ok := request.Params.Arguments["name"].(string)
-		if !ok {
-			return nil, fmt.Errorf("tag name is required")
+		parser := toolgen.NewParameterParser(request)
+
+		name, err := parser.GetString("name", true)
+		if err != nil {
+			return nil, err
 		}
 
 		id, err := s.cli.CreateEnvironmentTag(name)

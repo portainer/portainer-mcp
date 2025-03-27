@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -48,22 +49,19 @@ func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ResourceHandler
 
 func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name, ok := request.Params.Arguments["name"].(string)
-		if !ok {
-			return nil, fmt.Errorf("environment group name is required")
-		}
+		parser := toolgen.NewParameterParser(request)
 
-		environmentIds, ok := request.Params.Arguments["environmentIds"].([]any)
-		if !ok {
-			return nil, fmt.Errorf("environment IDs are required")
-		}
-
-		environmentIdsInt, err := parseNumericArray(environmentIds)
+		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, fmt.Errorf("invalid environment IDs. Error: %w", err)
+			return nil, err
 		}
 
-		id, err := s.cli.CreateEnvironmentGroup(name, environmentIdsInt)
+		environmentIds, err := parser.GetArrayOfIntegers("environmentIds", true)
+		if err != nil {
+			return nil, err
+		}
+
+		id, err := s.cli.CreateEnvironmentGroup(name, environmentIds)
 		if err != nil {
 			return nil, fmt.Errorf("error creating environment group. Error: %w", err)
 		}
@@ -74,33 +72,29 @@ func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFu
 
 func (s *PortainerMCPServer) handleUpdateEnvironmentGroup() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id, ok := request.Params.Arguments["id"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("environment group ID is required")
-		}
+		parser := toolgen.NewParameterParser(request)
 
-		name, ok := request.Params.Arguments["name"].(string)
-		if !ok {
-			return nil, fmt.Errorf("environment group name is required")
-		}
-
-		environmentIds := request.Params.Arguments["environmentIds"].([]any)
-		tagIds := request.Params.Arguments["tagIds"].([]any)
-
-		environmentIdsInt, err := parseNumericArray(environmentIds)
+		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, fmt.Errorf("invalid environment IDs. Error: %w", err)
+			return nil, err
 		}
 
-		tagIdsInt := []int{}
-		if len(tagIds) > 0 {
-			tagIdsInt, err = parseNumericArray(tagIds)
-			if err != nil {
-				return nil, fmt.Errorf("invalid tag IDs. Error: %w", err)
-			}
+		name, err := parser.GetString("name", true)
+		if err != nil {
+			return nil, err
 		}
 
-		err = s.cli.UpdateEnvironmentGroup(int(id), name, environmentIdsInt, tagIdsInt)
+		environmentIds, err := parser.GetArrayOfIntegers("environmentIds", false)
+		if err != nil {
+			return nil, err
+		}
+
+		tagIds, err := parser.GetArrayOfIntegers("tagIds", false)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.cli.UpdateEnvironmentGroup(id, name, environmentIds, tagIds)
 		if err != nil {
 			return nil, fmt.Errorf("error updating environment group. Error: %w", err)
 		}

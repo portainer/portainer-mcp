@@ -1,26 +1,33 @@
 package mcp
 
-import (
-	"fmt"
-)
+import "fmt"
 
-// parseNumericArray converts a slice of any type to a slice of ints.
-// Returns an error if any value cannot be parsed as an integer.
-//
-// Example:
-//
-//	ids, err := parseNumericArray([]any{1, 2, 3})
-//	// ids = []int{1, 2, 3}
-func parseNumericArray(array []any) ([]int, error) {
-	result := make([]int, 0, len(array))
+// parseAccessMap parses access entries from an array of objects and returns a map of ID to access level
+func parseAccessMap(entries []any) (map[int]string, error) {
+	accessMap := map[int]string{}
 
-	for _, item := range array {
-		idFloat, ok := item.(float64)
+	for _, entry := range entries {
+		entryMap, ok := entry.(map[string]any)
 		if !ok {
-			return nil, fmt.Errorf("failed to parse '%v' as integer", item)
+			return nil, fmt.Errorf("invalid access entry: %v", entry)
 		}
-		result = append(result, int(idFloat))
+
+		id, ok := entryMap["id"].(float64)
+		if !ok {
+			return nil, fmt.Errorf("invalid ID: %v", entryMap["id"])
+		}
+
+		access, ok := entryMap["access"].(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid access: %v", entryMap["access"])
+		}
+
+		if !isValidAccessLevel(access) {
+			return nil, fmt.Errorf("invalid access level: %s", access)
+		}
+
+		accessMap[int(id)] = access
 	}
 
-	return result, nil
+	return accessMap, nil
 }

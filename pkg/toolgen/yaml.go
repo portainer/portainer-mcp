@@ -91,10 +91,10 @@ func convertParameter(param ParameterDefinition) mcp.ToolOption {
 		return mcp.WithString(param.Name, options...)
 	case "number":
 		return mcp.WithNumber(param.Name, options...)
-	case "array":
-		return mcp.WithArray(param.Name, options...)
 	case "boolean":
 		return mcp.WithBoolean(param.Name, options...)
+	case "array":
+		return mcp.WithArray(param.Name, options...)
 	case "object":
 		return mcp.WithObject(param.Name, options...)
 	default:

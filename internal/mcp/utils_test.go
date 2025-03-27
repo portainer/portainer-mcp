@@ -5,58 +5,108 @@ import (
 	"testing"
 )
 
-func TestParseNumericArray(t *testing.T) {
+func TestParseAccessMap(t *testing.T) {
 	tests := []struct {
 		name    string
-		input   []any
-		want    []int
+		entries []any
+		want    map[int]string
 		wantErr bool
 	}{
 		{
-			name:    "empty array",
-			input:   []any{},
-			want:    []int{},
+			name: "Valid single entry",
+			entries: []any{
+				map[string]any{
+					"id":     float64(1),
+					"access": AccessLevelEnvironmentAdmin,
+				},
+			},
+			want: map[int]string{
+				1: AccessLevelEnvironmentAdmin,
+			},
 			wantErr: false,
 		},
 		{
-			name:    "single value",
-			input:   []any{float64(42)},
-			want:    []int{42},
+			name: "Valid multiple entries",
+			entries: []any{
+				map[string]any{
+					"id":     float64(1),
+					"access": AccessLevelEnvironmentAdmin,
+				},
+				map[string]any{
+					"id":     float64(2),
+					"access": AccessLevelReadonlyUser,
+				},
+			},
+			want: map[int]string{
+				1: AccessLevelEnvironmentAdmin,
+				2: AccessLevelReadonlyUser,
+			},
 			wantErr: false,
 		},
 		{
-			name:    "multiple values",
-			input:   []any{float64(1), float64(2), float64(3), float64(4), float64(5)},
-			want:    []int{1, 2, 3, 4, 5},
-			wantErr: false,
-		},
-		{
-			name:    "negative values",
-			input:   []any{float64(-1), float64(-2), float64(-3)},
-			want:    []int{-1, -2, -3},
-			wantErr: false,
-		},
-		{
-			name:    "mixed positive and negative values",
-			input:   []any{float64(0), float64(1), float64(-2), float64(3), float64(-4)},
-			want:    []int{0, 1, -2, 3, -4},
-			wantErr: false,
-		},
-		{
-			name:    "invalid string value",
-			input:   []any{float64(1), "abc", float64(3)},
+			name: "Invalid entry type",
+			entries: []any{
+				"not a map",
+			},
 			want:    nil,
 			wantErr: true,
 		},
 		{
-			name:    "invalid boolean value",
-			input:   []any{float64(1), true, float64(3)},
+			name: "Invalid ID type",
+			entries: []any{
+				map[string]any{
+					"id":     "string-id",
+					"access": AccessLevelEnvironmentAdmin,
+				},
+			},
 			want:    nil,
 			wantErr: true,
 		},
 		{
-			name:    "invalid nil value",
-			input:   []any{float64(1), nil, float64(3)},
+			name: "Invalid access type",
+			entries: []any{
+				map[string]any{
+					"id":     float64(1),
+					"access": 123,
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Invalid access level",
+			entries: []any{
+				map[string]any{
+					"id":     float64(1),
+					"access": "invalid_access_level",
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "Empty entries",
+			entries: []any{},
+			want:    map[int]string{},
+			wantErr: false,
+		},
+		{
+			name: "Missing ID field",
+			entries: []any{
+				map[string]any{
+					"access": AccessLevelEnvironmentAdmin,
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Missing access field",
+			entries: []any{
+				map[string]any{
+					"id": float64(1),
+				},
+			},
 			want:    nil,
 			wantErr: true,
 		},
@@ -64,22 +114,13 @@ func TestParseNumericArray(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseNumericArray(tt.input)
-
-			// Check error status
+			got, err := parseAccessMap(tt.entries)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ParseNumericArray() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("parseAccessMap() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-
-			// If we expect an error, no need to check the result
-			if tt.wantErr {
-				return
-			}
-
-			// Check result values
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ParseNumericArray() = %v, want %v", got, tt.want)
+				t.Errorf("parseAccessMap() = %v, want %v", got, tt.want)
 			}
 		})
 	}
