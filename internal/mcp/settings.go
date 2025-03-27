@@ -10,17 +10,12 @@ import (
 )
 
 func (s *PortainerMCPServer) AddSettingsFeatures() {
-	settingsResource := mcp.NewResource("portainer://settings",
-		"Portainer Settings",
-		mcp.WithResourceDescription("Inspect Portainer instance settings"),
-		mcp.WithMIMEType("application/json"),
-	)
-
-	s.srv.AddResource(settingsResource, s.handleGetSettings())
+	settingsTool := s.tools[ToolGetSettings]
+	s.srv.AddTool(settingsTool, s.handleGetSettings())
 }
 
-func (s *PortainerMCPServer) handleGetSettings() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+func (s *PortainerMCPServer) handleGetSettings() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		settings, err := s.cli.GetSettings()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get settings: %w", err)
@@ -31,12 +26,6 @@ func (s *PortainerMCPServer) handleGetSettings() server.ResourceHandlerFunc {
 			return nil, fmt.Errorf("failed to marshal settings: %w", err)
 		}
 
-		return []mcp.ResourceContents{
-			mcp.TextResourceContents{
-				URI:      "portainer://settings",
-				MIMEType: "application/json",
-				Text:     string(data),
-			},
-		}, nil
+		return mcp.NewToolResultText(string(data)), nil
 	}
 }

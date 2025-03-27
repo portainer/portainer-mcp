@@ -11,20 +11,15 @@ import (
 )
 
 func (s *PortainerMCPServer) AddUserFeatures() {
-	usersResource := mcp.NewResource("portainer://users",
-		"Portainer Users",
-		mcp.WithResourceDescription("Lists all available users"),
-		mcp.WithMIMEType("application/json"),
-	)
-
-	s.srv.AddResource(usersResource, s.handleGetUsers())
+	// listUsersTool := s.tools[ToolListUsers]
+	// s.srv.AddTool(listUsersTool, s.handleGetUsers())
 
 	updateUserTool := s.tools[ToolUpdateUser]
 	s.srv.AddTool(updateUserTool, s.handleUpdateUser())
 }
 
-func (s *PortainerMCPServer) handleGetUsers() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+func (s *PortainerMCPServer) handleGetUsers() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		users, err := s.cli.GetUsers()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get users: %w", err)
@@ -35,13 +30,7 @@ func (s *PortainerMCPServer) handleGetUsers() server.ResourceHandlerFunc {
 			return nil, fmt.Errorf("failed to marshal users: %w", err)
 		}
 
-		return []mcp.ResourceContents{
-			mcp.TextResourceContents{
-				URI:      "portainer://users",
-				MIMEType: "application/json",
-				Text:     string(data),
-			},
-		}, nil
+		return mcp.NewToolResultText(string(data)), nil
 	}
 }
 

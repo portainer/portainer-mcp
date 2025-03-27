@@ -11,16 +11,11 @@ import (
 )
 
 func (s *PortainerMCPServer) AddTeamFeatures() {
-	teamsResource := mcp.NewResource("portainer://teams",
-		"Portainer Teams",
-		mcp.WithResourceDescription("Lists all available teams"),
-		mcp.WithMIMEType("application/json"),
-	)
-
-	s.srv.AddResource(teamsResource, s.handleGetTeams())
-
 	createTeamTool := s.tools[ToolCreateTeam]
 	s.srv.AddTool(createTeamTool, s.handleCreateTeam())
+
+	// listTeamsTool := s.tools[ToolListTeams]
+	// s.srv.AddTool(listTeamsTool, s.handleGetTeams())
 
 	updateTeamTool := s.tools[ToolUpdateTeam]
 	s.srv.AddTool(updateTeamTool, s.handleUpdateTeam())
@@ -44,8 +39,8 @@ func (s *PortainerMCPServer) handleCreateTeam() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleGetTeams() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+func (s *PortainerMCPServer) handleGetTeams() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		teams, err := s.cli.GetTeams()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get teams: %w", err)
@@ -56,13 +51,7 @@ func (s *PortainerMCPServer) handleGetTeams() server.ResourceHandlerFunc {
 			return nil, fmt.Errorf("failed to marshal teams: %w", err)
 		}
 
-		return []mcp.ResourceContents{
-			mcp.TextResourceContents{
-				URI:      "portainer://teams",
-				MIMEType: "application/json",
-				Text:     string(data),
-			},
-		}, nil
+		return mcp.NewToolResultText(string(data)), nil
 	}
 }
 

@@ -11,16 +11,11 @@ import (
 )
 
 func (s *PortainerMCPServer) AddStackFeatures() {
-	stacksResource := mcp.NewResource("portainer://stacks",
-		"Portainer Stacks",
-		mcp.WithResourceDescription("Lists all available stacks"),
-		mcp.WithMIMEType("application/json"),
-	)
-
-	s.srv.AddResource(stacksResource, s.handleGetStacks())
-
 	createStackTool := s.tools[ToolCreateStack]
 	s.srv.AddTool(createStackTool, s.handleCreateStack())
+
+	listStacksTool := s.tools[ToolListStacks]
+	s.srv.AddTool(listStacksTool, s.handleGetStacks())
 
 	updateStackTool := s.tools[ToolUpdateStack]
 	s.srv.AddTool(updateStackTool, s.handleUpdateStack())
@@ -29,8 +24,8 @@ func (s *PortainerMCPServer) AddStackFeatures() {
 	s.srv.AddTool(getStackFileTool, s.handleGetStackFile())
 }
 
-func (s *PortainerMCPServer) handleGetStacks() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+func (s *PortainerMCPServer) handleGetStacks() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		stacks, err := s.cli.GetStacks()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get stacks: %w", err)
@@ -41,13 +36,7 @@ func (s *PortainerMCPServer) handleGetStacks() server.ResourceHandlerFunc {
 			return nil, fmt.Errorf("failed to marshal stacks: %w", err)
 		}
 
-		return []mcp.ResourceContents{
-			mcp.TextResourceContents{
-				URI:      "portainer://stacks",
-				MIMEType: "application/json",
-				Text:     string(data),
-			},
-		}, nil
+		return mcp.NewToolResultText(string(data)), nil
 	}
 }
 

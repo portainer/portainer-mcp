@@ -11,20 +11,15 @@ import (
 )
 
 func (s *PortainerMCPServer) AddEnvironmentFeatures() {
-	environmentsResource := mcp.NewResource("portainer://environments",
-		"Portainer Environments",
-		mcp.WithResourceDescription("Lists all available environments"),
-		mcp.WithMIMEType("application/json"),
-	)
-
-	s.srv.AddResource(environmentsResource, s.handleGetEnvironments())
+	listEnvironmentsTool := s.tools[ToolListEnvironments]
+	s.srv.AddTool(listEnvironmentsTool, s.handleGetEnvironments())
 
 	updateEnvironmentTool := s.tools[ToolUpdateEnvironment]
 	s.srv.AddTool(updateEnvironmentTool, s.handleUpdateEnvironment())
 }
 
-func (s *PortainerMCPServer) handleGetEnvironments() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+func (s *PortainerMCPServer) handleGetEnvironments() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		environments, err := s.cli.GetEnvironments()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get environments: %w", err)
@@ -35,13 +30,7 @@ func (s *PortainerMCPServer) handleGetEnvironments() server.ResourceHandlerFunc 
 			return nil, fmt.Errorf("failed to marshal environments: %w", err)
 		}
 
-		return []mcp.ResourceContents{
-			mcp.TextResourceContents{
-				URI:      "portainer://environments",
-				MIMEType: "application/json",
-				Text:     string(data),
-			},
-		}, nil
+		return mcp.NewToolResultText(string(data)), nil
 	}
 }
 

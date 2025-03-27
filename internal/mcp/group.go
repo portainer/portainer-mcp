@@ -11,22 +11,18 @@ import (
 )
 
 func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
-	environmentGroupsResource := mcp.NewResource("portainer://environment-groups",
-		"Portainer Environment Groups",
-		mcp.WithResourceDescription("Lists all available environment groups"),
-		mcp.WithMIMEType("application/json"),
-	)
-	s.srv.AddResource(environmentGroupsResource, s.handleGetEnvironmentGroups())
-
 	createEnvironmentGroupTool := s.tools[ToolCreateEnvironmentGroup]
 	s.srv.AddTool(createEnvironmentGroupTool, s.handleCreateEnvironmentGroup())
+
+	listEnvironmentGroupsTool := s.tools[ToolListEnvironmentGroups]
+	s.srv.AddTool(listEnvironmentGroupsTool, s.handleGetEnvironmentGroups())
 
 	updateEnvironmentGroupTool := s.tools[ToolUpdateEnvironmentGroup]
 	s.srv.AddTool(updateEnvironmentGroupTool, s.handleUpdateEnvironmentGroup())
 }
 
-func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		edgeGroups, err := s.cli.GetEnvironmentGroups()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get environment groups: %w", err)
@@ -37,13 +33,7 @@ func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ResourceHandler
 			return nil, fmt.Errorf("failed to marshal environment groups: %w", err)
 		}
 
-		return []mcp.ResourceContents{
-			mcp.TextResourceContents{
-				URI:      "portainer://environment-groups",
-				MIMEType: "application/json",
-				Text:     string(data),
-			},
-		}, nil
+		return mcp.NewToolResultText(string(data)), nil
 	}
 }
 

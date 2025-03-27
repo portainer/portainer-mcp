@@ -5,19 +5,27 @@ import "slices"
 // Tool names as defined in the YAML file
 const (
 	ToolCreateEnvironmentGroup           = "createEnvironmentGroup"
+	ToolListEnvironmentGroups            = "listEnvironmentGroups"
 	ToolUpdateEnvironmentGroup           = "updateEnvironmentGroup"
 	ToolCreateAccessGroup                = "createAccessGroup"
+	ToolListAccessGroups                 = "listAccessGroups"
 	ToolUpdateAccessGroup                = "updateAccessGroup"
 	ToolAddEnvironmentToAccessGroup      = "addEnvironmentToAccessGroup"
 	ToolRemoveEnvironmentFromAccessGroup = "removeEnvironmentFromAccessGroup"
+	ToolListEnvironments                 = "listEnvironments"
 	ToolUpdateEnvironment                = "updateEnvironment"
 	ToolGetStackFile                     = "getStackFile"
 	ToolCreateStack                      = "createStack"
+	ToolListStacks                       = "listStacks"
 	ToolUpdateStack                      = "updateStack"
 	ToolCreateEnvironmentTag             = "createEnvironmentTag"
+	ToolListEnvironmentTags              = "listEnvironmentTags"
 	ToolCreateTeam                       = "createTeam"
+	ToolListTeams                        = "listTeams"
 	ToolUpdateTeam                       = "updateTeam"
+	ToolListUsers                        = "listUsers"
 	ToolUpdateUser                       = "updateUser"
+	ToolGetSettings                      = "getSettings"
 )
 
 // Access levels for users and teams

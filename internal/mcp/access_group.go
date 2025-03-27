@@ -12,16 +12,11 @@ import (
 )
 
 func (s *PortainerMCPServer) AddAccessGroupFeatures() {
-	accessGroupResource := mcp.NewResource("portainer://access-groups",
-		"Portainer Access Groups",
-		mcp.WithResourceDescription("Lists all available access groups"),
-		mcp.WithMIMEType("application/json"),
-	)
-
-	s.srv.AddResource(accessGroupResource, s.handleGetAccessGroups())
-
 	createAccessGroupTool := s.tools[ToolCreateAccessGroup]
 	s.srv.AddTool(createAccessGroupTool, s.handleCreateAccessGroup())
+
+	listAccessGroupTool := s.tools[ToolListAccessGroups]
+	s.srv.AddTool(listAccessGroupTool, s.handleGetAccessGroups())
 
 	updateAccessGroupTool := s.tools[ToolUpdateAccessGroup]
 	s.srv.AddTool(updateAccessGroupTool, s.handleUpdateAccessGroup())
@@ -33,8 +28,8 @@ func (s *PortainerMCPServer) AddAccessGroupFeatures() {
 	s.srv.AddTool(removeEnvironmentFromAccessGroupTool, s.handleRemoveEnvironmentFromAccessGroup())
 }
 
-func (s *PortainerMCPServer) handleGetAccessGroups() server.ResourceHandlerFunc {
-	return func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+func (s *PortainerMCPServer) handleGetAccessGroups() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		accessGroups, err := s.cli.GetAccessGroups()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get access groups: %w", err)
@@ -45,13 +40,7 @@ func (s *PortainerMCPServer) handleGetAccessGroups() server.ResourceHandlerFunc 
 			return nil, fmt.Errorf("failed to marshal access groups: %w", err)
 		}
 
-		return []mcp.ResourceContents{
-			mcp.TextResourceContents{
-				URI:      "portainer://access-groups",
-				MIMEType: "application/json",
-				Text:     string(data),
-			},
-		}, nil
+		return mcp.NewToolResultText(string(data)), nil
 	}
 }
 
