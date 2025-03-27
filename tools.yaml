@@ -1,5 +1,8 @@
 ---
 tools:
+  ## Access Groups
+  ## An access group is the equivalent of an Endpoint Group in Portainer.
+  ## ------------------------------------------------------------
   - name: listAccessGroups
     description: List all available access groups
   - name: createAccessGroup
@@ -140,6 +143,8 @@ tools:
         description: The ID of the environment to remove from the access group
         type: number
         required: true
+  ## Environment
+  ## ------------------------------------------------------------
   - name: listEnvironments
     description: List all available environments
   - name: updateEnvironment
@@ -208,6 +213,9 @@ tools:
                 - standard_user
                 - readonly_user
                 - operator_user
+  ## Environment Groups
+  ## An environment group is the equivalent of an Edge Group in Portainer.
+  ## ------------------------------------------------------------
   - name: createEnvironmentGroup
     description: Create a new environment group
     parameters:
@@ -255,8 +263,12 @@ tools:
         type: array
         items:
           type: number
+  ## Settings
+  ## ------------------------------------------------------------
   - name: getSettings
     description: Get the settings of the Portainer instance
+  ## Stacks
+  ## ------------------------------------------------------------
   - name: listStacks
     description: List all available stacks
   - name: getStackFile
@@ -313,6 +325,8 @@ tools:
         required: true
         items:
           type: number
+  ## Tags
+  ## ------------------------------------------------------------
   - name: createEnvironmentTag
     description: Create a new environment tag
     parameters:
@@ -322,6 +336,8 @@ tools:
         required: true
   - name: listEnvironmentTags
     description: List all available environment tags
+  ## Teams
+  ## ------------------------------------------------------------
   - name: createTeam
     description: Create a new team
     parameters:
@@ -349,6 +365,8 @@ tools:
         type: array
         items:
           type: number
+  ## Users
+  ## ------------------------------------------------------------
   - name: listUsers
     description: List all available users
   - name: updateUser
