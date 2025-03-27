@@ -11,14 +11,9 @@ import (
 )
 
 func (s *PortainerMCPServer) AddTeamFeatures() {
-	createTeamTool := s.tools[ToolCreateTeam]
-	s.srv.AddTool(createTeamTool, s.handleCreateTeam())
-
-	// listTeamsTool := s.tools[ToolListTeams]
-	// s.srv.AddTool(listTeamsTool, s.handleGetTeams())
-
-	updateTeamTool := s.tools[ToolUpdateTeam]
-	s.srv.AddTool(updateTeamTool, s.handleUpdateTeam())
+	s.addToolIfExists(ToolCreateTeam, s.handleCreateTeam())
+	s.addToolIfExists(ToolListTeams, s.handleGetTeams())
+	s.addToolIfExists(ToolUpdateTeam, s.handleUpdateTeam())
 }
 
 func (s *PortainerMCPServer) handleCreateTeam() server.ToolHandlerFunc {

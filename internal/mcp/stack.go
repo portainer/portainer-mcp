@@ -11,17 +11,10 @@ import (
 )
 
 func (s *PortainerMCPServer) AddStackFeatures() {
-	createStackTool := s.tools[ToolCreateStack]
-	s.srv.AddTool(createStackTool, s.handleCreateStack())
-
-	listStacksTool := s.tools[ToolListStacks]
-	s.srv.AddTool(listStacksTool, s.handleGetStacks())
-
-	updateStackTool := s.tools[ToolUpdateStack]
-	s.srv.AddTool(updateStackTool, s.handleUpdateStack())
-
-	getStackFileTool := s.tools[ToolGetStackFile]
-	s.srv.AddTool(getStackFileTool, s.handleGetStackFile())
+	s.addToolIfExists(ToolCreateStack, s.handleCreateStack())
+	s.addToolIfExists(ToolListStacks, s.handleGetStacks())
+	s.addToolIfExists(ToolUpdateStack, s.handleUpdateStack())
+	s.addToolIfExists(ToolGetStackFile, s.handleGetStackFile())
 }
 
 func (s *PortainerMCPServer) handleGetStacks() server.ToolHandlerFunc {

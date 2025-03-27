@@ -11,11 +11,8 @@ import (
 )
 
 func (s *PortainerMCPServer) AddUserFeatures() {
-	// listUsersTool := s.tools[ToolListUsers]
-	// s.srv.AddTool(listUsersTool, s.handleGetUsers())
-
-	updateUserTool := s.tools[ToolUpdateUser]
-	s.srv.AddTool(updateUserTool, s.handleUpdateUser())
+	s.addToolIfExists(ToolListUsers, s.handleGetUsers())
+	s.addToolIfExists(ToolUpdateUser, s.handleUpdateUser())
 }
 
 func (s *PortainerMCPServer) handleGetUsers() server.ToolHandlerFunc {

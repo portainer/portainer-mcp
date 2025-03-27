@@ -36,3 +36,10 @@ func NewPortainerMCPServer(serverURL, token, toolsPath string) (*PortainerMCPSer
 func (s *PortainerMCPServer) Start() error {
 	return server.ServeStdio(s.srv)
 }
+
+// addToolIfExists adds a tool to the server if it exists in the tools map
+func (s *PortainerMCPServer) addToolIfExists(toolName string, handler server.ToolHandlerFunc) {
+	if tool, exists := s.tools[toolName]; exists {
+		s.srv.AddTool(tool, handler)
+	}
+}

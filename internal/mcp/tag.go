@@ -11,11 +11,8 @@ import (
 )
 
 func (s *PortainerMCPServer) AddTagFeatures() {
-	createEnvironmentTagTool := s.tools[ToolCreateEnvironmentTag]
-	s.srv.AddTool(createEnvironmentTagTool, s.handleCreateEnvironmentTag())
-
-	listEnvironmentTagsTool := s.tools[ToolListEnvironmentTags]
-	s.srv.AddTool(listEnvironmentTagsTool, s.handleGetEnvironmentTags())
+	s.addToolIfExists(ToolCreateEnvironmentTag, s.handleCreateEnvironmentTag())
+	s.addToolIfExists(ToolListEnvironmentTags, s.handleGetEnvironmentTags())
 }
 
 func (s *PortainerMCPServer) handleGetEnvironmentTags() server.ToolHandlerFunc {

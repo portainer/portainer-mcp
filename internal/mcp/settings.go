@@ -10,8 +10,7 @@ import (
 )
 
 func (s *PortainerMCPServer) AddSettingsFeatures() {
-	settingsTool := s.tools[ToolGetSettings]
-	s.srv.AddTool(settingsTool, s.handleGetSettings())
+	s.addToolIfExists(ToolGetSettings, s.handleGetSettings())
 }
 
 func (s *PortainerMCPServer) handleGetSettings() server.ToolHandlerFunc {

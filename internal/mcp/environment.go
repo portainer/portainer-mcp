@@ -11,11 +11,8 @@ import (
 )
 
 func (s *PortainerMCPServer) AddEnvironmentFeatures() {
-	listEnvironmentsTool := s.tools[ToolListEnvironments]
-	s.srv.AddTool(listEnvironmentsTool, s.handleGetEnvironments())
-
-	updateEnvironmentTool := s.tools[ToolUpdateEnvironment]
-	s.srv.AddTool(updateEnvironmentTool, s.handleUpdateEnvironment())
+	s.addToolIfExists(ToolListEnvironments, s.handleGetEnvironments())
+	s.addToolIfExists(ToolUpdateEnvironment, s.handleUpdateEnvironment())
 }
 
 func (s *PortainerMCPServer) handleGetEnvironments() server.ToolHandlerFunc {

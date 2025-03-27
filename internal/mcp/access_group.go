@@ -12,20 +12,11 @@ import (
 )
 
 func (s *PortainerMCPServer) AddAccessGroupFeatures() {
-	createAccessGroupTool := s.tools[ToolCreateAccessGroup]
-	s.srv.AddTool(createAccessGroupTool, s.handleCreateAccessGroup())
-
-	listAccessGroupTool := s.tools[ToolListAccessGroups]
-	s.srv.AddTool(listAccessGroupTool, s.handleGetAccessGroups())
-
-	updateAccessGroupTool := s.tools[ToolUpdateAccessGroup]
-	s.srv.AddTool(updateAccessGroupTool, s.handleUpdateAccessGroup())
-
-	addEnvironmentToAccessGroupTool := s.tools[ToolAddEnvironmentToAccessGroup]
-	s.srv.AddTool(addEnvironmentToAccessGroupTool, s.handleAddEnvironmentToAccessGroup())
-
-	removeEnvironmentFromAccessGroupTool := s.tools[ToolRemoveEnvironmentFromAccessGroup]
-	s.srv.AddTool(removeEnvironmentFromAccessGroupTool, s.handleRemoveEnvironmentFromAccessGroup())
+	s.addToolIfExists(ToolCreateAccessGroup, s.handleCreateAccessGroup())
+	s.addToolIfExists(ToolListAccessGroups, s.handleGetAccessGroups())
+	s.addToolIfExists(ToolUpdateAccessGroup, s.handleUpdateAccessGroup())
+	s.addToolIfExists(ToolAddEnvironmentToAccessGroup, s.handleAddEnvironmentToAccessGroup())
+	s.addToolIfExists(ToolRemoveEnvironmentFromAccessGroup, s.handleRemoveEnvironmentFromAccessGroup())
 }
 
 func (s *PortainerMCPServer) handleGetAccessGroups() server.ToolHandlerFunc {

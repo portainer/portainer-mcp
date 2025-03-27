@@ -11,14 +11,9 @@ import (
 )
 
 func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
-	createEnvironmentGroupTool := s.tools[ToolCreateEnvironmentGroup]
-	s.srv.AddTool(createEnvironmentGroupTool, s.handleCreateEnvironmentGroup())
-
-	listEnvironmentGroupsTool := s.tools[ToolListEnvironmentGroups]
-	s.srv.AddTool(listEnvironmentGroupsTool, s.handleGetEnvironmentGroups())
-
-	updateEnvironmentGroupTool := s.tools[ToolUpdateEnvironmentGroup]
-	s.srv.AddTool(updateEnvironmentGroupTool, s.handleUpdateEnvironmentGroup())
+	s.addToolIfExists(ToolCreateEnvironmentGroup, s.handleCreateEnvironmentGroup())
+	s.addToolIfExists(ToolListEnvironmentGroups, s.handleGetEnvironmentGroups())
+	s.addToolIfExists(ToolUpdateEnvironmentGroup, s.handleUpdateEnvironmentGroup())
 }
 
 func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ToolHandlerFunc {
