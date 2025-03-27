@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/client"
 	"github.com/deviantony/portainer-mcp/pkg/toolgen"
@@ -41,5 +42,7 @@ func (s *PortainerMCPServer) Start() error {
 func (s *PortainerMCPServer) addToolIfExists(toolName string, handler server.ToolHandlerFunc) {
 	if tool, exists := s.tools[toolName]; exists {
 		s.srv.AddTool(tool, handler)
+	} else {
+		log.Printf("Tool %s not found", toolName)
 	}
 }
