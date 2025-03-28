@@ -2,10 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"log"
 
 	"github.com/deviantony/portainer-mcp/internal/mcp"
+	"github.com/rs/zerolog/log"
 )
 
 const defaultToolsPath = "tools.yaml"
@@ -17,7 +16,7 @@ func main() {
 	flag.Parse()
 
 	if *serverFlag == "" || *tokenFlag == "" {
-		log.Fatal("Both -server and -token flags are required")
+		log.Fatal().Msg("Both -server and -token flags are required")
 	}
 
 	toolsPath := *toolsFlag
@@ -25,11 +24,14 @@ func main() {
 		toolsPath = defaultToolsPath
 	}
 
-	log.Printf("Starting Portainer MCP server with server URL: %s and token: %s", *serverFlag, *tokenFlag)
+	log.Info().
+		Str("server", *serverFlag).
+		Str("token", *tokenFlag).
+		Msg("Starting Portainer MCP server")
 
 	server, err := mcp.NewPortainerMCPServer(*serverFlag, *tokenFlag, toolsPath)
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to create server: %w", err))
+		log.Fatal().Err(err).Msg("failed to create server")
 	}
 
 	server.AddEnvironmentFeatures()
@@ -43,6 +45,6 @@ func main() {
 
 	err = server.Start()
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to start server: %w", err))
+		log.Fatal().Err(err).Msg("failed to start server")
 	}
 }
