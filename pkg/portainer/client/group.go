@@ -45,22 +45,57 @@ func (c *PortainerClient) CreateEnvironmentGroup(name string, environmentIds []i
 	return int(id), nil
 }
 
-// UpdateEnvironmentGroup updates an existing environment group on the Portainer server.
+// UpdateEnvironmentGroupName updates the name of an existing environment group.
 // Environment groups are the equivalent of Edge Groups in Portainer.
 //
 // Parameters:
 //   - id: The ID of the environment group to update
 //   - name: The new name for the environment group
+//
+// Returns:
+//   - An error if the operation fails
+func (c *PortainerClient) UpdateEnvironmentGroupName(id int, name string) error {
+	err := c.cli.UpdateEdgeGroup(int64(id), name, nil, nil)
+	if err != nil {
+		return fmt.Errorf("failed to update environment group name: %w", err)
+	}
+	return nil
+}
+
+// UpdateEnvironmentGroupEnvironments updates the environments associated with an environment group.
+// Environment groups are the equivalent of Edge Groups in Portainer.
+//
+// Parameters:
+//   - id: The ID of the environment group to update
+//   - name: The name of the environment group, required.
 //   - environmentIds: A slice of environment IDs to include in the group
+//
+// Returns:
+//   - An error if the operation fails
+func (c *PortainerClient) UpdateEnvironmentGroupEnvironments(id int, name string, environmentIds []int) error {
+	envs := utils.IntToInt64Slice(environmentIds)
+	err := c.cli.UpdateEdgeGroup(int64(id), name, &envs, nil)
+	if err != nil {
+		return fmt.Errorf("failed to update environment group environments: %w", err)
+	}
+	return nil
+}
+
+// UpdateEnvironmentGroupTags updates the tags associated with an environment group.
+// Environment groups are the equivalent of Edge Groups in Portainer.
+//
+// Parameters:
+//   - id: The ID of the environment group to update
+//   - name: The name of the environment group, required.
 //   - tagIds: A slice of tag IDs to include in the group
 //
 // Returns:
 //   - An error if the operation fails
-func (c *PortainerClient) UpdateEnvironmentGroup(id int, name string, environmentIds []int, tagIds []int) error {
-	err := c.cli.UpdateEdgeGroup(int64(id), name, utils.IntToInt64Slice(environmentIds), utils.IntToInt64Slice(tagIds))
+func (c *PortainerClient) UpdateEnvironmentGroupTags(id int, name string, tagIds []int) error {
+	tags := utils.IntToInt64Slice(tagIds)
+	err := c.cli.UpdateEdgeGroup(int64(id), name, nil, &tags)
 	if err != nil {
-		return fmt.Errorf("failed to update environment group: %w", err)
+		return fmt.Errorf("failed to update environment group tags: %w", err)
 	}
-
 	return nil
 }

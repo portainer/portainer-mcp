@@ -25,7 +25,7 @@ func (c *PortainerClient) GetUsers() ([]models.User, error) {
 	return users, nil
 }
 
-// UpdateUser updates the role of a user.
+// UpdateUserRole updates the role of a user.
 //
 // Parameters:
 //   - id: The ID of the user to update
@@ -33,13 +33,13 @@ func (c *PortainerClient) GetUsers() ([]models.User, error) {
 //
 // Returns:
 //   - An error if the operation fails
-func (c *PortainerClient) UpdateUser(id int, role string) error {
+func (c *PortainerClient) UpdateUserRole(id int, role string) error {
 	roleInt := convertRole(role)
 	if roleInt == 0 {
 		return fmt.Errorf("invalid role: must be admin, user or edge_admin")
 	}
 
-	return c.cli.UpdateUser(id, roleInt)
+	return c.cli.UpdateUserRole(id, roleInt)
 }
 
 func convertRole(role string) int64 {

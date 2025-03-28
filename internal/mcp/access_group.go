@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
 	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -14,7 +13,9 @@ import (
 func (s *PortainerMCPServer) AddAccessGroupFeatures() {
 	s.addToolIfExists(ToolCreateAccessGroup, s.handleCreateAccessGroup())
 	s.addToolIfExists(ToolListAccessGroups, s.handleGetAccessGroups())
-	s.addToolIfExists(ToolUpdateAccessGroup, s.handleUpdateAccessGroup())
+	s.addToolIfExists(ToolUpdateAccessGroupName, s.handleUpdateAccessGroupName())
+	s.addToolIfExists(ToolUpdateAccessGroupUserAccesses, s.handleUpdateAccessGroupUserAccesses())
+	s.addToolIfExists(ToolUpdateAccessGroupTeamAccesses, s.handleUpdateAccessGroupTeamAccesses())
 	s.addToolIfExists(ToolAddEnvironmentToAccessGroup, s.handleAddEnvironmentToAccessGroup())
 	s.addToolIfExists(ToolRemoveEnvironmentFromAccessGroup, s.handleRemoveEnvironmentFromAccessGroup())
 }
@@ -49,33 +50,7 @@ func (s *PortainerMCPServer) handleCreateAccessGroup() server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		userAccesses, err := parser.GetArrayOfObjects("userAccesses", false)
-		if err != nil {
-			return nil, err
-		}
-		userAccessesMap, err := parseAccessMap(userAccesses)
-		if err != nil {
-			return nil, fmt.Errorf("invalid user accesses: %w", err)
-		}
-
-		teamAccesses, err := parser.GetArrayOfObjects("teamAccesses", false)
-		if err != nil {
-			return nil, err
-		}
-		teamAccessesMap, err := parseAccessMap(teamAccesses)
-		if err != nil {
-			return nil, fmt.Errorf("invalid team accesses: %w", err)
-		}
-
-		// Create access group
-		accessGroup := models.AccessGroup{
-			Name:           name,
-			EnvironmentIds: environmentIds,
-			UserAccesses:   userAccessesMap,
-			TeamAccesses:   teamAccessesMap,
-		}
-
-		groupID, err := s.cli.CreateAccessGroup(accessGroup)
+		groupID, err := s.cli.CreateAccessGroup(name, environmentIds)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create access group: %w", err)
 		}
@@ -84,7 +59,7 @@ func (s *PortainerMCPServer) handleCreateAccessGroup() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateAccessGroup() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) handleUpdateAccessGroupName() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -93,42 +68,73 @@ func (s *PortainerMCPServer) handleUpdateAccessGroup() server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		name, err := parser.GetString("name", false)
+		name, err := parser.GetString("name", true)
 		if err != nil {
 			return nil, err
 		}
 
-		userAccesses, err := parser.GetArrayOfObjects("userAccesses", false)
+		err = s.cli.UpdateAccessGroupName(id, name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update access group name: %w", err)
+		}
+
+		return mcp.NewToolResultText("Access group name updated successfully"), nil
+	}
+}
+
+func (s *PortainerMCPServer) handleUpdateAccessGroupUserAccesses() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		parser := toolgen.NewParameterParser(request)
+
+		id, err := parser.GetInt("id", true)
 		if err != nil {
 			return nil, err
 		}
+
+		userAccesses, err := parser.GetArrayOfObjects("userAccesses", true)
+		if err != nil {
+			return nil, err
+		}
+
 		userAccessesMap, err := parseAccessMap(userAccesses)
 		if err != nil {
 			return nil, fmt.Errorf("invalid user accesses: %w", err)
 		}
 
-		teamAccesses, err := parser.GetArrayOfObjects("teamAccesses", false)
+		err = s.cli.UpdateAccessGroupUserAccesses(id, userAccessesMap)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update access group user accesses: %w", err)
+		}
+
+		return mcp.NewToolResultText("Access group user accesses updated successfully"), nil
+	}
+}
+
+func (s *PortainerMCPServer) handleUpdateAccessGroupTeamAccesses() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		parser := toolgen.NewParameterParser(request)
+
+		id, err := parser.GetInt("id", true)
 		if err != nil {
 			return nil, err
 		}
+
+		teamAccesses, err := parser.GetArrayOfObjects("teamAccesses", true)
+		if err != nil {
+			return nil, err
+		}
+
 		teamAccessesMap, err := parseAccessMap(teamAccesses)
 		if err != nil {
 			return nil, fmt.Errorf("invalid team accesses: %w", err)
 		}
 
-		accessGroup := models.AccessGroup{
-			ID:           id,
-			Name:         name,
-			UserAccesses: userAccessesMap,
-			TeamAccesses: teamAccessesMap,
-		}
-
-		err = s.cli.UpdateAccessGroup(accessGroup)
+		err = s.cli.UpdateAccessGroupTeamAccesses(id, teamAccessesMap)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update access group: %w", err)
+			return nil, fmt.Errorf("failed to update access group team accesses: %w", err)
 		}
 
-		return mcp.NewToolResultText("Access group updated successfully"), nil
+		return mcp.NewToolResultText("Access group team accesses updated successfully"), nil
 	}
 }
 

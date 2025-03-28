@@ -13,7 +13,9 @@ import (
 func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
 	s.addToolIfExists(ToolCreateEnvironmentGroup, s.handleCreateEnvironmentGroup())
 	s.addToolIfExists(ToolListEnvironmentGroups, s.handleGetEnvironmentGroups())
-	s.addToolIfExists(ToolUpdateEnvironmentGroup, s.handleUpdateEnvironmentGroup())
+	s.addToolIfExists(ToolUpdateEnvironmentGroupName, s.handleUpdateEnvironmentGroupName())
+	s.addToolIfExists(ToolUpdateEnvironmentGroupEnvironments, s.handleUpdateEnvironmentGroupEnvironments())
+	s.addToolIfExists(ToolUpdateEnvironmentGroupTags, s.handleUpdateEnvironmentGroupTags())
 }
 
 func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ToolHandlerFunc {
@@ -55,7 +57,7 @@ func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFu
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateEnvironmentGroup() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) handleUpdateEnvironmentGroupName() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -69,21 +71,67 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentGroup() server.ToolHandlerFu
 			return nil, err
 		}
 
-		environmentIds, err := parser.GetArrayOfIntegers("environmentIds", false)
+		err = s.cli.UpdateEnvironmentGroupName(id, name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update environment group name: %w", err)
+		}
+
+		return mcp.NewToolResultText("Environment group name updated successfully"), nil
+	}
+}
+
+func (s *PortainerMCPServer) handleUpdateEnvironmentGroupEnvironments() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		parser := toolgen.NewParameterParser(request)
+
+		id, err := parser.GetInt("id", true)
 		if err != nil {
 			return nil, err
 		}
 
-		tagIds, err := parser.GetArrayOfIntegers("tagIds", false)
+		name, err := parser.GetString("name", true)
 		if err != nil {
 			return nil, err
 		}
 
-		err = s.cli.UpdateEnvironmentGroup(id, name, environmentIds, tagIds)
+		environmentIds, err := parser.GetArrayOfIntegers("environmentIds", true)
 		if err != nil {
-			return nil, fmt.Errorf("error updating environment group. Error: %w", err)
+			return nil, err
 		}
 
-		return mcp.NewToolResultText("Environment group updated successfully"), nil
+		err = s.cli.UpdateEnvironmentGroupEnvironments(id, name, environmentIds)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update environment group environments: %w", err)
+		}
+
+		return mcp.NewToolResultText("Environment group environments updated successfully"), nil
+	}
+}
+
+func (s *PortainerMCPServer) handleUpdateEnvironmentGroupTags() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		parser := toolgen.NewParameterParser(request)
+
+		id, err := parser.GetInt("id", true)
+		if err != nil {
+			return nil, err
+		}
+
+		name, err := parser.GetString("name", true)
+		if err != nil {
+			return nil, err
+		}
+
+		tagIds, err := parser.GetArrayOfIntegers("tagIds", true)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.cli.UpdateEnvironmentGroupTags(id, name, tagIds)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update environment group tags: %w", err)
+		}
+
+		return mcp.NewToolResultText("Environment group tags updated successfully"), nil
 	}
 }

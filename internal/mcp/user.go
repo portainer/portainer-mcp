@@ -12,7 +12,7 @@ import (
 
 func (s *PortainerMCPServer) AddUserFeatures() {
 	s.addToolIfExists(ToolListUsers, s.handleGetUsers())
-	s.addToolIfExists(ToolUpdateUser, s.handleUpdateUser())
+	s.addToolIfExists(ToolUpdateUserRole, s.handleUpdateUserRole())
 }
 
 func (s *PortainerMCPServer) handleGetUsers() server.ToolHandlerFunc {
@@ -31,7 +31,7 @@ func (s *PortainerMCPServer) handleGetUsers() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateUser() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) handleUpdateUserRole() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -49,7 +49,7 @@ func (s *PortainerMCPServer) handleUpdateUser() server.ToolHandlerFunc {
 			return nil, fmt.Errorf("invalid role %s: must be one of: %v", role, AllUserRoles)
 		}
 
-		err = s.cli.UpdateUser(id, role)
+		err = s.cli.UpdateUserRole(id, role)
 		if err != nil {
 			return nil, fmt.Errorf("error updating user. Error: %w", err)
 		}

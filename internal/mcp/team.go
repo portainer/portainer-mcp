@@ -13,7 +13,8 @@ import (
 func (s *PortainerMCPServer) AddTeamFeatures() {
 	s.addToolIfExists(ToolCreateTeam, s.handleCreateTeam())
 	s.addToolIfExists(ToolListTeams, s.handleGetTeams())
-	s.addToolIfExists(ToolUpdateTeam, s.handleUpdateTeam())
+	s.addToolIfExists(ToolUpdateTeamName, s.handleUpdateTeamName())
+	s.addToolIfExists(ToolUpdateTeamMembers, s.handleUpdateTeamMembers())
 }
 
 func (s *PortainerMCPServer) handleCreateTeam() server.ToolHandlerFunc {
@@ -50,7 +51,7 @@ func (s *PortainerMCPServer) handleGetTeams() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateTeam() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) handleUpdateTeamName() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -59,34 +60,39 @@ func (s *PortainerMCPServer) handleUpdateTeam() server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		name, err := parser.GetString("name", false)
+		name, err := parser.GetString("name", true)
 		if err != nil {
 			return nil, err
 		}
 
-		userIds, err := parser.GetArrayOfIntegers("userIds", false)
+		err = s.cli.UpdateTeamName(id, name)
 		if err != nil {
-			return nil, err
-		}
-
-		if name == "" && len(userIds) == 0 {
-			return nil, fmt.Errorf("team name or user IDs are required")
-		}
-
-		if name != "" {
-			err := s.cli.UpdateTeam(id, name)
-			if err != nil {
-				return nil, fmt.Errorf("failed to update team. Error: %w", err)
-			}
-		}
-
-		if len(userIds) > 0 {
-			err = s.cli.UpdateTeamMembers(id, userIds)
-			if err != nil {
-				return nil, fmt.Errorf("failed to update team members. Error: %w", err)
-			}
+			return nil, fmt.Errorf("failed to update team. Error: %w", err)
 		}
 
 		return mcp.NewToolResultText("Team updated successfully"), nil
+	}
+}
+
+func (s *PortainerMCPServer) handleUpdateTeamMembers() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		parser := toolgen.NewParameterParser(request)
+
+		id, err := parser.GetInt("id", true)
+		if err != nil {
+			return nil, err
+		}
+
+		userIds, err := parser.GetArrayOfIntegers("userIds", true)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.cli.UpdateTeamMembers(id, userIds)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update team members. Error: %w", err)
+		}
+
+		return mcp.NewToolResultText("Team members updated successfully"), nil
 	}
 }

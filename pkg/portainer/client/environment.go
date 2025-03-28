@@ -26,7 +26,7 @@ func (c *PortainerClient) GetEnvironments() ([]models.Environment, error) {
 	return environments, nil
 }
 
-// UpdateEnvironment updates the tags for an environment.
+// UpdateEnvironmentTags updates the tags associated with an environment.
 //
 // Parameters:
 //   - id: The ID of the environment to update
@@ -34,15 +34,71 @@ func (c *PortainerClient) GetEnvironments() ([]models.Environment, error) {
 //
 // Returns:
 //   - An error if the operation fails
-func (c *PortainerClient) UpdateEnvironment(id int, tagIds []int, userAccesses map[int]string, teamAccesses map[int]string) error {
+func (c *PortainerClient) UpdateEnvironmentTags(id int, tagIds []int) error {
+	tags := utils.IntToInt64Slice(tagIds)
 	err := c.cli.UpdateEndpoint(int64(id),
-		utils.IntToInt64Slice(tagIds),
-		utils.IntToInt64Map(userAccesses),
-		utils.IntToInt64Map(teamAccesses),
+		&tags,
+		nil,
+		nil,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to update environment: %w", err)
+		return fmt.Errorf("failed to update environment tags: %w", err)
 	}
+	return nil
+}
 
+// UpdateEnvironmentUserAccesses updates the user access policies of an environment.
+//
+// Parameters:
+//   - id: The ID of the environment to update
+//   - userAccesses: Map of user IDs to their access level
+//
+// Valid access levels are:
+//   - environment_administrator
+//   - helpdesk_user
+//   - standard_user
+//   - readonly_user
+//   - operator_user
+//
+// Returns:
+//   - An error if the operation fails
+func (c *PortainerClient) UpdateEnvironmentUserAccesses(id int, userAccesses map[int]string) error {
+	uac := utils.IntToInt64Map(userAccesses)
+	err := c.cli.UpdateEndpoint(int64(id),
+		nil,
+		&uac,
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update environment user accesses: %w", err)
+	}
+	return nil
+}
+
+// UpdateEnvironmentTeamAccesses updates the team access policies of an environment.
+//
+// Parameters:
+//   - id: The ID of the environment to update
+//   - teamAccesses: Map of team IDs to their access level
+//
+// Valid access levels are:
+//   - environment_administrator
+//   - helpdesk_user
+//   - standard_user
+//   - readonly_user
+//   - operator_user
+//
+// Returns:
+//   - An error if the operation fails
+func (c *PortainerClient) UpdateEnvironmentTeamAccesses(id int, teamAccesses map[int]string) error {
+	tac := utils.IntToInt64Map(teamAccesses)
+	err := c.cli.UpdateEndpoint(int64(id),
+		nil,
+		nil,
+		&tac,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update environment team accesses: %w", err)
+	}
 	return nil
 }

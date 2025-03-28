@@ -6,7 +6,7 @@ tools:
   - name: listAccessGroups
     description: List all available access groups
   - name: createAccessGroup
-    description: Create a new access group. Use this tool when you want to define
+    description: Create a new access group. Use access groups when you want to define
       accesses on more than one environment. Otherwise, define the accesses on
       the environment level.
     parameters:
@@ -22,67 +22,31 @@ tools:
         type: array
         items:
           type: number
-      - name: userAccesses
-        description: "The user accesses that are associated with all the environments in
-          the access group. The ID is the user ID of the user in Portainer.
-          Example: [{id: 1, access: 'environment_administrator'}, {id: 2,
-          access: 'standard_user'}]"
-        type: array
-        items:
-          type: object
-          properties:
-            id:
-              description: The ID of the user
-              type: number
-            access:
-              description: The access level of the user. Can be environment_administrator,
-                helpdesk_user, standard_user, readonly_user or operator_user
-              type: string
-              enum:
-                - environment_administrator
-                - helpdesk_user
-                - standard_user
-                - readonly_user
-                - operator_user
-      - name: teamAccesses
-        description: "The team accesses that are associated with all the environments in
-          the access group. The ID is the team ID of the team in Portainer.
-          Example: [{id: 1, access: 'environment_administrator'}, {id: 2,
-          access: 'standard_user'}]"
-        type: array
-        items:
-          type: object
-          properties:
-            id:
-              description: The ID of the team
-              type: number
-            access:
-              description: The access level of the team. Can be environment_administrator,
-                helpdesk_user, standard_user, readonly_user or operator_user
-              type: string
-              enum:
-                - environment_administrator
-                - helpdesk_user
-                - standard_user
-                - readonly_user
-                - operator_user
-  - name: updateAccessGroup
-    description: Update an existing access group.
+  - name: updateAccessGroupName
+    description: Update the name of an existing access group.
     parameters:
       - name: id
         description: The ID of the access group to update
         type: number
         required: true
       - name: name
-        description: The name of the access group, re-use the existing name to keep the
-          same group name
+        description: The name of the access group
         type: string
+        required: true
+  - name: updateAccessGroupUserAccesses
+    description: Update the user accesses of an existing access group.
+    parameters:
+      - name: id
+        description: The ID of the access group to update
+        type: number
+        required: true
       - name: userAccesses
         description: "The user accesses that are associated with all the environments in
           the access group. The ID is the user ID of the user in Portainer.
           Example: [{id: 1, access: 'environment_administrator'}, {id: 2,
           access: 'standard_user'}]"
         type: array
+        required: true
         items:
           type: object
           properties:
@@ -99,12 +63,20 @@ tools:
                 - standard_user
                 - readonly_user
                 - operator_user
+  - name: updateAccessGroupTeamAccesses
+    description: Update the team accesses of an existing access group.
+    parameters:
+      - name: id
+        description: The ID of the access group to update
+        type: number
+        required: true
       - name: teamAccesses
         description: "The team accesses that are associated with all the environments in
           the access group. The ID is the team ID of the team in Portainer.
           Example: [{id: 1, access: 'environment_administrator'}, {id: 2,
           access: 'standard_user'}]"
         type: array
+        required: true
         items:
           type: object
           properties:
@@ -147,31 +119,39 @@ tools:
   ## ------------------------------------------------------------
   - name: listEnvironments
     description: List all available environments
-  - name: updateEnvironment
-    description: Update an existing environment
+  - name: updateEnvironmentTags
+    description: Update the tags associated with an environment
     parameters:
       - name: id
         description: The ID of the environment to update
         type: number
         required: true
       - name: tagIds
-        description: "The IDs of the tags that are associated with the environment. Must
-          include all the tag IDs that are associated with the environment -
-          this includes new tags and the existing tags that are already
-          associated with the environment. Example: [1, 2, 3]"
+        description: >-
+          The IDs of the tags that are associated with the environment.
+          Must include all the tag IDs that should be associated with the environment - this includes new tags and existing tags.
+          Providing an empty array will remove all tags.
+          Example: [1, 2, 3]
         type: array
         required: true
         items:
           type: number
+  - name: updateEnvironmentUserAccesses
+    description: Update the user access policies of an environment
+    parameters:
+      - name: id
+        description: The ID of the environment to update
+        type: number
+        required: true
       - name: userAccesses
-        description: "The user accesses that are associated with all the environments in
-          the access group. The ID is the user ID of the user in Portainer. Must
-          include all the access policies for all the users that are associated
-          with the environment - this includes new users and the existing users
-          that are already associated with the environment. Example: [{id: 1,
-          access: 'environment_administrator'}, {id: 2, access:
-          'standard_user'}]"
+        description: >-
+          The user accesses that are associated with the environment.
+          The ID is the user ID of the user in Portainer.
+          Must include all the access policies for all users that should be associated with the environment.
+          Providing an empty array will remove all user accesses.
+          Example: [{id: 1, access: 'environment_administrator'}, {id: 2, access: 'standard_user'}]
         type: array
+        required: true
         items:
           type: object
           properties:
@@ -179,8 +159,7 @@ tools:
               description: The ID of the user
               type: number
             access:
-              description: The access level of the user. Can be environment_administrator,
-                helpdesk_user, standard_user, readonly_user or operator_user
+              description: The access level of the user
               type: string
               enum:
                 - environment_administrator
@@ -188,15 +167,22 @@ tools:
                 - standard_user
                 - readonly_user
                 - operator_user
+  - name: updateEnvironmentTeamAccesses
+    description: Update the team access policies of an environment
+    parameters:
+      - name: id
+        description: The ID of the environment to update
+        type: number
+        required: true
       - name: teamAccesses
-        description: "The team accesses that are associated with all the environments in
-          the access group. The ID is the team ID of the team in Portainer. Must
-          include all the access policies for all the teams that are associated
-          with the environment - this includes new teams and the existing teams
-          that are already associated with the environment. Example: [{id: 1,
-          access: 'environment_administrator'}, {id: 2, access:
-          'standard_user'}]"
+        description: >-
+          The team accesses that are associated with the environment.
+          The ID is the team ID of the team in Portainer.
+          Must include all the access policies for all teams that should be associated with the environment.
+          Providing an empty array will remove all team accesses.
+          Example: [{id: 1, access: 'environment_administrator'}, {id: 2, access: 'standard_user'}]
         type: array
+        required: true
         items:
           type: object
           properties:
@@ -204,8 +190,7 @@ tools:
               description: The ID of the team
               type: number
             access:
-              description: The access level of the team. Can be environment_administrator,
-                helpdesk_user, standard_user, readonly_user or operator_user
+              description: The access level of the team
               type: string
               enum:
                 - environment_administrator
@@ -217,7 +202,7 @@ tools:
   ## An environment group is the equivalent of an Edge Group in Portainer.
   ## ------------------------------------------------------------
   - name: createEnvironmentGroup
-    description: Create a new environment group
+    description: Create a new environment group. Environment groups are the equivalent of Edge Groups in Portainer.
     parameters:
       - name: name
         description: The name of the environment group
@@ -230,37 +215,58 @@ tools:
         items:
           type: number
   - name: listEnvironmentGroups
-    description: List all available environment groups
-  - name: updateEnvironmentGroup
-    description: Update an existing environment group
+    description: List all available environment groups. Environment groups are the equivalent of Edge Groups in Portainer.
+  - name: updateEnvironmentGroupName
+    description: Update the name of an environment group. Environment groups are the equivalent of Edge Groups in Portainer.
     parameters:
       - name: id
         description: The ID of the environment group to update
         type: number
         required: true
       - name: name
-        description: The name of the environment group, re-use the existing name to keep
-          the same group name
+        description: The new name for the environment group
+        type: string
+        required: true
+  - name: updateEnvironmentGroupEnvironments
+    description: Update the environments associated with an environment group. Environment groups are the equivalent of Edge Groups in Portainer.
+    parameters:
+      - name: id
+        description: The ID of the environment group to update
+        type: number
+        required: true
+      - name: name
+        description: The name for the environment group. Passing the current name is required for this operation.
         type: string
         required: true
       - name: environmentIds
-        description: The IDs of the environments that are part of the group. Optional,
-          provide this if you want to associate environments with the group
-          based on their IDs. Specify either this parameter or the tagIds
-          parameter, but not both. Must include all the environment IDs that are
-          part of the group - this includes new environments and the existing
-          environments that are already associated with the group.
+        description: >-
+          The IDs of the environments that should be part of the group.
+          Must include all environment IDs that should be associated with the group.
+          Providing an empty array will remove all environments from the group.
+          Example: [1, 2, 3]
         type: array
+        required: true
         items:
           type: number
+  - name: updateEnvironmentGroupTags
+    description: Update the tags associated with an environment group. Environment groups are the equivalent of Edge Groups in Portainer.
+    parameters:
+      - name: id
+        description: The ID of the environment group to update
+        type: number
+        required: true
+      - name: name
+        description: The name for the environment group. Passing the current name is required for this operation.
+        type: string
+        required: true
       - name: tagIds
-        description: The IDs of the tags that are associated with the group. Optional,
-          provide this if you want to associate environments with the group
-          based on their tags. Specify either this parameter or the
-          environmentIds parameter, but not both. Must include all the tag IDs
-          that are associated with the group - this includes new tags and the
-          existing tags that are already associated with the group.
+        description: >-
+          The IDs of the tags that should be associated with the group.
+          Must include all tag IDs that should be associated with the group.
+          Providing an empty array will remove all tags from the group.
+          Example: [1, 2, 3]
         type: array
+        required: true
         items:
           type: number
   ## Settings
@@ -347,8 +353,8 @@ tools:
         required: true
   - name: listTeams
     description: List all available teams
-  - name: updateTeam
-    description: Update an existing team
+  - name: updateTeamName
+    description: Update the name of an existing team
     parameters:
       - name: id
         description: The ID of the team to update
@@ -357,14 +363,24 @@ tools:
       - name: name
         description: The new name of the team
         type: string
+        required: true
+  - name: updateTeamMembers
+    description: Update the members of an existing team
+    parameters:
+      - name: id
+        description: The ID of the team to update
+        type: number
+        required: true
       - name: userIds
         description: "The IDs of the users that are part of the team. Must include all
           the user IDs that are part of the team - this includes new users and
           the existing users that are already associated with the team. Example:
           [1, 2, 3]"
         type: array
+        required: true
         items:
           type: number
+
   ## Users
   ## ------------------------------------------------------------
   - name: listUsers

@@ -31,13 +31,13 @@ func (c *PortainerClient) GetTeams() ([]models.Team, error) {
 	return teams, nil
 }
 
-// UpdateTeam updates the name of a team.
+// UpdateTeamName updates the name of a team.
 //
 // Parameters:
 //   - id: The ID of the team to update
 //   - name: The new name for the team
-func (c *PortainerClient) UpdateTeam(id int, name string) error {
-	return c.cli.UpdateTeam(id, name)
+func (c *PortainerClient) UpdateTeamName(id int, name string) error {
+	return c.cli.UpdateTeamName(id, name)
 }
 
 // CreateTeam creates a new team.
