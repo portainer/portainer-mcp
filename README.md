@@ -11,3 +11,29 @@ This implementation focuses on exposing Portainer environment data through the M
 *Note: This project is currently under development.*
 
 It is currently designed to work with a Portainer administrator API token.
+
+# Usage
+
+With Claude Desktop, configure it like so:
+
+```
+{
+    "mcpServers": {
+        "portainer": {
+            "command": "/path/to/portainer-mcp",
+            "args": [
+                "-server",
+                "[IP]:[PORT]",
+                "-token",
+                "[TOKEN]"
+            ]
+        }
+    }
+}
+```
+
+Replace `[IP]`, `[PORT]` and `[TOKEN]` with the IP, port and API access token associated with your Portainer instance.
+
+# Supported capabilities
+
+WIP
