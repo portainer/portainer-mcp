@@ -5,8 +5,8 @@ This document summarizes design decisions for the software.
 ## Table of Contents
 1. [202503-1: Using an external tools file for tool definition](#202503-1-using-an-external-tools-file-for-tool-definition)
 2. [202503-2: Using tools to get resources instead of MCP resources](#202503-2-using-tools-to-get-resources-instead-of-mcp-resources)
-3. [202503-3: Tools file versioning](#202503-3-tools-file-versioning)
-4. [202503-4: Specific tool for updates instead of a single update tool](#202503-4-specific-tool-for-updates-instead-of-a-single-update-tool)
+3. [202503-3: Specific tool for updates instead of a single update tool](#202503-3-specific-tool-for-updates-instead-of-a-single-update-tool)
+4. [202503-4: Tools file versioning](#202503-4-tools-file-versioning)
 
 ## 202503-1: Using an external tools file for tool definition
 
@@ -93,17 +93,67 @@ Replace MCP resources with tools for retrieving Portainer resources. For example
 
 **Challenges**
 - Potential loss of MCP resource-specific features
-- Need to maintain tool definitions for resource access
-- May need to reconsider if application-driven selection becomes necessary
+- May need to reconsider if application-driven selection becomes necessary or when we'll need to build our own client
 
 ### References
 - https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#user-interaction-model
 - https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#user-interaction-model
 
-## 202503-3: Tools file versioning
+## 202503-3: Specific tool for updates instead of a single update tool
 
 **Date**: 29/03/2025
 
-## 202503-4: Specific tool for updates instead of a single update tool
+### Context
+Initially, resource updates (such as access groups, environments, etc.) were handled through single, multi-purpose update tools that could modify multiple properties at once. This approach led to complex parameter handling and unclear behavior around optional values.
+
+### Decision
+Split update operations into multiple specific tools, each responsible for updating a single property or related set of properties. For example, instead of a single `updateAccessGroup` tool, create separate tools like:
+- `updateAccessGroupName`
+- `updateAccessGroupUserAccesses`
+- `updateAccessGroupTeamAccesses`
+
+### Rationale
+1. **Parameter Clarity**
+   - Each tool has clear, required parameters
+   - No ambiguity between undefined parameters and empty values
+   - Eliminates need for complex optional parameter handling
+
+2. **Code Simplification**
+   - Removes need for pointer types in parameter handling
+   - Clearer validation of required parameters
+   - Simpler implementation of each specific update operation
+
+3. **Maintenance Benefits**
+   - Each tool has a single responsibility
+   - Easier to test individual update operations
+   - Clearer documentation of available operations
+
+4. **Model Interaction**
+   - Models can clearly understand which property they're updating
+   - More explicit about the changes being made
+   - Better alignment with natural language commands
+
+### Trade-offs
+
+**Benefits**
+- Clearer parameter requirements and validation
+- Simpler code without pointer logic
+- Better separation of concerns
+- More explicit and focused tools
+- Easier testing and maintenance
+
+**Challenges**
+- Multiple API calls needed for updating multiple properties
+- Slightly increased network traffic for multi-property updates
+- More tool definitions to maintain
+- No atomic updates across multiple properties
+
+### Notes
+Performance impact of multiple API calls is considered acceptable given:
+- Non-performance-critical context
+- Relatively low frequency of update operations
+- Benefits of simpler code and clearer behavior outweigh the overhead
+
+## 202503-4: Tools file versioning
 
 **Date**: 29/03/2025
