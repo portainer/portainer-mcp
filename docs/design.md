@@ -147,6 +147,8 @@ Split update operations into multiple specific tools, each responsible for updat
 - Slightly increased network traffic for multi-property updates
 - More tool definitions to maintain
 - No atomic updates across multiple properties
+- More tools might clutter the context of the model
+- Some clients have a hard limit on the number of tools that can be used/enabled
 
 ### Notes
 Performance impact of multiple API calls is considered acceptable given:
