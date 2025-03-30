@@ -59,11 +59,11 @@ The following table lists the currently supported operations through MCP tools:
 | | UpdateAccessGroupTeamAccesses | Update team accesses for an access group |
 | | AddEnvironmentToAccessGroup | Add an environment to an access group |
 | | RemoveEnvironmentFromAccessGroup | Remove an environment from an access group |
-| **Stacks** |
+| **Stacks (Edge Stacks)** |
 | | ListStacks | List all available stacks |
 | | GetStackFile | Get the compose file for a specific stack |
-| | CreateStack | Create a new stack |
-| | UpdateStack | Update an existing stack |
+| | CreateStack | Create a new Docker stack |
+| | UpdateStack | Update an existing Docker stack |
 | **Tags** |
 | | ListEnvironmentTags | List all available environment tags |
 | | CreateEnvironmentTag | Create a new environment tag |
