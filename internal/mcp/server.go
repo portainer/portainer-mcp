@@ -5,14 +5,63 @@ import (
 	"log"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/client"
+	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
 	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
+// PortainerClient defines the interface for the wrapper client used by the MCP server
+type PortainerClient interface {
+	// Tag methods
+	GetEnvironmentTags() ([]models.EnvironmentTag, error)
+	CreateEnvironmentTag(name string) (int, error)
+
+	// Environment methods
+	GetEnvironments() ([]models.Environment, error)
+	UpdateEnvironmentTags(id int, tagIds []int) error
+	UpdateEnvironmentUserAccesses(id int, userAccesses map[int]string) error
+	UpdateEnvironmentTeamAccesses(id int, teamAccesses map[int]string) error
+
+	// Environment Group methods
+	GetEnvironmentGroups() ([]models.Group, error)
+	CreateEnvironmentGroup(name string, environmentIds []int) (int, error)
+	UpdateEnvironmentGroupName(id int, name string) error
+	UpdateEnvironmentGroupEnvironments(id int, name string, environmentIds []int) error
+	UpdateEnvironmentGroupTags(id int, name string, tagIds []int) error
+
+	// Access Group methods
+	GetAccessGroups() ([]models.AccessGroup, error)
+	CreateAccessGroup(name string, environmentIds []int) (int, error)
+	UpdateAccessGroupName(id int, name string) error
+	UpdateAccessGroupUserAccesses(id int, userAccesses map[int]string) error
+	UpdateAccessGroupTeamAccesses(id int, teamAccesses map[int]string) error
+	AddEnvironmentToAccessGroup(id int, environmentId int) error
+	RemoveEnvironmentFromAccessGroup(id int, environmentId int) error
+
+	// Stack methods
+	GetStacks() ([]models.Stack, error)
+	GetStackFile(id int) (string, error)
+	CreateStack(name string, file string, environmentGroupIds []int) (int, error)
+	UpdateStack(id int, file string, environmentGroupIds []int) error
+
+	// Team methods
+	CreateTeam(name string) (int, error)
+	GetTeams() ([]models.Team, error)
+	UpdateTeamName(id int, name string) error
+	UpdateTeamMembers(id int, userIds []int) error
+
+	// User methods
+	GetUsers() ([]models.User, error)
+	UpdateUserRole(id int, role string) error
+
+	// Settings methods
+	GetSettings() (models.PortainerSettings, error)
+}
+
 type PortainerMCPServer struct {
 	srv   *server.MCPServer
-	cli   *client.PortainerClient
+	cli   PortainerClient
 	tools map[string]mcp.Tool
 }
 
