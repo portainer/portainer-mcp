@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/internal/mcp"
-	pm_models "github.com/deviantony/portainer-mcp/pkg/portainer/models"
+	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
 	"github.com/deviantony/portainer-mcp/tests/integration/helpers"
 	go_mcp "github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/assert"
@@ -48,7 +48,7 @@ func TestSettingsManagement(t *testing.T) {
 		assert.True(t, ok, "Expected text content in response")
 
 		// Unmarshal the result from the MCP handler into the local models.PortainerSettings struct
-		var retrievedSettings pm_models.PortainerSettings
+		var retrievedSettings models.PortainerSettings
 		err = json.Unmarshal([]byte(textContent.Text), &retrievedSettings)
 		require.NoError(t, err, "Failed to unmarshal retrieved settings")
 
@@ -58,7 +58,7 @@ func TestSettingsManagement(t *testing.T) {
 		require.NoError(t, err, "Failed to get settings directly via client for comparison")
 
 		// Convert the raw settings using the package's conversion function
-		expectedConvertedSettings := pm_models.ConvertSettingsToPortainerSettings(rawSettings)
+		expectedConvertedSettings := models.ConvertSettingsToPortainerSettings(rawSettings)
 
 		// Compare the Settings struct from MCP handler with the one converted from the direct client call
 		assert.Equal(t, expectedConvertedSettings, retrievedSettings, "Mismatch between MCP handler settings and converted client settings")

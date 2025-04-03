@@ -1,6 +1,6 @@
 package models
 
-import "github.com/portainer/client-api-go/v2/pkg/models"
+import apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 
 type PortainerSettings struct {
 	Authentication struct {
@@ -19,7 +19,7 @@ const (
 	AuthenticationMethodUnknown  = "unknown"
 )
 
-func ConvertSettingsToPortainerSettings(settings *models.PortainereeSettings) PortainerSettings {
+func ConvertSettingsToPortainerSettings(settings *apimodels.PortainereeSettings) PortainerSettings {
 	s := PortainerSettings{}
 
 	s.Authentication.Method = convertAuthenticationMethod(settings.AuthenticationMethod)

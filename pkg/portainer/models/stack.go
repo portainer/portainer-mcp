@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/utils"
-	"github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 )
 
 type Stack struct {
@@ -14,7 +14,7 @@ type Stack struct {
 	EnvironmentGroupIds []int  `json:"group_ids"`
 }
 
-func ConvertEdgeStackToStack(e *models.PortainereeEdgeStack) Stack {
+func ConvertEdgeStackToStack(e *apimodels.PortainereeEdgeStack) Stack {
 	createdAt := time.Unix(e.CreationDate, 0).Format(time.RFC3339)
 
 	return Stack{

@@ -3,10 +3,10 @@ package models
 import (
 	"strconv"
 
-	"github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 )
 
-func convertAccesses[T models.PortainerUserAccessPolicies | models.PortainerTeamAccessPolicies](policies T) map[int]string {
+func convertAccesses[T apimodels.PortainerUserAccessPolicies | apimodels.PortainerTeamAccessPolicies](policies T) map[int]string {
 	accesses := make(map[int]string)
 	for idStr, role := range policies {
 		id, err := strconv.Atoi(idStr)
@@ -17,7 +17,7 @@ func convertAccesses[T models.PortainerUserAccessPolicies | models.PortainerTeam
 	return accesses
 }
 
-func convertAccessPolicyRole(role *models.PortainerAccessPolicy) string {
+func convertAccessPolicyRole(role *apimodels.PortainerAccessPolicy) string {
 	switch role.RoleID {
 	case 1:
 		return "environment_administrator"

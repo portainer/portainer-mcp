@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 )
 
 type User struct {
@@ -18,7 +18,7 @@ const (
 	UserRoleUnknown   = "unknown"
 )
 
-func ConvertToUser(u *models.PortainereeUser) User {
+func ConvertToUser(u *apimodels.PortainereeUser) User {
 	return User{
 		ID:       int(u.ID),
 		Username: u.Username,
@@ -26,7 +26,7 @@ func ConvertToUser(u *models.PortainereeUser) User {
 	}
 }
 
-func convertUserRole(u *models.PortainereeUser) string {
+func convertUserRole(u *apimodels.PortainereeUser) string {
 	switch u.Role {
 	case 1:
 		return UserRoleAdmin

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	sdkmodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -13,14 +13,14 @@ import (
 func TestGetEnvironments(t *testing.T) {
 	tests := []struct {
 		name          string
-		mockEndpoints []*sdkmodels.PortainereeEndpoint
+		mockEndpoints []*apimodels.PortainereeEndpoint
 		mockError     error
 		expected      []models.Environment
 		expectedError bool
 	}{
 		{
 			name: "successful retrieval",
-			mockEndpoints: []*sdkmodels.PortainereeEndpoint{
+			mockEndpoints: []*apimodels.PortainereeEndpoint{
 				{
 					ID:      1,
 					Name:    "env1",
@@ -28,19 +28,19 @@ func TestGetEnvironments(t *testing.T) {
 					Status:  1, // active
 					Type:    1, // docker-local
 					TagIds:  []int64{1, 2},
-					UserAccessPolicies: sdkmodels.PortainerUserAccessPolicies{
-						"1": sdkmodels.PortainerAccessPolicy{RoleID: 1}, // environment_administrator
-						"2": sdkmodels.PortainerAccessPolicy{RoleID: 2}, // helpdesk_user
-						"3": sdkmodels.PortainerAccessPolicy{RoleID: 3}, // standard_user
-						"4": sdkmodels.PortainerAccessPolicy{RoleID: 4}, // readonly_user
-						"5": sdkmodels.PortainerAccessPolicy{RoleID: 5}, // operator_user
+					UserAccessPolicies: apimodels.PortainerUserAccessPolicies{
+						"1": apimodels.PortainerAccessPolicy{RoleID: 1}, // environment_administrator
+						"2": apimodels.PortainerAccessPolicy{RoleID: 2}, // helpdesk_user
+						"3": apimodels.PortainerAccessPolicy{RoleID: 3}, // standard_user
+						"4": apimodels.PortainerAccessPolicy{RoleID: 4}, // readonly_user
+						"5": apimodels.PortainerAccessPolicy{RoleID: 5}, // operator_user
 					},
-					TeamAccessPolicies: sdkmodels.PortainerTeamAccessPolicies{
-						"6":  sdkmodels.PortainerAccessPolicy{RoleID: 1}, // environment_administrator
-						"7":  sdkmodels.PortainerAccessPolicy{RoleID: 2}, // helpdesk_user
-						"8":  sdkmodels.PortainerAccessPolicy{RoleID: 3}, // standard_user
-						"9":  sdkmodels.PortainerAccessPolicy{RoleID: 4}, // readonly_user
-						"10": sdkmodels.PortainerAccessPolicy{RoleID: 5}, // operator_user
+					TeamAccessPolicies: apimodels.PortainerTeamAccessPolicies{
+						"6":  apimodels.PortainerAccessPolicy{RoleID: 1}, // environment_administrator
+						"7":  apimodels.PortainerAccessPolicy{RoleID: 2}, // helpdesk_user
+						"8":  apimodels.PortainerAccessPolicy{RoleID: 3}, // standard_user
+						"9":  apimodels.PortainerAccessPolicy{RoleID: 4}, // readonly_user
+						"10": apimodels.PortainerAccessPolicy{RoleID: 5}, // operator_user
 					},
 				},
 				{
@@ -102,7 +102,7 @@ func TestGetEnvironments(t *testing.T) {
 		},
 		{
 			name:          "empty environments",
-			mockEndpoints: []*sdkmodels.PortainereeEndpoint{},
+			mockEndpoints: []*apimodels.PortainereeEndpoint{},
 			expected:      []models.Environment{},
 		},
 		{

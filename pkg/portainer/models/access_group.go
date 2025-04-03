@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 )
 
 type AccessGroup struct {
@@ -12,7 +12,7 @@ type AccessGroup struct {
 	TeamAccesses   map[int]string `json:"team_accesses"`
 }
 
-func ConvertEndpointGroupToAccessGroup(g *models.PortainerEndpointGroup, envs []*models.PortainereeEndpoint) AccessGroup {
+func ConvertEndpointGroupToAccessGroup(g *apimodels.PortainerEndpointGroup, envs []*apimodels.PortainereeEndpoint) AccessGroup {
 	environmentIds := make([]int, 0)
 	for _, env := range envs {
 		if env.GroupID == g.ID {

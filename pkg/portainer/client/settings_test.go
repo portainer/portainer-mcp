@@ -5,24 +5,24 @@ import (
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	sdkmodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetSettings(t *testing.T) {
 	tests := []struct {
 		name          string
-		mockSettings  *sdkmodels.PortainereeSettings
+		mockSettings  *apimodels.PortainereeSettings
 		mockError     error
 		expected      models.PortainerSettings
 		expectedError bool
 	}{
 		{
 			name: "successful retrieval - internal auth",
-			mockSettings: &sdkmodels.PortainereeSettings{
+			mockSettings: &apimodels.PortainereeSettings{
 				AuthenticationMethod:      1, // internal
 				EnableEdgeComputeFeatures: true,
-				Edge: &sdkmodels.PortainereeEdge{
+				Edge: &apimodels.PortainereeEdge{
 					TunnelServerAddress: "tunnel.example.com",
 				},
 			},
@@ -43,10 +43,10 @@ func TestGetSettings(t *testing.T) {
 		},
 		{
 			name: "successful retrieval - ldap auth",
-			mockSettings: &sdkmodels.PortainereeSettings{
+			mockSettings: &apimodels.PortainereeSettings{
 				AuthenticationMethod:      2, // ldap
 				EnableEdgeComputeFeatures: false,
-				Edge: &sdkmodels.PortainereeEdge{
+				Edge: &apimodels.PortainereeEdge{
 					TunnelServerAddress: "tunnel2.example.com",
 				},
 			},
@@ -67,10 +67,10 @@ func TestGetSettings(t *testing.T) {
 		},
 		{
 			name: "successful retrieval - oauth auth",
-			mockSettings: &sdkmodels.PortainereeSettings{
+			mockSettings: &apimodels.PortainereeSettings{
 				AuthenticationMethod:      3, // oauth
 				EnableEdgeComputeFeatures: true,
-				Edge: &sdkmodels.PortainereeEdge{
+				Edge: &apimodels.PortainereeEdge{
 					TunnelServerAddress: "tunnel3.example.com",
 				},
 			},
@@ -91,10 +91,10 @@ func TestGetSettings(t *testing.T) {
 		},
 		{
 			name: "successful retrieval - unknown auth",
-			mockSettings: &sdkmodels.PortainereeSettings{
+			mockSettings: &apimodels.PortainereeSettings{
 				AuthenticationMethod:      0, // unknown
 				EnableEdgeComputeFeatures: false,
-				Edge: &sdkmodels.PortainereeEdge{
+				Edge: &apimodels.PortainereeEdge{
 					TunnelServerAddress: "tunnel4.example.com",
 				},
 			},

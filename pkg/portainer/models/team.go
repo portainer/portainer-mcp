@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 )
 
 type Team struct {
@@ -10,7 +10,7 @@ type Team struct {
 	MemberIDs []int  `json:"members"`
 }
 
-func ConvertToTeam(t *models.PortainerTeam, m []*models.PortainerTeamMembership) Team {
+func ConvertToTeam(t *apimodels.PortainerTeam, m []*apimodels.PortainerTeamMembership) Team {
 	memberIDs := make([]int, 0)
 	for _, member := range m {
 		if member.TeamID == t.ID {

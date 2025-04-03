@@ -10,7 +10,7 @@ import (
 	"github.com/deviantony/portainer-mcp/tests/integration/helpers"
 	mcpmodels "github.com/mark3labs/mcp-go/mcp"
 	"github.com/portainer/client-api-go/v2/client/utils"
-	portainermodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -132,7 +132,7 @@ func TestEnvironmentManagement(t *testing.T) {
 		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
 		require.NoError(t, err, "Failed to get endpoint via client after user access update")
 
-		expectedUserAccesses := utils.BuildAccessPolicies[portainermodels.PortainerUserAccessPolicies](map[int64]string{
+		expectedUserAccesses := utils.BuildAccessPolicies[apimodels.PortainerUserAccessPolicies](map[int64]string{
 			1: "environment_administrator",
 			2: "standard_user",
 		})
@@ -162,7 +162,7 @@ func TestEnvironmentManagement(t *testing.T) {
 		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
 		require.NoError(t, err, "Failed to get endpoint via client after team access update")
 
-		expectedTeamAccesses := utils.BuildAccessPolicies[portainermodels.PortainerTeamAccessPolicies](map[int64]string{
+		expectedTeamAccesses := utils.BuildAccessPolicies[apimodels.PortainerTeamAccessPolicies](map[int64]string{
 			1: "environment_administrator",
 			2: "standard_user",
 		})

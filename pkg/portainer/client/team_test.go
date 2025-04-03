@@ -5,15 +5,15 @@ import (
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	sdkmodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetTeams(t *testing.T) {
 	tests := []struct {
 		name            string
-		mockTeams       []*sdkmodels.PortainerTeam
-		mockMemberships []*sdkmodels.PortainerTeamMembership
+		mockTeams       []*apimodels.PortainerTeam
+		mockMemberships []*apimodels.PortainerTeamMembership
 		mockTeamError   error
 		mockMemberError error
 		expected        []models.Team
@@ -21,7 +21,7 @@ func TestGetTeams(t *testing.T) {
 	}{
 		{
 			name: "successful retrieval",
-			mockTeams: []*sdkmodels.PortainerTeam{
+			mockTeams: []*apimodels.PortainerTeam{
 				{
 					ID:   1,
 					Name: "team1",
@@ -31,7 +31,7 @@ func TestGetTeams(t *testing.T) {
 					Name: "team2",
 				},
 			},
-			mockMemberships: []*sdkmodels.PortainerTeamMembership{
+			mockMemberships: []*apimodels.PortainerTeamMembership{
 				{
 					ID:     1,
 					UserID: 100,
@@ -63,7 +63,7 @@ func TestGetTeams(t *testing.T) {
 		},
 		{
 			name: "teams with empty memberships",
-			mockTeams: []*sdkmodels.PortainerTeam{
+			mockTeams: []*apimodels.PortainerTeam{
 				{
 					ID:   1,
 					Name: "team1",
@@ -73,7 +73,7 @@ func TestGetTeams(t *testing.T) {
 					Name: "team2",
 				},
 			},
-			mockMemberships: []*sdkmodels.PortainerTeamMembership{},
+			mockMemberships: []*apimodels.PortainerTeamMembership{},
 			expected: []models.Team{
 				{
 					ID:        1,
@@ -89,8 +89,8 @@ func TestGetTeams(t *testing.T) {
 		},
 		{
 			name:            "empty teams",
-			mockTeams:       []*sdkmodels.PortainerTeam{},
-			mockMemberships: []*sdkmodels.PortainerTeamMembership{},
+			mockTeams:       []*apimodels.PortainerTeam{},
+			mockMemberships: []*apimodels.PortainerTeamMembership{},
 			expected:        []models.Team{},
 		},
 		{
@@ -100,7 +100,7 @@ func TestGetTeams(t *testing.T) {
 		},
 		{
 			name: "list memberships error",
-			mockTeams: []*sdkmodels.PortainerTeam{
+			mockTeams: []*apimodels.PortainerTeam{
 				{
 					ID:   1,
 					Name: "team1",
@@ -221,7 +221,7 @@ func TestUpdateTeamMembers(t *testing.T) {
 		name            string
 		teamID          int
 		userIDs         []int
-		mockMemberships []*sdkmodels.PortainerTeamMembership
+		mockMemberships []*apimodels.PortainerTeamMembership
 		mockListError   error
 		mockDeleteError error
 		mockCreateError error
@@ -231,7 +231,7 @@ func TestUpdateTeamMembers(t *testing.T) {
 			name:    "successful update - add and remove members",
 			teamID:  1,
 			userIDs: []int{101, 102}, // Want to keep 101 and add 102
-			mockMemberships: []*sdkmodels.PortainerTeamMembership{
+			mockMemberships: []*apimodels.PortainerTeamMembership{
 				{
 					ID:     1,
 					UserID: 100, // Should be removed
@@ -248,7 +248,7 @@ func TestUpdateTeamMembers(t *testing.T) {
 			name:    "successful update - no changes needed",
 			teamID:  1,
 			userIDs: []int{100, 101},
-			mockMemberships: []*sdkmodels.PortainerTeamMembership{
+			mockMemberships: []*apimodels.PortainerTeamMembership{
 				{
 					ID:     1,
 					UserID: 100,
@@ -272,7 +272,7 @@ func TestUpdateTeamMembers(t *testing.T) {
 			name:    "delete membership error",
 			teamID:  1,
 			userIDs: []int{101}, // Want to remove 100
-			mockMemberships: []*sdkmodels.PortainerTeamMembership{
+			mockMemberships: []*apimodels.PortainerTeamMembership{
 				{
 					ID:     1,
 					UserID: 100,
@@ -286,7 +286,7 @@ func TestUpdateTeamMembers(t *testing.T) {
 			name:            "create membership error",
 			teamID:          1,
 			userIDs:         []int{100}, // Want to add 100
-			mockMemberships: []*sdkmodels.PortainerTeamMembership{},
+			mockMemberships: []*apimodels.PortainerTeamMembership{},
 			mockCreateError: errors.New("failed to create membership"),
 			expectedError:   true,
 		},

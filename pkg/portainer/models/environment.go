@@ -2,7 +2,7 @@ package models
 
 import (
 	"github.com/deviantony/portainer-mcp/pkg/portainer/utils"
-	"github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 )
 
 type Environment struct {
@@ -34,7 +34,7 @@ const (
 	EnvironmentTypeUnknown             = "unknown"
 )
 
-func ConvertEndpointToEnvironment(e *models.PortainereeEndpoint) Environment {
+func ConvertEndpointToEnvironment(e *apimodels.PortainereeEndpoint) Environment {
 	return Environment{
 		ID:           int(e.ID),
 		Name:         e.Name,
@@ -46,7 +46,7 @@ func ConvertEndpointToEnvironment(e *models.PortainereeEndpoint) Environment {
 	}
 }
 
-func convertEnvironmentStatus(e *models.PortainereeEndpoint) string {
+func convertEnvironmentStatus(e *apimodels.PortainereeEndpoint) string {
 	switch e.Status {
 	case 1:
 		return EnvironmentStatusActive
@@ -57,7 +57,7 @@ func convertEnvironmentStatus(e *models.PortainereeEndpoint) string {
 	}
 }
 
-func convertEnvironmentType(e *models.PortainereeEndpoint) string {
+func convertEnvironmentType(e *apimodels.PortainereeEndpoint) string {
 	switch e.Type {
 	case 1:
 		return EnvironmentTypeDockerLocal

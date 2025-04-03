@@ -7,7 +7,7 @@ import (
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
 	"github.com/deviantony/portainer-mcp/pkg/portainer/utils"
-	sdkmodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,14 +15,14 @@ func TestGetStacks(t *testing.T) {
 	now := time.Now().Unix()
 	tests := []struct {
 		name          string
-		mockStacks    []*sdkmodels.PortainereeEdgeStack
+		mockStacks    []*apimodels.PortainereeEdgeStack
 		mockError     error
 		expected      []models.Stack
 		expectedError bool
 	}{
 		{
 			name: "successful retrieval",
-			mockStacks: []*sdkmodels.PortainereeEdgeStack{
+			mockStacks: []*apimodels.PortainereeEdgeStack{
 				{
 					ID:           1,
 					Name:         "stack1",
@@ -53,7 +53,7 @@ func TestGetStacks(t *testing.T) {
 		},
 		{
 			name:       "empty stacks",
-			mockStacks: []*sdkmodels.PortainereeEdgeStack{},
+			mockStacks: []*apimodels.PortainereeEdgeStack{},
 			expected:   []models.Stack{},
 		},
 		{
