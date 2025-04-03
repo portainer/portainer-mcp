@@ -11,13 +11,13 @@ import (
 )
 
 func (s *PortainerMCPServer) AddEnvironmentFeatures() {
-	s.addToolIfExists(ToolListEnvironments, s.handleGetEnvironments())
-	s.addToolIfExists(ToolUpdateEnvironmentTags, s.handleUpdateEnvironmentTags())
-	s.addToolIfExists(ToolUpdateEnvironmentUserAccesses, s.handleUpdateEnvironmentUserAccesses())
-	s.addToolIfExists(ToolUpdateEnvironmentTeamAccesses, s.handleUpdateEnvironmentTeamAccesses())
+	s.addToolIfExists(ToolListEnvironments, s.HandleGetEnvironments())
+	s.addToolIfExists(ToolUpdateEnvironmentTags, s.HandleUpdateEnvironmentTags())
+	s.addToolIfExists(ToolUpdateEnvironmentUserAccesses, s.HandleUpdateEnvironmentUserAccesses())
+	s.addToolIfExists(ToolUpdateEnvironmentTeamAccesses, s.HandleUpdateEnvironmentTeamAccesses())
 }
 
-func (s *PortainerMCPServer) handleGetEnvironments() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleGetEnvironments() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		environments, err := s.cli.GetEnvironments()
 		if err != nil {
@@ -33,7 +33,7 @@ func (s *PortainerMCPServer) handleGetEnvironments() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateEnvironmentTags() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateEnvironmentTags() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -56,7 +56,7 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentTags() server.ToolHandlerFun
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateEnvironmentUserAccesses() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateEnvironmentUserAccesses() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -84,7 +84,7 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentUserAccesses() server.ToolHa
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateEnvironmentTeamAccesses() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateEnvironmentTeamAccesses() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 

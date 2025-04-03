@@ -44,7 +44,7 @@ func TestHandleGetEnvironments(t *testing.T) {
 				cli: mockClient,
 			}
 
-			handler := server.handleGetEnvironments()
+			handler := server.HandleGetEnvironments()
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			if tt.expectError {
@@ -147,7 +147,7 @@ func TestHandleUpdateEnvironmentTags(t *testing.T) {
 
 			tt.setupParams(&request)
 
-			handler := server.handleUpdateEnvironmentTags()
+			handler := server.HandleUpdateEnvironmentTags()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -271,7 +271,7 @@ func TestHandleUpdateEnvironmentUserAccesses(t *testing.T) {
 
 			tt.setupParams(&request)
 
-			handler := server.handleUpdateEnvironmentUserAccesses()
+			handler := server.HandleUpdateEnvironmentUserAccesses()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -395,7 +395,7 @@ func TestHandleUpdateEnvironmentTeamAccesses(t *testing.T) {
 
 			tt.setupParams(&request)
 
-			handler := server.handleUpdateEnvironmentTeamAccesses()
+			handler := server.HandleUpdateEnvironmentTeamAccesses()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
