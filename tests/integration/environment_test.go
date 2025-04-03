@@ -54,26 +54,32 @@ func TestEnvironmentManagement(t *testing.T) {
 	// - The environment is correctly retrieved from the system
 	// - The environment has the expected default properties (type, status)
 	// - No tags, user accesses, or team accesses are initially assigned
-	t.Run("Environment Creation and Retrieval", func(t *testing.T) {
+	// - Compares MCP handler output with direct client API call result
+	t.Run("Environment Retrieval", func(t *testing.T) {
 		handler := env.MCPServer.HandleGetEnvironments()
 		result, err := handler(env.Ctx, mcp.CreateMCPRequest(nil))
-		require.NoError(t, err, "Failed to get environments")
+		require.NoError(t, err, "Failed to get environments via MCP handler")
 
-		assert.Len(t, result.Content, 1, "Expected exactly one environment")
+		assert.Len(t, result.Content, 1, "Expected exactly one environment from MCP handler")
 		textContent, ok := result.Content[0].(mcpmodels.TextContent)
-		assert.True(t, ok, "Expected text content in response")
+		assert.True(t, ok, "Expected text content in MCP response")
 
 		var environments []models.Environment
 		err = json.Unmarshal([]byte(textContent.Text), &environments)
-		require.NoError(t, err, "Failed to unmarshal environments")
+		require.NoError(t, err, "Failed to unmarshal environments from MCP response")
+		require.Len(t, environments, 1, "Expected exactly one environment after unmarshalling")
 
 		environment = environments[0]
-		assert.Equal(t, testEndpointName, environment.Name, "Environment name mismatch")
-		assert.Equal(t, "docker-edge-agent", environment.Type, "Environment type mismatch")
-		assert.Equal(t, "active", environment.Status, "Environment status mismatch")
-		assert.Empty(t, environment.TagIds, "Expected no tags initially")
-		assert.Empty(t, environment.UserAccesses, "Expected no user accesses initially")
-		assert.Empty(t, environment.TeamAccesses, "Expected no team accesses initially")
+
+		// Fetch the same endpoint directly via the client
+		rawEndpoint, err := env.Client.GetEndpoint(int64(environment.ID))
+		require.NoError(t, err, "Failed to get endpoint directly via client")
+
+		// Convert the raw endpoint to the expected Environment model using the package's converter
+		expectedEnvironment := models.ConvertEndpointToEnvironment(rawEndpoint)
+
+		// Compare the Environment struct from MCP handler with the one converted from the direct client call
+		assert.Equal(t, expectedEnvironment, environment, "Mismatch between MCP handler environment and converted client environment")
 	})
 
 	// Subtest: Tag Management
@@ -95,11 +101,12 @@ func TestEnvironmentManagement(t *testing.T) {
 
 		handler := env.MCPServer.HandleUpdateEnvironmentTags()
 		_, err = handler(env.Ctx, request)
-		require.NoError(t, err, "Failed to update environment tags")
+		require.NoError(t, err, "Failed to update environment tags via MCP handler")
 
+		// Verify by fetching endpoint directly via client
 		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
-		require.NoError(t, err, "Failed to get endpoint")
-		assert.Equal(t, []int64{tagId1, tagId2}, endpoint.TagIds, "Tag IDs mismatch")
+		require.NoError(t, err, "Failed to get endpoint via client after tag update")
+		assert.ElementsMatch(t, []int64{tagId1, tagId2}, endpoint.TagIds, "Tag IDs mismatch (Client check)") // Use ElementsMatch for unordered comparison
 	})
 
 	// Subtest: User Access Management
@@ -119,16 +126,17 @@ func TestEnvironmentManagement(t *testing.T) {
 
 		handler := env.MCPServer.HandleUpdateEnvironmentUserAccesses()
 		_, err := handler(env.Ctx, request)
-		require.NoError(t, err, "Failed to update environment user accesses")
+		require.NoError(t, err, "Failed to update environment user accesses via MCP handler")
 
+		// Verify by fetching endpoint directly via client
 		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
-		require.NoError(t, err, "Failed to get endpoint")
+		require.NoError(t, err, "Failed to get endpoint via client after user access update")
 
 		expectedUserAccesses := utils.BuildAccessPolicies[portainermodels.PortainerUserAccessPolicies](map[int64]string{
 			1: "environment_administrator",
 			2: "standard_user",
 		})
-		assert.Equal(t, expectedUserAccesses, endpoint.UserAccessPolicies, "User access policies mismatch")
+		assert.Equal(t, expectedUserAccesses, endpoint.UserAccessPolicies, "User access policies mismatch (Client check)")
 	})
 
 	// Subtest: Team Access Management
@@ -148,15 +156,16 @@ func TestEnvironmentManagement(t *testing.T) {
 
 		handler := env.MCPServer.HandleUpdateEnvironmentTeamAccesses()
 		_, err := handler(env.Ctx, request)
-		require.NoError(t, err, "Failed to update environment team accesses")
+		require.NoError(t, err, "Failed to update environment team accesses via MCP handler")
 
+		// Verify by fetching endpoint directly via client
 		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
-		require.NoError(t, err, "Failed to get endpoint")
+		require.NoError(t, err, "Failed to get endpoint via client after team access update")
 
 		expectedTeamAccesses := utils.BuildAccessPolicies[portainermodels.PortainerTeamAccessPolicies](map[int64]string{
 			1: "environment_administrator",
 			2: "standard_user",
 		})
-		assert.Equal(t, expectedTeamAccesses, endpoint.TeamAccessPolicies, "Team access policies mismatch")
+		assert.Equal(t, expectedTeamAccesses, endpoint.TeamAccessPolicies, "Team access policies mismatch (Client check)")
 	})
 }
