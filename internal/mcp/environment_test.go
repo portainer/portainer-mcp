@@ -133,18 +133,7 @@ func TestHandleUpdateEnvironmentTags(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
 			handler := server.HandleUpdateEnvironmentTags()
@@ -257,18 +246,7 @@ func TestHandleUpdateEnvironmentUserAccesses(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
 			handler := server.HandleUpdateEnvironmentUserAccesses()
@@ -381,18 +359,7 @@ func TestHandleUpdateEnvironmentTeamAccesses(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
 			handler := server.HandleUpdateEnvironmentTeamAccesses()

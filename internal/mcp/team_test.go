@@ -46,7 +46,9 @@ func TestHandleCreateTeam(t *testing.T) {
 			mockID:      0,
 			mockError:   nil,
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {},
+			setupParams: func(request *mcp.CallToolRequest) {
+				// No need to set any parameters as the request will be invalid
+			},
 		},
 	}
 
@@ -61,18 +63,7 @@ func TestHandleCreateTeam(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
 			handler := server.handleCreateTeam()
@@ -218,18 +209,7 @@ func TestHandleUpdateTeamName(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
 			handler := server.handleUpdateTeamName()
@@ -317,18 +297,7 @@ func TestHandleUpdateTeamMembers(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
 			handler := server.handleUpdateTeamMembers()

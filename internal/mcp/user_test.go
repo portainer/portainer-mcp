@@ -152,19 +152,7 @@ func TestHandleUpdateUserRole(t *testing.T) {
 			}
 
 			// Create request with parameters
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
-			// Setup parameters
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
 			// Call handler

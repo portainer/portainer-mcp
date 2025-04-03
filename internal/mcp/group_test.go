@@ -134,18 +134,7 @@ func TestHandleCreateEnvironmentGroup(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
 			handler := server.handleCreateEnvironmentGroup()
@@ -176,7 +165,7 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 		inputName   string
 		mockError   error
 		expectError bool
-		setupParams func(request *mcp.CallToolRequest)
+		setupParams func(request mcp.CallToolRequest) mcp.CallToolRequest
 	}{
 		{
 			name:        "successful name update",
@@ -184,9 +173,10 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			inputName:   "newname",
 			mockError:   nil,
 			expectError: false,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["name"] = "newname"
+				return request
 			},
 		},
 		{
@@ -195,9 +185,10 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			inputName:   "newname",
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["name"] = "newname"
+				return request
 			},
 		},
 		{
@@ -205,8 +196,9 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			inputName:   "newname",
 			mockError:   nil,
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["name"] = "newname"
+				return request
 			},
 		},
 		{
@@ -214,8 +206,9 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			inputID:     1,
 			mockError:   nil,
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
+				return request
 			},
 		},
 	}
@@ -231,19 +224,8 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
-			tt.setupParams(&request)
+			request := CreateMCPRequest(map[string]any{})
+			request = tt.setupParams(request)
 
 			handler := server.handleUpdateEnvironmentGroupName()
 			result, err := handler(context.Background(), request)
@@ -274,7 +256,7 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 		inputEnvIDs []int
 		mockError   error
 		expectError bool
-		setupParams func(request *mcp.CallToolRequest)
+		setupParams func(request mcp.CallToolRequest) mcp.CallToolRequest
 	}{
 		{
 			name:        "successful environments update",
@@ -283,10 +265,11 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			inputEnvIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: false,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				return request
 			},
 		},
 		{
@@ -296,10 +279,11 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			inputEnvIDs: []int{1, 2, 3},
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				return request
 			},
 		},
 		{
@@ -308,9 +292,10 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			inputEnvIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				return request
 			},
 		},
 		{
@@ -319,9 +304,10 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			inputEnvIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				return request
 			},
 		},
 		{
@@ -330,9 +316,10 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			inputName:   "group1",
 			mockError:   nil,
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["name"] = "group1"
+				return request
 			},
 		},
 	}
@@ -348,19 +335,8 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
-			tt.setupParams(&request)
+			request := CreateMCPRequest(map[string]any{})
+			request = tt.setupParams(request)
 
 			handler := server.handleUpdateEnvironmentGroupEnvironments()
 			result, err := handler(context.Background(), request)
@@ -391,7 +367,7 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 		inputTagIDs []int
 		mockError   error
 		expectError bool
-		setupParams func(request *mcp.CallToolRequest)
+		setupParams func(request mcp.CallToolRequest) mcp.CallToolRequest
 	}{
 		{
 			name:        "successful tags update",
@@ -400,10 +376,11 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			inputTagIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: false,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				return request
 			},
 		},
 		{
@@ -413,10 +390,11 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			inputTagIDs: []int{1, 2, 3},
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				return request
 			},
 		},
 		{
@@ -425,9 +403,10 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			inputTagIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				return request
 			},
 		},
 		{
@@ -436,9 +415,10 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			inputTagIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				return request
 			},
 		},
 		{
@@ -447,9 +427,10 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			inputName:   "group1",
 			mockError:   nil,
 			expectError: true,
-			setupParams: func(request *mcp.CallToolRequest) {
+			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["name"] = "group1"
+				return request
 			},
 		},
 	}
@@ -465,19 +446,8 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
-			tt.setupParams(&request)
+			request := CreateMCPRequest(map[string]any{})
+			request = tt.setupParams(request)
 
 			handler := server.handleUpdateEnvironmentGroupTags()
 			result, err := handler(context.Background(), request)

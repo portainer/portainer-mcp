@@ -122,19 +122,7 @@ func TestHandleCreateEnvironmentTag(t *testing.T) {
 			}
 
 			// Create request with parameters
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
-			// Only add the name parameter if it's not empty
+			request := CreateMCPRequest(map[string]any{})
 			if tt.inputName != "" {
 				request.Params.Arguments["name"] = tt.inputName
 			}
