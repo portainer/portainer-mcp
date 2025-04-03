@@ -2,12 +2,14 @@ package integration
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/internal/mcp"
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
 	"github.com/deviantony/portainer-mcp/tests/integration/helpers"
 	mcpmodels "github.com/mark3labs/mcp-go/mcp"
+	"github.com/portainer/client-api-go/v2/client/utils"
 	portainermodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,23 +22,38 @@ const (
 	testTag2Name     = "tag2"
 )
 
+// prepareTestEnvironment prepares the test environment for the tests
+// It enables Edge Compute settings and creates an Edge Docker endpoint
+func prepareTestEnvironment(t *testing.T, env *helpers.TestEnv) {
+	host, port := env.Portainer.GetHostAndPort()
+	serverAddr := fmt.Sprintf("%s:%s", host, port)
+	tunnelAddr := fmt.Sprintf("%s:8000", host)
+
+	err := env.Client.UpdateSettings(true, serverAddr, tunnelAddr)
+	require.NoError(t, err, "Failed to update settings")
+
+	_, err = env.Client.CreateEdgeDockerEndpoint(testEndpointName)
+	require.NoError(t, err, "Failed to create Edge Docker endpoint")
+}
+
 // TestEnvironmentManagement is an integration test suite that verifies the complete
-// lifecycle of environment management in Portainer MCP. It tests the creation and
+// lifecycle of environment management in Portainer MCP. It tests the retrieval and
 // configuration of environments, including tag management, user access controls,
 // and team access policies.
 func TestEnvironmentManagement(t *testing.T) {
 	env := helpers.NewTestEnv(t)
 	defer env.Cleanup(t)
 
-	// Initialize environment settings
-	env.InitializeEnvironment(t)
-
-	_, err := env.Client.CreateEdgeDockerEndpoint(testEndpointName)
-	require.NoError(t, err, "Failed to create local Docker endpoint")
+	// Prepare the test environment
+	prepareTestEnvironment(t, env)
 
 	var environment models.Environment
 
-	// Subtest: Environment Creation and Retrieval
+	// Subtest: Environment Retrieval
+	// Verifies that:
+	// - The environment is correctly retrieved from the system
+	// - The environment has the expected default properties (type, status)
+	// - No tags, user accesses, or team accesses are initially assigned
 	t.Run("Environment Creation and Retrieval", func(t *testing.T) {
 		handler := env.MCPServer.HandleGetEnvironments()
 		result, err := handler(env.Ctx, mcp.CreateMCPRequest(nil))
@@ -60,6 +77,11 @@ func TestEnvironmentManagement(t *testing.T) {
 	})
 
 	// Subtest: Tag Management
+	// Verifies that:
+	// - New tags can be created in the system
+	// - Multiple tags can be assigned to an environment simultaneously
+	// - The environment correctly reflects the assigned tag IDs
+	// - The tags are properly persisted in the endpoint configuration
 	t.Run("Tag Management", func(t *testing.T) {
 		tagId1, err := env.Client.CreateTag(testTag1Name)
 		require.NoError(t, err, "Failed to create first tag")
@@ -81,6 +103,11 @@ func TestEnvironmentManagement(t *testing.T) {
 	})
 
 	// Subtest: User Access Management
+	// Verifies that:
+	// - User access policies can be assigned to an environment
+	// - Multiple users with different access levels can be configured
+	// - Access levels are correctly mapped to appropriate role IDs
+	// - The environment's user access policies are properly updated and persisted
 	t.Run("User Access Management", func(t *testing.T) {
 		request := mcp.CreateMCPRequest(map[string]any{
 			"id": float64(environment.ID),
@@ -91,19 +118,25 @@ func TestEnvironmentManagement(t *testing.T) {
 		})
 
 		handler := env.MCPServer.HandleUpdateEnvironmentUserAccesses()
-		_, err = handler(env.Ctx, request)
+		_, err := handler(env.Ctx, request)
 		require.NoError(t, err, "Failed to update environment user accesses")
 
 		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
 		require.NoError(t, err, "Failed to get endpoint")
-		expectedUserAccesses := portainermodels.PortainerUserAccessPolicies{
-			"1": portainermodels.PortainerAccessPolicy{RoleID: int64(1)}, // environment_administrator
-			"2": portainermodels.PortainerAccessPolicy{RoleID: int64(3)}, // standard_user
-		}
+
+		expectedUserAccesses := utils.BuildAccessPolicies[portainermodels.PortainerUserAccessPolicies](map[int64]string{
+			1: "environment_administrator",
+			2: "standard_user",
+		})
 		assert.Equal(t, expectedUserAccesses, endpoint.UserAccessPolicies, "User access policies mismatch")
 	})
 
 	// Subtest: Team Access Management
+	// Verifies that:
+	// - Team access policies can be assigned to an environment
+	// - Multiple teams with different access levels can be configured
+	// - Access levels are correctly mapped to appropriate role IDs
+	// - The environment's team access policies are properly updated and persisted
 	t.Run("Team Access Management", func(t *testing.T) {
 		request := mcp.CreateMCPRequest(map[string]any{
 			"id": float64(environment.ID),
@@ -114,15 +147,16 @@ func TestEnvironmentManagement(t *testing.T) {
 		})
 
 		handler := env.MCPServer.HandleUpdateEnvironmentTeamAccesses()
-		_, err = handler(env.Ctx, request)
+		_, err := handler(env.Ctx, request)
 		require.NoError(t, err, "Failed to update environment team accesses")
 
 		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
 		require.NoError(t, err, "Failed to get endpoint")
-		expectedTeamAccesses := portainermodels.PortainerTeamAccessPolicies{
-			"1": portainermodels.PortainerAccessPolicy{RoleID: int64(1)}, // environment_administrator
-			"2": portainermodels.PortainerAccessPolicy{RoleID: int64(3)}, // standard_user
-		}
+
+		expectedTeamAccesses := utils.BuildAccessPolicies[portainermodels.PortainerTeamAccessPolicies](map[int64]string{
+			1: "environment_administrator",
+			2: "standard_user",
+		})
 		assert.Equal(t, expectedTeamAccesses, endpoint.TeamAccessPolicies, "Team access policies mismatch")
 	})
 }

@@ -56,17 +56,3 @@ func (e *TestEnv) Cleanup(t *testing.T) {
 		t.Logf("Failed to terminate container: %v", err)
 	}
 }
-
-// GetServerURL returns the server URL for the test environment
-func (e *TestEnv) GetServerURL() string {
-	host, port := e.Portainer.GetHostAndPort()
-	return fmt.Sprintf("%s:%s", host, port)
-}
-
-// InitializeEnvironment sets up the initial environment settings
-func (e *TestEnv) InitializeEnvironment(t *testing.T) {
-	host, port := e.Portainer.GetHostAndPort()
-	serverURL := fmt.Sprintf("%s:%s", host, port)
-	err := e.Client.UpdateSettings(true, serverURL, fmt.Sprintf("%s:8000", host))
-	require.NoError(t, err, "Failed to update settings")
-}

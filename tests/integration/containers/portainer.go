@@ -97,9 +97,8 @@ func NewPortainerContainer(ctx context.Context) (*PortainerContainer, error) {
 		APIHost:   host,
 	}
 
-	// Initialize admin user
-	if err := pc.initializeAdmin(); err != nil {
-		return nil, fmt.Errorf("failed to initialize admin user: %w", err)
+	if err := pc.registerAPIToken(); err != nil {
+		return nil, fmt.Errorf("failed to register API token: %w", err)
 	}
 
 	return pc, nil
@@ -119,10 +118,11 @@ func (pc *PortainerContainer) GetAPIToken() string {
 	return pc.apiToken
 }
 
-// initializeAdmin sets up the initial admin user
-func (pc *PortainerContainer) initializeAdmin() error {
-	// SDK implementation kept as reference - doesn't work because of an issue with the client-api-go
+// registerAPIToken registers an API token for the admin user
+func (pc *PortainerContainer) registerAPIToken() error {
+	// SDK implementation kept as reference - doesn't work currently because of an issue with the client-api-go
 	// See: https://github.com/portainer/portainer-suite/pull/604
+	// Once this PR is merged and a new version of the client-api-go is released, we can use it again
 	/*
 		transport := httptransport.New(
 			fmt.Sprintf("%s:%s", pc.APIHost, pc.APIPort.Port()),
@@ -174,6 +174,7 @@ func (pc *PortainerContainer) initializeAdmin() error {
 	*/
 
 	// Direct HTTP implementation
+	// alternative to the SDK implementation above
 	httpClient := &http.Client{
 		Timeout: requestTimeout,
 		Transport: &http.Transport{
