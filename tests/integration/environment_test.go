@@ -29,10 +29,10 @@ func prepareTestEnvironment(t *testing.T, env *helpers.TestEnv) {
 	serverAddr := fmt.Sprintf("%s:%s", host, port)
 	tunnelAddr := fmt.Sprintf("%s:8000", host)
 
-	err := env.Client.UpdateSettings(true, serverAddr, tunnelAddr)
+	err := env.RawClient.UpdateSettings(true, serverAddr, tunnelAddr)
 	require.NoError(t, err, "Failed to update settings")
 
-	_, err = env.Client.CreateEdgeDockerEndpoint(testEndpointName)
+	_, err = env.RawClient.CreateEdgeDockerEndpoint(testEndpointName)
 	require.NoError(t, err, "Failed to create Edge Docker endpoint")
 }
 
@@ -72,7 +72,7 @@ func TestEnvironmentManagement(t *testing.T) {
 		environment = environments[0]
 
 		// Fetch the same endpoint directly via the client
-		rawEndpoint, err := env.Client.GetEndpoint(int64(environment.ID))
+		rawEndpoint, err := env.RawClient.GetEndpoint(int64(environment.ID))
 		require.NoError(t, err, "Failed to get endpoint directly via client")
 
 		// Convert the raw endpoint to the expected Environment model using the package's converter
@@ -89,9 +89,9 @@ func TestEnvironmentManagement(t *testing.T) {
 	// - The environment correctly reflects the assigned tag IDs
 	// - The tags are properly persisted in the endpoint configuration
 	t.Run("Tag Management", func(t *testing.T) {
-		tagId1, err := env.Client.CreateTag(testTag1Name)
+		tagId1, err := env.RawClient.CreateTag(testTag1Name)
 		require.NoError(t, err, "Failed to create first tag")
-		tagId2, err := env.Client.CreateTag(testTag2Name)
+		tagId2, err := env.RawClient.CreateTag(testTag2Name)
 		require.NoError(t, err, "Failed to create second tag")
 
 		request := mcp.CreateMCPRequest(map[string]any{
@@ -104,9 +104,9 @@ func TestEnvironmentManagement(t *testing.T) {
 		require.NoError(t, err, "Failed to update environment tags via MCP handler")
 
 		// Verify by fetching endpoint directly via client
-		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
+		rawEndpoint, err := env.RawClient.GetEndpoint(int64(environment.ID))
 		require.NoError(t, err, "Failed to get endpoint via client after tag update")
-		assert.ElementsMatch(t, []int64{tagId1, tagId2}, endpoint.TagIds, "Tag IDs mismatch (Client check)") // Use ElementsMatch for unordered comparison
+		assert.ElementsMatch(t, []int64{tagId1, tagId2}, rawEndpoint.TagIds, "Tag IDs mismatch (Client check)") // Use ElementsMatch for unordered comparison
 	})
 
 	// Subtest: User Access Management
@@ -129,14 +129,14 @@ func TestEnvironmentManagement(t *testing.T) {
 		require.NoError(t, err, "Failed to update environment user accesses via MCP handler")
 
 		// Verify by fetching endpoint directly via client
-		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
+		rawEndpoint, err := env.RawClient.GetEndpoint(int64(environment.ID))
 		require.NoError(t, err, "Failed to get endpoint via client after user access update")
 
-		expectedUserAccesses := utils.BuildAccessPolicies[apimodels.PortainerUserAccessPolicies](map[int64]string{
+		expectedRawUserAccesses := utils.BuildAccessPolicies[apimodels.PortainerUserAccessPolicies](map[int64]string{
 			1: "environment_administrator",
 			2: "standard_user",
 		})
-		assert.Equal(t, expectedUserAccesses, endpoint.UserAccessPolicies, "User access policies mismatch (Client check)")
+		assert.Equal(t, expectedRawUserAccesses, rawEndpoint.UserAccessPolicies, "User access policies mismatch (Client check)")
 	})
 
 	// Subtest: Team Access Management
@@ -159,13 +159,13 @@ func TestEnvironmentManagement(t *testing.T) {
 		require.NoError(t, err, "Failed to update environment team accesses via MCP handler")
 
 		// Verify by fetching endpoint directly via client
-		endpoint, err := env.Client.GetEndpoint(int64(environment.ID))
+		rawEndpoint, err := env.RawClient.GetEndpoint(int64(environment.ID))
 		require.NoError(t, err, "Failed to get endpoint via client after team access update")
 
-		expectedTeamAccesses := utils.BuildAccessPolicies[apimodels.PortainerTeamAccessPolicies](map[int64]string{
+		expectedRawTeamAccesses := utils.BuildAccessPolicies[apimodels.PortainerTeamAccessPolicies](map[int64]string{
 			1: "environment_administrator",
 			2: "standard_user",
 		})
-		assert.Equal(t, expectedTeamAccesses, endpoint.TeamAccessPolicies, "Team access policies mismatch (Client check)")
+		assert.Equal(t, expectedRawTeamAccesses, rawEndpoint.TeamAccessPolicies, "Team access policies mismatch (Client check)")
 	})
 }

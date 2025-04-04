@@ -75,7 +75,6 @@ To improve clarity, especially in files where both model types might appear (lik
 import (
     "github.com/deviantony/portainer-mcp/pkg/portainer/models" // Default: models (Local MCP Models)
     apimodels "github.com/portainer/client-api-go/v2/pkg/models"      // Alias: apimodels (Raw Client-API-Go Models)
-    // Alternatively: rawmodels "..." 
 )
 ```
 

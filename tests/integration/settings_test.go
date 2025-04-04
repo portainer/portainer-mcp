@@ -21,7 +21,7 @@ func prepareTestEnvironmentSettings(t *testing.T, env *helpers.TestEnv) {
 	tunnelAddr := fmt.Sprintf("%s:8000", host)
 
 	// Enable Edge Compute settings which is a prerequisite for some setting retrieval
-	err := env.Client.UpdateSettings(true, serverAddr, tunnelAddr)
+	err := env.RawClient.UpdateSettings(true, serverAddr, tunnelAddr)
 	require.NoError(t, err, "Failed to update settings for test preparation")
 }
 
@@ -54,7 +54,7 @@ func TestSettingsManagement(t *testing.T) {
 
 		// Fetch settings directly via client to compare
 		// Note: env.Client.GetSettings() returns the raw client-api-go settings struct
-		rawSettings, err := env.Client.GetSettings()
+		rawSettings, err := env.RawClient.GetSettings()
 		require.NoError(t, err, "Failed to get settings directly via client for comparison")
 
 		// Convert the raw settings using the package's conversion function

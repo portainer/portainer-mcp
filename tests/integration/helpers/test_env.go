@@ -19,7 +19,7 @@ const (
 type TestEnv struct {
 	Ctx       context.Context
 	Portainer *containers.PortainerContainer
-	Client    *client.PortainerClient
+	RawClient *client.PortainerClient
 	MCPServer *mcp.PortainerMCPServer
 }
 
@@ -33,7 +33,7 @@ func NewTestEnv(t *testing.T) *TestEnv {
 	host, port := portainer.GetHostAndPort()
 	serverURL := fmt.Sprintf("%s:%s", host, port)
 
-	cli := client.NewPortainerClient(
+	rawCli := client.NewPortainerClient(
 		serverURL,
 		portainer.GetAPIToken(),
 		client.WithSkipTLSVerify(true),
@@ -45,7 +45,7 @@ func NewTestEnv(t *testing.T) *TestEnv {
 	return &TestEnv{
 		Ctx:       ctx,
 		Portainer: portainer,
-		Client:    cli,
+		RawClient: rawCli,
 		MCPServer: mcpServer,
 	}
 }
