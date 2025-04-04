@@ -2,7 +2,6 @@ package integration
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/internal/mcp"
@@ -13,26 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// prepareTestEnvironmentSettings prepares the test environment for the tests.
-// It enables Edge Compute settings.
-func prepareTestEnvironmentSettings(t *testing.T, env *helpers.TestEnv) {
-	host, port := env.Portainer.GetHostAndPort()
-	serverAddr := fmt.Sprintf("%s:%s", host, port)
-	tunnelAddr := fmt.Sprintf("%s:8000", host)
-
-	// Enable Edge Compute settings which is a prerequisite for some setting retrieval
-	err := env.RawClient.UpdateSettings(true, serverAddr, tunnelAddr)
-	require.NoError(t, err, "Failed to update settings for test preparation")
-}
-
 // TestSettingsManagement is an integration test suite that verifies the retrieval
 // of Portainer settings via the MCP handler.
 func TestSettingsManagement(t *testing.T) {
 	env := helpers.NewTestEnv(t)
 	defer env.Cleanup(t)
-
-	// Prepare the test environment
-	prepareTestEnvironmentSettings(t, env)
 
 	// Subtest: Settings Retrieval
 	// Verifies that:
@@ -53,7 +37,6 @@ func TestSettingsManagement(t *testing.T) {
 		require.NoError(t, err, "Failed to unmarshal retrieved settings")
 
 		// Fetch settings directly via client to compare
-		// Note: env.Client.GetSettings() returns the raw client-api-go settings struct
 		rawSettings, err := env.RawClient.GetSettings()
 		require.NoError(t, err, "Failed to get settings directly via client for comparison")
 
