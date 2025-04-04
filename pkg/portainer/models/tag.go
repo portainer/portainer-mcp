@@ -12,10 +12,10 @@ type EnvironmentTag struct {
 	EnvironmentIds []int  `json:"environment_ids"`
 }
 
-func ConvertTagToEnvironmentTag(e *apimodels.PortainerTag) EnvironmentTag {
-	environmentIDs := make([]int, 0, len(e.Endpoints))
+func ConvertTagToEnvironmentTag(rawTag *apimodels.PortainerTag) EnvironmentTag {
+	environmentIDs := make([]int, 0, len(rawTag.Endpoints))
 
-	for endpointID := range e.Endpoints {
+	for endpointID := range rawTag.Endpoints {
 		id, err := strconv.Atoi(endpointID)
 		if err == nil {
 			environmentIDs = append(environmentIDs, id)
@@ -23,8 +23,8 @@ func ConvertTagToEnvironmentTag(e *apimodels.PortainerTag) EnvironmentTag {
 	}
 
 	return EnvironmentTag{
-		ID:             int(e.ID),
-		Name:           e.Name,
+		ID:             int(rawTag.ID),
+		Name:           rawTag.Name,
 		EnvironmentIds: environmentIDs,
 	}
 }

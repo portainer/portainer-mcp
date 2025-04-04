@@ -12,19 +12,19 @@ type AccessGroup struct {
 	TeamAccesses   map[int]string `json:"team_accesses"`
 }
 
-func ConvertEndpointGroupToAccessGroup(g *apimodels.PortainerEndpointGroup, envs []*apimodels.PortainereeEndpoint) AccessGroup {
+func ConvertEndpointGroupToAccessGroup(rawGroup *apimodels.PortainerEndpointGroup, rawEndpoints []*apimodels.PortainereeEndpoint) AccessGroup {
 	environmentIds := make([]int, 0)
-	for _, env := range envs {
-		if env.GroupID == g.ID {
+	for _, env := range rawEndpoints {
+		if env.GroupID == rawGroup.ID {
 			environmentIds = append(environmentIds, int(env.ID))
 		}
 	}
 
 	return AccessGroup{
-		ID:             int(g.ID),
-		Name:           g.Name,
+		ID:             int(rawGroup.ID),
+		Name:           rawGroup.Name,
 		EnvironmentIds: environmentIds,
-		UserAccesses:   convertAccesses(g.UserAccessPolicies),
-		TeamAccesses:   convertAccesses(g.TeamAccessPolicies),
+		UserAccesses:   convertAccesses(rawGroup.UserAccessPolicies),
+		TeamAccesses:   convertAccesses(rawGroup.TeamAccessPolicies),
 	}
 }

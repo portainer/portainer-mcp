@@ -14,13 +14,13 @@ type Stack struct {
 	EnvironmentGroupIds []int  `json:"group_ids"`
 }
 
-func ConvertEdgeStackToStack(e *apimodels.PortainereeEdgeStack) Stack {
-	createdAt := time.Unix(e.CreationDate, 0).Format(time.RFC3339)
+func ConvertEdgeStackToStack(rawEdgeStack *apimodels.PortainereeEdgeStack) Stack {
+	createdAt := time.Unix(rawEdgeStack.CreationDate, 0).Format(time.RFC3339)
 
 	return Stack{
-		ID:                  int(e.ID),
-		Name:                e.Name,
+		ID:                  int(rawEdgeStack.ID),
+		Name:                rawEdgeStack.Name,
 		CreatedAt:           createdAt,
-		EnvironmentGroupIds: utils.Int64ToIntSlice(e.EdgeGroups),
+		EnvironmentGroupIds: utils.Int64ToIntSlice(rawEdgeStack.EdgeGroups),
 	}
 }

@@ -39,6 +39,7 @@ Understanding the distinction and interaction between these layers is crucial.
 *   **Characteristics:** Can be complex, may contain fields not relevant to MCP, and might use types (like numeric enums) that are less convenient for MCP's purposes.
 *   **Examples:** `models.PortainereeSettings`, `models.PortainereeEndpoint`.
 *   **Usage:** Returned by the Raw Client, used as input to the conversion functions within the Wrapper Client / Local Models package.
+*   **Naming Convention:** To improve clarity, variables holding instances of these Raw Models are typically prefixed with `raw` (e.g., `rawSettings`, `rawEndpoint`).
 
 ### 2. Local Models (`portainer-mcp/pkg/portainer/models`)
 
@@ -53,7 +54,7 @@ Understanding the distinction and interaction between these layers is crucial.
 *   **Location:** Typically reside within `portainer-mcp/pkg/portainer/models`.
 *   **Role:** Bridge the gap between Raw Models and Local Models.
 *   **Examples:** `ConvertSettingsToPortainerSettings`, `ConvertEndpointToEnvironment`.
-*   **Usage:** Called by the Wrapper Client methods to transform data before returning it.
+*   **Usage:** Called by the Wrapper Client methods to transform data before returning it. The function parameters accepting Raw Models typically follow the `raw` prefix naming convention (e.g., `func ConvertSettingsToPortainerSettings(rawSettings *apimodels.PortainereeSettings)`).
 
 ## Typical Workflow Example (`GetSettings`)
 
@@ -85,7 +86,7 @@ This approach keeps code cleaner for the more frequently used local models while
 *   **Unit Tests** (like `pkg/portainer/client/settings_test.go`): Should mock the Raw Client interface and verify that the Wrapper Client correctly calls the Raw Client and performs the necessary conversions, returning the expected Local Model.
 *   **Integration Tests** (like `tests/integration/settings_test.go`): 
     *   Call the MCP handler, which uses the Wrapper Client internally and returns JSON representing a Local Model.
-    *   Often need to *also* call the Raw Client directly to get the ground-truth state from the live Portainer instance.
+    *   Often need to *also* call the Raw Client directly to get the ground-truth state from the live Portainer instance (variables holding this state should follow the `raw` prefix convention, e.g., `rawEndpoint`).
     *   May need to manually apply the same Conversion Function to the Raw Model obtained from the Raw Client to create an expected Local Model for comparison against the handler's result.
 
 By understanding these distinct layers and their interactions, development and testing within `portainer-mcp` should be clearer. 

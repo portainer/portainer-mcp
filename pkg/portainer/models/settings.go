@@ -19,12 +19,12 @@ const (
 	AuthenticationMethodUnknown  = "unknown"
 )
 
-func ConvertSettingsToPortainerSettings(settings *apimodels.PortainereeSettings) PortainerSettings {
+func ConvertSettingsToPortainerSettings(rawSettings *apimodels.PortainereeSettings) PortainerSettings {
 	s := PortainerSettings{}
 
-	s.Authentication.Method = convertAuthenticationMethod(settings.AuthenticationMethod)
-	s.Edge.Enabled = settings.EnableEdgeComputeFeatures
-	s.Edge.ServerURL = settings.Edge.TunnelServerAddress
+	s.Authentication.Method = convertAuthenticationMethod(rawSettings.AuthenticationMethod)
+	s.Edge.Enabled = rawSettings.EnableEdgeComputeFeatures
+	s.Edge.ServerURL = rawSettings.Edge.TunnelServerAddress
 
 	return s
 }

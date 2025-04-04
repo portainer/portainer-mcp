@@ -18,16 +18,16 @@ const (
 	UserRoleUnknown   = "unknown"
 )
 
-func ConvertToUser(u *apimodels.PortainereeUser) User {
+func ConvertToUser(rawUser *apimodels.PortainereeUser) User {
 	return User{
-		ID:       int(u.ID),
-		Username: u.Username,
-		Role:     convertUserRole(u),
+		ID:       int(rawUser.ID),
+		Username: rawUser.Username,
+		Role:     convertUserRole(rawUser),
 	}
 }
 
-func convertUserRole(u *apimodels.PortainereeUser) string {
-	switch u.Role {
+func convertUserRole(rawUser *apimodels.PortainereeUser) string {
+	switch rawUser.Role {
 	case 1:
 		return UserRoleAdmin
 	case 2:

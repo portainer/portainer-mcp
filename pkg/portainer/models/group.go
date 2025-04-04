@@ -12,11 +12,11 @@ type Group struct {
 	TagIds         []int  `json:"tag_ids"`
 }
 
-func ConvertEdgeGroupToGroup(e *apimodels.EdgegroupsDecoratedEdgeGroup) Group {
+func ConvertEdgeGroupToGroup(rawEdgeGroup *apimodels.EdgegroupsDecoratedEdgeGroup) Group {
 	return Group{
-		ID:             int(e.ID),
-		Name:           e.Name,
-		EnvironmentIds: utils.Int64ToIntSlice(e.Endpoints),
-		TagIds:         utils.Int64ToIntSlice(e.TagIds),
+		ID:             int(rawEdgeGroup.ID),
+		Name:           rawEdgeGroup.Name,
+		EnvironmentIds: utils.Int64ToIntSlice(rawEdgeGroup.Endpoints),
+		TagIds:         utils.Int64ToIntSlice(rawEdgeGroup.TagIds),
 	}
 }

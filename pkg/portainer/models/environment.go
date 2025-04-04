@@ -34,20 +34,20 @@ const (
 	EnvironmentTypeUnknown             = "unknown"
 )
 
-func ConvertEndpointToEnvironment(e *apimodels.PortainereeEndpoint) Environment {
+func ConvertEndpointToEnvironment(rawEndpoint *apimodels.PortainereeEndpoint) Environment {
 	return Environment{
-		ID:           int(e.ID),
-		Name:         e.Name,
-		Status:       convertEnvironmentStatus(e),
-		Type:         convertEnvironmentType(e),
-		TagIds:       utils.Int64ToIntSlice(e.TagIds),
-		UserAccesses: convertAccesses(e.UserAccessPolicies),
-		TeamAccesses: convertAccesses(e.TeamAccessPolicies),
+		ID:           int(rawEndpoint.ID),
+		Name:         rawEndpoint.Name,
+		Status:       convertEnvironmentStatus(rawEndpoint),
+		Type:         convertEnvironmentType(rawEndpoint),
+		TagIds:       utils.Int64ToIntSlice(rawEndpoint.TagIds),
+		UserAccesses: convertAccesses(rawEndpoint.UserAccessPolicies),
+		TeamAccesses: convertAccesses(rawEndpoint.TeamAccessPolicies),
 	}
 }
 
-func convertEnvironmentStatus(e *apimodels.PortainereeEndpoint) string {
-	switch e.Status {
+func convertEnvironmentStatus(rawEndpoint *apimodels.PortainereeEndpoint) string {
+	switch rawEndpoint.Status {
 	case 1:
 		return EnvironmentStatusActive
 	case 2:
@@ -57,8 +57,8 @@ func convertEnvironmentStatus(e *apimodels.PortainereeEndpoint) string {
 	}
 }
 
-func convertEnvironmentType(e *apimodels.PortainereeEndpoint) string {
-	switch e.Type {
+func convertEnvironmentType(rawEndpoint *apimodels.PortainereeEndpoint) string {
+	switch rawEndpoint.Type {
 	case 1:
 		return EnvironmentTypeDockerLocal
 	case 2:
