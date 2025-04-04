@@ -48,7 +48,7 @@ func TestHandleGetEnvironmentTags(t *testing.T) {
 			}
 
 			// Call handler
-			handler := server.handleGetEnvironmentTags()
+			handler := server.HandleGetEnvironmentTags()
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			// Verify results
@@ -128,7 +128,7 @@ func TestHandleCreateEnvironmentTag(t *testing.T) {
 			}
 
 			// Call handler
-			handler := server.handleCreateEnvironmentTag()
+			handler := server.HandleCreateEnvironmentTag()
 			result, err := handler(context.Background(), request)
 
 			// Verify results
