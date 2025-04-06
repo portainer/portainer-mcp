@@ -44,7 +44,7 @@ func TestHandleGetStacks(t *testing.T) {
 				cli: mockClient,
 			}
 
-			handler := server.handleGetStacks()
+			handler := server.HandleGetStacks()
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			if tt.expectError {
@@ -124,7 +124,7 @@ func TestHandleGetStackFile(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleGetStackFile()
+			handler := server.HandleGetStackFile()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -239,7 +239,7 @@ func TestHandleCreateStack(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleCreateStack()
+			handler := server.HandleCreateStack()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -348,7 +348,7 @@ func TestHandleUpdateStack(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleUpdateStack()
+			handler := server.HandleUpdateStack()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
