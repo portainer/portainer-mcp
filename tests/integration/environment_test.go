@@ -24,7 +24,7 @@ const (
 
 // prepareTestEnvironment prepares the test environment for the tests
 // It enables Edge Compute settings and creates an Edge Docker endpoint
-func prepareTestEnvironment(t *testing.T, env *helpers.TestEnv) {
+func prepareEnvironmentManagementTestEnvironment(t *testing.T, env *helpers.TestEnv) {
 	host, port := env.Portainer.GetHostAndPort()
 	serverAddr := fmt.Sprintf("%s:%s", host, port)
 	tunnelAddr := fmt.Sprintf("%s:8000", host)
@@ -45,7 +45,7 @@ func TestEnvironmentManagement(t *testing.T) {
 	defer env.Cleanup(t)
 
 	// Prepare the test environment
-	prepareTestEnvironment(t, env)
+	prepareEnvironmentManagementTestEnvironment(t, env)
 
 	var environment models.Environment
 

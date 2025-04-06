@@ -47,7 +47,7 @@ func TestHandleGetUsers(t *testing.T) {
 			}
 
 			// Call handler
-			handler := server.handleGetUsers()
+			handler := server.HandleGetUsers()
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			// Verify results
@@ -156,7 +156,7 @@ func TestHandleUpdateUserRole(t *testing.T) {
 			tt.setupParams(&request)
 
 			// Call handler
-			handler := server.handleUpdateUserRole()
+			handler := server.HandleUpdateUserRole()
 			result, err := handler(context.Background(), request)
 
 			// Verify results
