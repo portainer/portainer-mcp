@@ -13,4 +13,4 @@ alwaysApply: false
 - You are allowed to make changes to the handler method signature if it need to be exposed but you must update the associated unit test file
 - You are not allowed to change any other files
 - Do not use fmt.Sscanf for parsing MCP handler responses
-- Leverage the RawClient to request resources, if the method you think is useful/needed is not implemented on the client leave it anyway and I will implement it
+- Leverage the RawClient to request resources, use the GetResource / GetResourceByName pattern instead of Listing and iterating. If the method do not exist, keep it anyway even if it does not compile I will implement it and we can iterate.

@@ -44,7 +44,7 @@ func TestHandleGetEnvironmentGroups(t *testing.T) {
 				cli: mockClient,
 			}
 
-			handler := server.handleGetEnvironmentGroups()
+			handler := server.HandleGetEnvironmentGroups()
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			if tt.expectError {
@@ -137,7 +137,7 @@ func TestHandleCreateEnvironmentGroup(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleCreateEnvironmentGroup()
+			handler := server.HandleCreateEnvironmentGroup()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -227,7 +227,7 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			request = tt.setupParams(request)
 
-			handler := server.handleUpdateEnvironmentGroupName()
+			handler := server.HandleUpdateEnvironmentGroupName()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -338,7 +338,7 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			request = tt.setupParams(request)
 
-			handler := server.handleUpdateEnvironmentGroupEnvironments()
+			handler := server.HandleUpdateEnvironmentGroupEnvironments()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -449,7 +449,7 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			request = tt.setupParams(request)
 
-			handler := server.handleUpdateEnvironmentGroupTags()
+			handler := server.HandleUpdateEnvironmentGroupTags()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
