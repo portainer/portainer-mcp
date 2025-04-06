@@ -19,12 +19,16 @@ const (
 	userRoleStandard = 2 // Portainer API role ID for Standard User
 )
 
+// prepareUserManagementTestEnvironment creates a test user and returns its ID
 func prepareUserManagementTestEnvironment(t *testing.T, env *helpers.TestEnv) int {
 	testUserID, err := env.RawClient.CreateUser(testUsername, testUserPassword, userRoleStandard)
 	require.NoError(t, err, "Failed to create test user via raw client")
 	return int(testUserID)
 }
 
+// TestUserManagement is an integration test suite that verifies the complete
+// lifecycle of user management in Portainer MCP. It tests user listing
+// and role updates.
 func TestUserManagement(t *testing.T) {
 	env := helpers.NewTestEnv(t)
 	defer env.Cleanup(t)

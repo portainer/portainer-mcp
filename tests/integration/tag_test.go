@@ -23,8 +23,6 @@ func TestTagManagement(t *testing.T) {
 	env := helpers.NewTestEnv(t)
 	defer env.Cleanup(t)
 
-	// var createdTagID int64 // Removed as it's unused
-
 	// Subtest: Tag Creation
 	// Verifies that:
 	// - A new tag can be created via the MCP handler.

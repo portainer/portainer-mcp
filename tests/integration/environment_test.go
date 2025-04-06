@@ -69,6 +69,7 @@ func TestEnvironmentManagement(t *testing.T) {
 		require.NoError(t, err, "Failed to unmarshal environments from MCP response")
 		require.Len(t, environments, 1, "Expected exactly one environment after unmarshalling")
 
+		// Extract the environment for subsequent tests
 		environment = environments[0]
 
 		// Fetch the same endpoint directly via the client

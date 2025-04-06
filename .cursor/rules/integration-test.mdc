@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+# Integration test rules and guidelines
+
+- Always expose the test plan for confirmation first before implementing it
+- Use [team_test.go](mdc:tests/integration/team_test.go), [user_test.go](mdc:tests/integration/user_test.go) and [environment_test.go](mdc:tests/integration/environment_test.go) as references, especially for imports and test pattern/structure
+- Use [clients_and_models.md](mdc:docs/clients_and_models.md) as guidelines
+- You are allowed to make changes to the handler method signature if it need to be exposed but you must update the associated unit test file
+- You are not allowed to change any other files
+- Do not use fmt.Sscanf for parsing MCP handler responses
+- Leverage the RawClient to request resources, if the method you think is useful/needed is not implemented on the client leave it anyway and I will implement it

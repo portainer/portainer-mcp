@@ -66,7 +66,7 @@ func TestHandleCreateTeam(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleCreateTeam()
+			handler := server.HandleCreateTeam()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -120,7 +120,7 @@ func TestHandleGetTeams(t *testing.T) {
 				cli: mockClient,
 			}
 
-			handler := server.handleGetTeams()
+			handler := server.HandleGetTeams()
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			if tt.expectError {
@@ -212,7 +212,7 @@ func TestHandleUpdateTeamName(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleUpdateTeamName()
+			handler := server.HandleUpdateTeamName()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -300,7 +300,7 @@ func TestHandleUpdateTeamMembers(t *testing.T) {
 			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleUpdateTeamMembers()
+			handler := server.HandleUpdateTeamMembers()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
