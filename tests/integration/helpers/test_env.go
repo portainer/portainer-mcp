@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/deviantony/portainer-mcp/internal/mcp"
-	"github.com/deviantony/portainer-mcp/tests/integration/containers"
 	"github.com/portainer/client-api-go/v2/client"
+	"github.com/portainer/portainer-mcp/internal/mcp"
+	"github.com/portainer/portainer-mcp/tests/integration/containers"
 	"github.com/stretchr/testify/require"
 )
 

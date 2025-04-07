@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/portainer/portainer-mcp/pkg/toolgen"
 )
 
 func (s *PortainerMCPServer) AddTeamFeatures() {

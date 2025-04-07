@@ -1,4 +1,4 @@
-module github.com/deviantony/portainer-mcp
+module github.com/portainer/portainer-mcp
 
 go 1.23.5
 

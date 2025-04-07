@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/deviantony/portainer-mcp/internal/mcp"
-	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	"github.com/deviantony/portainer-mcp/tests/integration/helpers"
 	mcpmodels "github.com/mark3labs/mcp-go/mcp"
 	"github.com/portainer/client-api-go/v2/client/utils"
 	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
+	"github.com/portainer/portainer-mcp/internal/mcp"
+	"github.com/portainer/portainer-mcp/pkg/portainer/models"
+	"github.com/portainer/portainer-mcp/tests/integration/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

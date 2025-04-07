@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/portainer/portainer-mcp/pkg/portainer/models"
 	"github.com/stretchr/testify/assert"
 )
 

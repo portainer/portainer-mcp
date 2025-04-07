@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/deviantony/portainer-mcp/internal/mcp"
+	"github.com/portainer/portainer-mcp/internal/mcp"
 	"github.com/rs/zerolog/log"
 )
 

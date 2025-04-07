@@ -3,8 +3,8 @@ package client
 import (
 	"fmt"
 
-	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	"github.com/deviantony/portainer-mcp/pkg/portainer/utils"
+	"github.com/portainer/portainer-mcp/pkg/portainer/models"
+	"github.com/portainer/portainer-mcp/pkg/portainer/utils"
 )
 
 // GetStacks retrieves all stacks from the Portainer server.

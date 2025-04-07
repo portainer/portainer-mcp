@@ -22,7 +22,7 @@ Understanding the distinction and interaction between these layers is crucial.
 
 ### 2. Wrapper Client (`portainer-mcp/pkg/portainer/client`)
 
-*   **Package:** `github.com/deviantony/portainer-mcp/pkg/portainer/client`
+*   **Package:** `github.com/portainer/portainer-mcp/pkg/portainer/client`
 *   **Role:** This client acts as an **abstraction layer** on top of the Raw Client. Its primary purposes are:
     *   To simplify the interface exposed to the rest of the `portainer-mcp` application (specifically the MCP server handlers in `internal/mcp/`).
     *   To perform necessary **data transformations**, converting Raw Models from the API into the simpler, tailored Local Models.
@@ -43,7 +43,7 @@ Understanding the distinction and interaction between these layers is crucial.
 
 ### 2. Local Models (`portainer-mcp/pkg/portainer/models`)
 
-*   **Package:** `github.com/deviantony/portainer-mcp/pkg/portainer/models`
+*   **Package:** `github.com/portainer/portainer-mcp/pkg/portainer/models`
 *   **Role:** These are simplified, tailored structs designed specifically for use within the `portainer-mcp` application and for exposure via the MCP tools.
 *   **Characteristics:** Simpler structure, contain only relevant fields, often use more convenient types (like string enums).
 *   **Examples:** `models.PortainerSettings`, `models.Environment`, `models.EnvironmentTag`.
@@ -74,7 +74,7 @@ To improve clarity, especially in files where both model types might appear (lik
 
 ```go
 import (
-    "github.com/deviantony/portainer-mcp/pkg/portainer/models" // Default: models (Local MCP Models)
+    "github.com/portainer/portainer-mcp/pkg/portainer/models" // Default: models (Local MCP Models)
     apimodels "github.com/portainer/client-api-go/v2/pkg/models"      // Alias: apimodels (Raw Client-API-Go Models)
 )
 ```

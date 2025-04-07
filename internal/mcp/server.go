@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/deviantony/portainer-mcp/pkg/portainer/client"
-	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	"github.com/deviantony/portainer-mcp/pkg/toolgen"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/portainer/portainer-mcp/pkg/portainer/client"
+	"github.com/portainer/portainer-mcp/pkg/portainer/models"
+	"github.com/portainer/portainer-mcp/pkg/toolgen"
 )
 
 // PortainerClient defines the interface for the wrapper client used by the MCP server

@@ -1,7 +1,7 @@
 package mcp
 
 import (
-	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
+	"github.com/portainer/portainer-mcp/pkg/portainer/models"
 	"github.com/stretchr/testify/mock"
 )
 
