@@ -91,6 +91,82 @@ func createInvalidYAMLFile(t *testing.T) string {
 	return path
 }
 
+func TestConvertToolDefinition(t *testing.T) {
+	tests := []struct {
+		name    string
+		def     ToolDefinition
+		wantErr bool
+	}{
+		{
+			name: "valid tool definition",
+			def: ToolDefinition{
+				Name:        "validTool",
+				Description: "A valid tool description",
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty name",
+			def: ToolDefinition{
+				Name:        "",
+				Description: "A tool with empty name",
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty description",
+			def: ToolDefinition{
+				Name:        "noDescTool",
+				Description: "",
+			},
+			wantErr: true,
+		},
+		{
+			name: "with parameters",
+			def: ToolDefinition{
+				Name:        "paramTool",
+				Description: "Tool with parameters",
+				Parameters: []ParameterDefinition{
+					{
+						Name:        "param1",
+						Type:        "string",
+						Required:    true,
+						Description: "A test parameter",
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := convertToolDefinition(tt.def)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("convertToolDefinition() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr {
+				// Test that the tool was created correctly
+				tool, err := convertToolDefinition(tt.def)
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+					return
+				}
+
+				if tool.Name != tt.def.Name {
+					t.Errorf("Tool name mismatch, got %s, want %s", tool.Name, tt.def.Name)
+				}
+
+				if tool.Description != tt.def.Description {
+					t.Errorf("Tool description mismatch, got %s, want %s", tool.Description, tt.def.Description)
+				}
+			}
+		})
+	}
+}
+
 func TestConvertToolDefinitions(t *testing.T) {
 	tests := []struct {
 		name string
@@ -134,6 +210,28 @@ func TestConvertToolDefinitions(t *testing.T) {
 			},
 			want: 2,
 		},
+		{
+			name: "invalid tools are skipped",
+			defs: []ToolDefinition{
+				{
+					Name:        "tool1",
+					Description: "Test tool 1",
+				},
+				{
+					Name:        "", // Invalid: empty name
+					Description: "Tool with empty name",
+				},
+				{
+					Name:        "noDescTool", // Invalid: empty description
+					Description: "",
+				},
+				{
+					Name:        "tool2",
+					Description: "Test tool 2",
+				},
+			},
+			want: 2, // Only 2 valid tools should be returned
+		},
 	}
 
 	for _, tt := range tests {
@@ -145,6 +243,11 @@ func TestConvertToolDefinitions(t *testing.T) {
 
 			// Verify each tool has the correct name and description
 			for _, def := range tt.defs {
+				// Skip invalid tools with empty name or description
+				if def.Name == "" || def.Description == "" {
+					continue
+				}
+
 				tool, exists := got[def.Name]
 				if !exists {
 					t.Errorf("Tool %s not found in result", def.Name)

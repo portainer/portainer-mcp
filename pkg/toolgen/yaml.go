@@ -1,6 +1,8 @@
 package toolgen
 
 import (
+	"fmt"
+	"log"
 	"os"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -49,14 +51,28 @@ func ConvertToolDefinitions(defs []ToolDefinition) map[string]mcp.Tool {
 	tools := make(map[string]mcp.Tool, len(defs))
 
 	for _, def := range defs {
-		tools[def.Name] = convertToolDefinition(def)
+		tool, err := convertToolDefinition(def)
+		if err != nil {
+			log.Printf("skipping invalid tool %s: %s", def.Name, err)
+			continue
+		}
+
+		tools[def.Name] = tool
 	}
 
 	return tools
 }
 
 // convertToolDefinition converts a single YAML tool definition to an mcp.Tool
-func convertToolDefinition(def ToolDefinition) mcp.Tool {
+func convertToolDefinition(def ToolDefinition) (mcp.Tool, error) {
+	if def.Name == "" {
+		return mcp.Tool{}, fmt.Errorf("tool name is required")
+	}
+
+	if def.Description == "" {
+		return mcp.Tool{}, fmt.Errorf("tool description is required")
+	}
+
 	options := []mcp.ToolOption{
 		mcp.WithDescription(def.Description),
 	}
@@ -65,7 +81,7 @@ func convertToolDefinition(def ToolDefinition) mcp.Tool {
 		options = append(options, convertParameter(param))
 	}
 
-	return mcp.NewTool(def.Name, options...)
+	return mcp.NewTool(def.Name, options...), nil
 }
 
 // convertParameter converts a YAML parameter definition to an mcp option

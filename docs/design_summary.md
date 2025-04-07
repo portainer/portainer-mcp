@@ -157,6 +157,3 @@ Performance impact of multiple API calls is considered acceptable given:
 - Relatively low frequency of update operations
 - Benefits of simpler code and clearer behavior outweigh the overhead
 
-## 202503-4: Tools file versioning
-
-**Date**: 29/03/2025
