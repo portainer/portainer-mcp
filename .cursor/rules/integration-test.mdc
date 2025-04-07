@@ -12,5 +12,5 @@ alwaysApply: false
 - Use [clients_and_models.md](mdc:docs/clients_and_models.md) as guidelines
 - You are allowed to make changes to the handler method signature if it need to be exposed but you must update the associated unit test file
 - You are not allowed to change any other files
-- Do not use fmt.Sscanf for parsing MCP handler responses
-- Leverage the RawClient to request resources, use the GetResource / GetResourceByName pattern instead of Listing and iterating. If the method do not exist, keep it anyway even if it does not compile I will implement it and we can iterate.
+- Never use fmt.Sscanf
+- Leverage the RawClient to request resources, use the GetResource / GetResourceByName pattern instead of Listing and iterating. If the method do not exist, tell me immediately so that I can resolve it and we can proceed further.
