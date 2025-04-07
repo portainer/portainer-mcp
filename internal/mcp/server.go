@@ -92,6 +92,6 @@ func (s *PortainerMCPServer) addToolIfExists(toolName string, handler server.Too
 	if tool, exists := s.tools[toolName]; exists {
 		s.srv.AddTool(tool, handler)
 	} else {
-		log.Printf("Tool %s not found", toolName)
+		log.Printf("Tool %s not found, will not be registered for MCP usage", toolName)
 	}
 }

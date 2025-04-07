@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	ToolsPath = "../../tools.yaml"
+	ToolsPath = "../../internal/tooldef/tools.yaml"
 )
 
 // TestEnv holds the test environment configuration and clients

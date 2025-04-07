@@ -53,7 +53,7 @@ func ConvertToolDefinitions(defs []ToolDefinition) map[string]mcp.Tool {
 	for _, def := range defs {
 		tool, err := convertToolDefinition(def)
 		if err != nil {
-			log.Printf("skipping invalid tool %s: %s", def.Name, err)
+			log.Printf("skipping invalid tool definition %s: %s", def.Name, err)
 			continue
 		}
 

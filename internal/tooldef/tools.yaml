@@ -385,7 +385,7 @@ tools:
   ## ------------------------------------------------------------
   - name: listUsers
     description: List all available users
-  - name: updateUser
+  - name: updateUserRole
     description: Update an existing user
     parameters:
       - name: id
