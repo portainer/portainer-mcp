@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/portainer/portainer-mcp/internal/mcp"
+	"github.com/portainer/portainer-mcp/internal/tooldef"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,9 +25,23 @@ func main() {
 		toolsPath = defaultToolsPath
 	}
 
+	// We first check if the tools.yaml file exists
+	// We'll create it from the embedded version if it doesn't exist
+	exists, err := tooldef.CreateToolsFileIfNotExists(toolsPath)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create tools.yaml file")
+	}
+
+	if exists {
+		log.Info().Msg("using existing tools.yaml file")
+	} else {
+		log.Info().Msg("created tools.yaml file")
+	}
+
 	log.Info().
 		Str("server", *serverFlag).
 		Str("token", *tokenFlag).
+		Str("tools", toolsPath).
 		Msg("Starting Portainer MCP server")
 
 	server, err := mcp.NewPortainerMCPServer(*serverFlag, *tokenFlag, toolsPath)
