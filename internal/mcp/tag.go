@@ -11,11 +11,11 @@ import (
 )
 
 func (s *PortainerMCPServer) AddTagFeatures() {
-	s.addToolIfExists(ToolCreateEnvironmentTag, s.handleCreateEnvironmentTag())
-	s.addToolIfExists(ToolListEnvironmentTags, s.handleGetEnvironmentTags())
+	s.addToolIfExists(ToolCreateEnvironmentTag, s.HandleCreateEnvironmentTag())
+	s.addToolIfExists(ToolListEnvironmentTags, s.HandleGetEnvironmentTags())
 }
 
-func (s *PortainerMCPServer) handleGetEnvironmentTags() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleGetEnvironmentTags() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		environmentTags, err := s.cli.GetEnvironmentTags()
 		if err != nil {
@@ -31,7 +31,7 @@ func (s *PortainerMCPServer) handleGetEnvironmentTags() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleCreateEnvironmentTag() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleCreateEnvironmentTag() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 

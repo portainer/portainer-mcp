@@ -61,7 +61,7 @@ func TestHandleGetSettings(t *testing.T) {
 			}
 
 			// Get the handler
-			handler := srv.handleGetSettings()
+			handler := srv.HandleGetSettings()
 
 			// Call the handler
 			result, err := handler(context.Background(), mcp.CallToolRequest{})

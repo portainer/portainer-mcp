@@ -2,7 +2,7 @@
 PLATFORM="$(shell go env GOOS)"
 ARCH="$(shell go env GOARCH)"
 
-.PHONY: pre build run
+.PHONY: pre build run test test-integration test-all
 
 pre:
 	mkdir -p dist
@@ -20,4 +20,9 @@ inspector: build
 	npx @modelcontextprotocol/inspector dist/portainer
 
 test:
-	go test -v ./...
+	go test -v $(shell go list ./... | grep -v /tests/)
+
+test-integration:
+	go test -v ./tests/...
+
+test-all: test test-integration

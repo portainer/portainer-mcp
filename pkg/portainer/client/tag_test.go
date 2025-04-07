@@ -5,21 +5,21 @@ import (
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	sdkmodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetEnvironmentTags(t *testing.T) {
 	tests := []struct {
 		name          string
-		mockTags      []*sdkmodels.PortainerTag
+		mockTags      []*apimodels.PortainerTag
 		mockError     error
 		expectedTags  []models.EnvironmentTag
 		expectedError bool
 	}{
 		{
 			name: "successful retrieval",
-			mockTags: []*sdkmodels.PortainerTag{
+			mockTags: []*apimodels.PortainerTag{
 				{ID: 1, Name: "prod"},
 				{ID: 2, Name: "dev"},
 			},
@@ -32,7 +32,7 @@ func TestGetEnvironmentTags(t *testing.T) {
 		},
 		{
 			name:          "empty tags list",
-			mockTags:      []*sdkmodels.PortainerTag{},
+			mockTags:      []*apimodels.PortainerTag{},
 			mockError:     nil,
 			expectedTags:  []models.EnvironmentTag{},
 			expectedError: false,

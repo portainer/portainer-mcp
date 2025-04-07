@@ -44,7 +44,7 @@ func TestHandleGetAccessGroups(t *testing.T) {
 				cli: mockClient,
 			}
 
-			handler := server.handleGetAccessGroups()
+			handler := server.HandleGetAccessGroups()
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			if tt.expectError {
@@ -155,21 +155,10 @@ func TestHandleCreateAccessGroup(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleCreateAccessGroup()
+			handler := server.HandleCreateAccessGroup()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -252,21 +241,10 @@ func TestHandleUpdateAccessGroupName(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleUpdateAccessGroupName()
+			handler := server.HandleUpdateAccessGroupName()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -390,21 +368,10 @@ func TestHandleUpdateAccessGroupUserAccesses(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleUpdateAccessGroupUserAccesses()
+			handler := server.HandleUpdateAccessGroupUserAccesses()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -528,21 +495,10 @@ func TestHandleUpdateAccessGroupTeamAccesses(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleUpdateAccessGroupTeamAccesses()
+			handler := server.HandleUpdateAccessGroupTeamAccesses()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -625,21 +581,10 @@ func TestHandleAddEnvironmentToAccessGroup(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleAddEnvironmentToAccessGroup()
+			handler := server.HandleAddEnvironmentToAccessGroup()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
@@ -722,21 +667,10 @@ func TestHandleRemoveEnvironmentFromAccessGroup(t *testing.T) {
 				cli: mockClient,
 			}
 
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
+			request := CreateMCPRequest(map[string]any{})
 			tt.setupParams(&request)
 
-			handler := server.handleRemoveEnvironmentFromAccessGroup()
+			handler := server.HandleRemoveEnvironmentFromAccessGroup()
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {

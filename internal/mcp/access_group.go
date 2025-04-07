@@ -11,16 +11,16 @@ import (
 )
 
 func (s *PortainerMCPServer) AddAccessGroupFeatures() {
-	s.addToolIfExists(ToolCreateAccessGroup, s.handleCreateAccessGroup())
-	s.addToolIfExists(ToolListAccessGroups, s.handleGetAccessGroups())
-	s.addToolIfExists(ToolUpdateAccessGroupName, s.handleUpdateAccessGroupName())
-	s.addToolIfExists(ToolUpdateAccessGroupUserAccesses, s.handleUpdateAccessGroupUserAccesses())
-	s.addToolIfExists(ToolUpdateAccessGroupTeamAccesses, s.handleUpdateAccessGroupTeamAccesses())
-	s.addToolIfExists(ToolAddEnvironmentToAccessGroup, s.handleAddEnvironmentToAccessGroup())
-	s.addToolIfExists(ToolRemoveEnvironmentFromAccessGroup, s.handleRemoveEnvironmentFromAccessGroup())
+	s.addToolIfExists(ToolCreateAccessGroup, s.HandleCreateAccessGroup())
+	s.addToolIfExists(ToolListAccessGroups, s.HandleGetAccessGroups())
+	s.addToolIfExists(ToolUpdateAccessGroupName, s.HandleUpdateAccessGroupName())
+	s.addToolIfExists(ToolUpdateAccessGroupUserAccesses, s.HandleUpdateAccessGroupUserAccesses())
+	s.addToolIfExists(ToolUpdateAccessGroupTeamAccesses, s.HandleUpdateAccessGroupTeamAccesses())
+	s.addToolIfExists(ToolAddEnvironmentToAccessGroup, s.HandleAddEnvironmentToAccessGroup())
+	s.addToolIfExists(ToolRemoveEnvironmentFromAccessGroup, s.HandleRemoveEnvironmentFromAccessGroup())
 }
 
-func (s *PortainerMCPServer) handleGetAccessGroups() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleGetAccessGroups() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		accessGroups, err := s.cli.GetAccessGroups()
 		if err != nil {
@@ -36,7 +36,7 @@ func (s *PortainerMCPServer) handleGetAccessGroups() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleCreateAccessGroup() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleCreateAccessGroup() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -59,7 +59,7 @@ func (s *PortainerMCPServer) handleCreateAccessGroup() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateAccessGroupName() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateAccessGroupName() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -82,7 +82,7 @@ func (s *PortainerMCPServer) handleUpdateAccessGroupName() server.ToolHandlerFun
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateAccessGroupUserAccesses() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateAccessGroupUserAccesses() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -110,7 +110,7 @@ func (s *PortainerMCPServer) handleUpdateAccessGroupUserAccesses() server.ToolHa
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateAccessGroupTeamAccesses() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateAccessGroupTeamAccesses() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -138,7 +138,7 @@ func (s *PortainerMCPServer) handleUpdateAccessGroupTeamAccesses() server.ToolHa
 	}
 }
 
-func (s *PortainerMCPServer) handleAddEnvironmentToAccessGroup() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleAddEnvironmentToAccessGroup() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -161,7 +161,7 @@ func (s *PortainerMCPServer) handleAddEnvironmentToAccessGroup() server.ToolHand
 	}
 }
 
-func (s *PortainerMCPServer) handleRemoveEnvironmentFromAccessGroup() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleRemoveEnvironmentFromAccessGroup() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 

@@ -11,13 +11,13 @@ import (
 )
 
 func (s *PortainerMCPServer) AddStackFeatures() {
-	s.addToolIfExists(ToolCreateStack, s.handleCreateStack())
-	s.addToolIfExists(ToolListStacks, s.handleGetStacks())
-	s.addToolIfExists(ToolUpdateStack, s.handleUpdateStack())
-	s.addToolIfExists(ToolGetStackFile, s.handleGetStackFile())
+	s.addToolIfExists(ToolCreateStack, s.HandleCreateStack())
+	s.addToolIfExists(ToolListStacks, s.HandleGetStacks())
+	s.addToolIfExists(ToolUpdateStack, s.HandleUpdateStack())
+	s.addToolIfExists(ToolGetStackFile, s.HandleGetStackFile())
 }
 
-func (s *PortainerMCPServer) handleGetStacks() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleGetStacks() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		stacks, err := s.cli.GetStacks()
 		if err != nil {
@@ -33,7 +33,7 @@ func (s *PortainerMCPServer) handleGetStacks() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleGetStackFile() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleGetStackFile() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -51,7 +51,7 @@ func (s *PortainerMCPServer) handleGetStackFile() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleCreateStack() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -79,7 +79,7 @@ func (s *PortainerMCPServer) handleCreateStack() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateStack() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateStack() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 

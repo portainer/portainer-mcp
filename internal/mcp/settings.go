@@ -10,10 +10,10 @@ import (
 )
 
 func (s *PortainerMCPServer) AddSettingsFeatures() {
-	s.addToolIfExists(ToolGetSettings, s.handleGetSettings())
+	s.addToolIfExists(ToolGetSettings, s.HandleGetSettings())
 }
 
-func (s *PortainerMCPServer) handleGetSettings() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleGetSettings() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		settings, err := s.cli.GetSettings()
 		if err != nil {

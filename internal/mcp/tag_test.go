@@ -48,7 +48,7 @@ func TestHandleGetEnvironmentTags(t *testing.T) {
 			}
 
 			// Call handler
-			handler := server.handleGetEnvironmentTags()
+			handler := server.HandleGetEnvironmentTags()
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			// Verify results
@@ -122,25 +122,13 @@ func TestHandleCreateEnvironmentTag(t *testing.T) {
 			}
 
 			// Create request with parameters
-			request := mcp.CallToolRequest{
-				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
-					Meta      *struct {
-						ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-					} `json:"_meta,omitempty"`
-				}{
-					Arguments: map[string]any{},
-				},
-			}
-
-			// Only add the name parameter if it's not empty
+			request := CreateMCPRequest(map[string]any{})
 			if tt.inputName != "" {
 				request.Params.Arguments["name"] = tt.inputName
 			}
 
 			// Call handler
-			handler := server.handleCreateEnvironmentTag()
+			handler := server.HandleCreateEnvironmentTag()
 			result, err := handler(context.Background(), request)
 
 			// Verify results

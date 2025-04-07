@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	sdkmodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -13,8 +13,8 @@ import (
 func TestGetAccessGroups(t *testing.T) {
 	tests := []struct {
 		name                  string
-		mockEndpointGroups    []*sdkmodels.PortainerEndpointGroup
-		mockEndpoints         []*sdkmodels.PortainereeEndpoint
+		mockEndpointGroups    []*apimodels.PortainerEndpointGroup
+		mockEndpoints         []*apimodels.PortainereeEndpoint
 		mockEndpointGroupsErr error
 		mockEndpointsErr      error
 		expected              []models.AccessGroup
@@ -22,27 +22,27 @@ func TestGetAccessGroups(t *testing.T) {
 	}{
 		{
 			name: "successful retrieval",
-			mockEndpointGroups: []*sdkmodels.PortainerEndpointGroup{
+			mockEndpointGroups: []*apimodels.PortainerEndpointGroup{
 				{
 					ID:   1,
 					Name: "group1",
-					UserAccessPolicies: sdkmodels.PortainerUserAccessPolicies{
-						"1": sdkmodels.PortainerAccessPolicy{RoleID: 1}, // environment_administrator
-						"2": sdkmodels.PortainerAccessPolicy{RoleID: 2}, // helpdesk_user
-						"3": sdkmodels.PortainerAccessPolicy{RoleID: 3}, // standard_user
-						"4": sdkmodels.PortainerAccessPolicy{RoleID: 4}, // readonly_user
-						"5": sdkmodels.PortainerAccessPolicy{RoleID: 5}, // operator_user
+					UserAccessPolicies: apimodels.PortainerUserAccessPolicies{
+						"1": apimodels.PortainerAccessPolicy{RoleID: 1}, // environment_administrator
+						"2": apimodels.PortainerAccessPolicy{RoleID: 2}, // helpdesk_user
+						"3": apimodels.PortainerAccessPolicy{RoleID: 3}, // standard_user
+						"4": apimodels.PortainerAccessPolicy{RoleID: 4}, // readonly_user
+						"5": apimodels.PortainerAccessPolicy{RoleID: 5}, // operator_user
 					},
-					TeamAccessPolicies: sdkmodels.PortainerTeamAccessPolicies{
-						"6":  sdkmodels.PortainerAccessPolicy{RoleID: 1}, // environment_administrator
-						"7":  sdkmodels.PortainerAccessPolicy{RoleID: 2}, // helpdesk_user
-						"8":  sdkmodels.PortainerAccessPolicy{RoleID: 3}, // standard_user
-						"9":  sdkmodels.PortainerAccessPolicy{RoleID: 4}, // readonly_user
-						"10": sdkmodels.PortainerAccessPolicy{RoleID: 5}, // operator_user
+					TeamAccessPolicies: apimodels.PortainerTeamAccessPolicies{
+						"6":  apimodels.PortainerAccessPolicy{RoleID: 1}, // environment_administrator
+						"7":  apimodels.PortainerAccessPolicy{RoleID: 2}, // helpdesk_user
+						"8":  apimodels.PortainerAccessPolicy{RoleID: 3}, // standard_user
+						"9":  apimodels.PortainerAccessPolicy{RoleID: 4}, // readonly_user
+						"10": apimodels.PortainerAccessPolicy{RoleID: 5}, // operator_user
 					},
 				},
 			},
-			mockEndpoints: []*sdkmodels.PortainereeEndpoint{
+			mockEndpoints: []*apimodels.PortainereeEndpoint{
 				{ID: 1, Name: "endpoint1", GroupID: 1},
 				{ID: 2, Name: "endpoint2", GroupID: 1},
 				{ID: 3, Name: "endpoint3", GroupID: 2},
@@ -76,7 +76,7 @@ func TestGetAccessGroups(t *testing.T) {
 		},
 		{
 			name: "endpoint list error",
-			mockEndpointGroups: []*sdkmodels.PortainerEndpointGroup{
+			mockEndpointGroups: []*apimodels.PortainerEndpointGroup{
 				{ID: 1, Name: "group1"},
 			},
 			mockEndpointsErr: errors.New("failed to list endpoints"),
@@ -84,8 +84,8 @@ func TestGetAccessGroups(t *testing.T) {
 		},
 		{
 			name:               "empty groups with endpoints",
-			mockEndpointGroups: []*sdkmodels.PortainerEndpointGroup{},
-			mockEndpoints: []*sdkmodels.PortainereeEndpoint{
+			mockEndpointGroups: []*apimodels.PortainerEndpointGroup{},
+			mockEndpoints: []*apimodels.PortainereeEndpoint{
 				{ID: 1, Name: "endpoint1", GroupID: 1},
 				{ID: 2, Name: "endpoint2", GroupID: 2},
 			},
@@ -93,16 +93,16 @@ func TestGetAccessGroups(t *testing.T) {
 		},
 		{
 			name: "groups with empty endpoints",
-			mockEndpointGroups: []*sdkmodels.PortainerEndpointGroup{
+			mockEndpointGroups: []*apimodels.PortainerEndpointGroup{
 				{
 					ID:   1,
 					Name: "group1",
-					UserAccessPolicies: sdkmodels.PortainerUserAccessPolicies{
-						"1": sdkmodels.PortainerAccessPolicy{RoleID: 1},
+					UserAccessPolicies: apimodels.PortainerUserAccessPolicies{
+						"1": apimodels.PortainerAccessPolicy{RoleID: 1},
 					},
 				},
 			},
-			mockEndpoints: []*sdkmodels.PortainereeEndpoint{},
+			mockEndpoints: []*apimodels.PortainereeEndpoint{},
 			expected: []models.AccessGroup{
 				{
 					ID:             1,
@@ -117,8 +117,8 @@ func TestGetAccessGroups(t *testing.T) {
 		},
 		{
 			name:               "both empty",
-			mockEndpointGroups: []*sdkmodels.PortainerEndpointGroup{},
-			mockEndpoints:      []*sdkmodels.PortainereeEndpoint{},
+			mockEndpointGroups: []*apimodels.PortainerEndpointGroup{},
+			mockEndpoints:      []*apimodels.PortainereeEndpoint{},
 			expected:           []models.AccessGroup{},
 		},
 	}

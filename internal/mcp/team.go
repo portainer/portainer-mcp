@@ -11,13 +11,13 @@ import (
 )
 
 func (s *PortainerMCPServer) AddTeamFeatures() {
-	s.addToolIfExists(ToolCreateTeam, s.handleCreateTeam())
-	s.addToolIfExists(ToolListTeams, s.handleGetTeams())
-	s.addToolIfExists(ToolUpdateTeamName, s.handleUpdateTeamName())
-	s.addToolIfExists(ToolUpdateTeamMembers, s.handleUpdateTeamMembers())
+	s.addToolIfExists(ToolCreateTeam, s.HandleCreateTeam())
+	s.addToolIfExists(ToolListTeams, s.HandleGetTeams())
+	s.addToolIfExists(ToolUpdateTeamName, s.HandleUpdateTeamName())
+	s.addToolIfExists(ToolUpdateTeamMembers, s.HandleUpdateTeamMembers())
 }
 
-func (s *PortainerMCPServer) handleCreateTeam() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleCreateTeam() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -35,7 +35,7 @@ func (s *PortainerMCPServer) handleCreateTeam() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleGetTeams() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleGetTeams() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		teams, err := s.cli.GetTeams()
 		if err != nil {
@@ -51,7 +51,7 @@ func (s *PortainerMCPServer) handleGetTeams() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateTeamName() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateTeamName() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -74,7 +74,7 @@ func (s *PortainerMCPServer) handleUpdateTeamName() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateTeamMembers() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateTeamMembers() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 

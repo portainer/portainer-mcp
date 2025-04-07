@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	sdkmodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -13,14 +13,14 @@ import (
 func TestGetEnvironmentGroups(t *testing.T) {
 	tests := []struct {
 		name          string
-		mockGroups    []*sdkmodels.EdgegroupsDecoratedEdgeGroup
+		mockGroups    []*apimodels.EdgegroupsDecoratedEdgeGroup
 		mockError     error
 		expected      []models.Group
 		expectedError bool
 	}{
 		{
 			name: "successful retrieval",
-			mockGroups: []*sdkmodels.EdgegroupsDecoratedEdgeGroup{
+			mockGroups: []*apimodels.EdgegroupsDecoratedEdgeGroup{
 				{
 					ID:        1,
 					Name:      "group1",
@@ -51,7 +51,7 @@ func TestGetEnvironmentGroups(t *testing.T) {
 		},
 		{
 			name:       "empty groups",
-			mockGroups: []*sdkmodels.EdgegroupsDecoratedEdgeGroup{},
+			mockGroups: []*apimodels.EdgegroupsDecoratedEdgeGroup{},
 			expected:   []models.Group{},
 		},
 		{

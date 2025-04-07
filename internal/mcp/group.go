@@ -11,14 +11,14 @@ import (
 )
 
 func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
-	s.addToolIfExists(ToolCreateEnvironmentGroup, s.handleCreateEnvironmentGroup())
-	s.addToolIfExists(ToolListEnvironmentGroups, s.handleGetEnvironmentGroups())
-	s.addToolIfExists(ToolUpdateEnvironmentGroupName, s.handleUpdateEnvironmentGroupName())
-	s.addToolIfExists(ToolUpdateEnvironmentGroupEnvironments, s.handleUpdateEnvironmentGroupEnvironments())
-	s.addToolIfExists(ToolUpdateEnvironmentGroupTags, s.handleUpdateEnvironmentGroupTags())
+	s.addToolIfExists(ToolCreateEnvironmentGroup, s.HandleCreateEnvironmentGroup())
+	s.addToolIfExists(ToolListEnvironmentGroups, s.HandleGetEnvironmentGroups())
+	s.addToolIfExists(ToolUpdateEnvironmentGroupName, s.HandleUpdateEnvironmentGroupName())
+	s.addToolIfExists(ToolUpdateEnvironmentGroupEnvironments, s.HandleUpdateEnvironmentGroupEnvironments())
+	s.addToolIfExists(ToolUpdateEnvironmentGroupTags, s.HandleUpdateEnvironmentGroupTags())
 }
 
-func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleGetEnvironmentGroups() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		edgeGroups, err := s.cli.GetEnvironmentGroups()
 		if err != nil {
@@ -34,7 +34,7 @@ func (s *PortainerMCPServer) handleGetEnvironmentGroups() server.ToolHandlerFunc
 	}
 }
 
-func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleCreateEnvironmentGroup() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -57,7 +57,7 @@ func (s *PortainerMCPServer) handleCreateEnvironmentGroup() server.ToolHandlerFu
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateEnvironmentGroupName() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupName() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -80,7 +80,7 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentGroupName() server.ToolHandl
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateEnvironmentGroupEnvironments() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupEnvironments() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
@@ -108,7 +108,7 @@ func (s *PortainerMCPServer) handleUpdateEnvironmentGroupEnvironments() server.T
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateEnvironmentGroupTags() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupTags() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 

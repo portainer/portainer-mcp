@@ -2,7 +2,7 @@ package models
 
 import (
 	"github.com/deviantony/portainer-mcp/pkg/portainer/utils"
-	"github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 )
 
 type Group struct {
@@ -12,11 +12,11 @@ type Group struct {
 	TagIds         []int  `json:"tag_ids"`
 }
 
-func ConvertEdgeGroupToGroup(e *models.EdgegroupsDecoratedEdgeGroup) Group {
+func ConvertEdgeGroupToGroup(rawEdgeGroup *apimodels.EdgegroupsDecoratedEdgeGroup) Group {
 	return Group{
-		ID:             int(e.ID),
-		Name:           e.Name,
-		EnvironmentIds: utils.Int64ToIntSlice(e.Endpoints),
-		TagIds:         utils.Int64ToIntSlice(e.TagIds),
+		ID:             int(rawEdgeGroup.ID),
+		Name:           rawEdgeGroup.Name,
+		EnvironmentIds: utils.Int64ToIntSlice(rawEdgeGroup.Endpoints),
+		TagIds:         utils.Int64ToIntSlice(rawEdgeGroup.TagIds),
 	}
 }

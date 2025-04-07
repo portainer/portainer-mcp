@@ -46,6 +46,7 @@ Tool definitions are externalized into a separate `tools.yaml` file instead of m
 - Better separation of concerns
 - Easier experimentation with LLM-optimized descriptions
 - Independent evolution of tool definitions and code
+- Improved visibility and security through externalized tool definitions, making it easier for users to audit and understand potential prompt injection risks
 
 **Challenges**
 - Need to handle file loading and validation

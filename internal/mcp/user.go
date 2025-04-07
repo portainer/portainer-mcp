@@ -11,11 +11,11 @@ import (
 )
 
 func (s *PortainerMCPServer) AddUserFeatures() {
-	s.addToolIfExists(ToolListUsers, s.handleGetUsers())
-	s.addToolIfExists(ToolUpdateUserRole, s.handleUpdateUserRole())
+	s.addToolIfExists(ToolListUsers, s.HandleGetUsers())
+	s.addToolIfExists(ToolUpdateUserRole, s.HandleUpdateUserRole())
 }
 
-func (s *PortainerMCPServer) handleGetUsers() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleGetUsers() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		users, err := s.cli.GetUsers()
 		if err != nil {
@@ -31,7 +31,7 @@ func (s *PortainerMCPServer) handleGetUsers() server.ToolHandlerFunc {
 	}
 }
 
-func (s *PortainerMCPServer) handleUpdateUserRole() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleUpdateUserRole() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 

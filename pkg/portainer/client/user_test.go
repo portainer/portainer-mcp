@@ -5,21 +5,21 @@ import (
 	"testing"
 
 	"github.com/deviantony/portainer-mcp/pkg/portainer/models"
-	sdkmodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetUsers(t *testing.T) {
 	tests := []struct {
 		name          string
-		mockUsers     []*sdkmodels.PortainereeUser
+		mockUsers     []*apimodels.PortainereeUser
 		mockError     error
 		expected      []models.User
 		expectedError bool
 	}{
 		{
 			name: "successful retrieval - all role types",
-			mockUsers: []*sdkmodels.PortainereeUser{
+			mockUsers: []*apimodels.PortainereeUser{
 				{
 					ID:       1,
 					Username: "admin_user",
@@ -66,7 +66,7 @@ func TestGetUsers(t *testing.T) {
 		},
 		{
 			name:      "empty users",
-			mockUsers: []*sdkmodels.PortainereeUser{},
+			mockUsers: []*apimodels.PortainereeUser{},
 			expected:  []models.User{},
 		},
 		{

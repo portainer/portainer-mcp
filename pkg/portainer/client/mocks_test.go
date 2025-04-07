@@ -1,7 +1,7 @@
 package client
 
 import (
-	sdkmodels "github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -51,12 +51,12 @@ type MockPortainerAPI struct {
 }
 
 // ListEdgeGroups mocks the ListEdgeGroups method
-func (m *MockPortainerAPI) ListEdgeGroups() ([]*sdkmodels.EdgegroupsDecoratedEdgeGroup, error) {
+func (m *MockPortainerAPI) ListEdgeGroups() ([]*apimodels.EdgegroupsDecoratedEdgeGroup, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*sdkmodels.EdgegroupsDecoratedEdgeGroup), args.Error(1)
+	return args.Get(0).([]*apimodels.EdgegroupsDecoratedEdgeGroup), args.Error(1)
 }
 
 // CreateEdgeGroup mocks the CreateEdgeGroup method
@@ -72,12 +72,12 @@ func (m *MockPortainerAPI) UpdateEdgeGroup(id int64, name string, environmentIds
 }
 
 // ListEdgeStacks mocks the ListEdgeStacks method
-func (m *MockPortainerAPI) ListEdgeStacks() ([]*sdkmodels.PortainereeEdgeStack, error) {
+func (m *MockPortainerAPI) ListEdgeStacks() ([]*apimodels.PortainereeEdgeStack, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*sdkmodels.PortainereeEdgeStack), args.Error(1)
+	return args.Get(0).([]*apimodels.PortainereeEdgeStack), args.Error(1)
 }
 
 // CreateEdgeStack mocks the CreateEdgeStack method
@@ -99,12 +99,12 @@ func (m *MockPortainerAPI) GetEdgeStackFile(id int64) (string, error) {
 }
 
 // ListEndpointGroups mocks the ListEndpointGroups method
-func (m *MockPortainerAPI) ListEndpointGroups() ([]*sdkmodels.PortainerEndpointGroup, error) {
+func (m *MockPortainerAPI) ListEndpointGroups() ([]*apimodels.PortainerEndpointGroup, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*sdkmodels.PortainerEndpointGroup), args.Error(1)
+	return args.Get(0).([]*apimodels.PortainerEndpointGroup), args.Error(1)
 }
 
 // CreateEndpointGroup mocks the CreateEndpointGroup method
@@ -132,21 +132,21 @@ func (m *MockPortainerAPI) RemoveEnvironmentFromEndpointGroup(groupId int64, env
 }
 
 // ListEndpoints mocks the ListEndpoints method
-func (m *MockPortainerAPI) ListEndpoints() ([]*sdkmodels.PortainereeEndpoint, error) {
+func (m *MockPortainerAPI) ListEndpoints() ([]*apimodels.PortainereeEndpoint, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*sdkmodels.PortainereeEndpoint), args.Error(1)
+	return args.Get(0).([]*apimodels.PortainereeEndpoint), args.Error(1)
 }
 
 // GetEndpoint mocks the GetEndpoint method
-func (m *MockPortainerAPI) GetEndpoint(id int64) (*sdkmodels.PortainereeEndpoint, error) {
+func (m *MockPortainerAPI) GetEndpoint(id int64) (*apimodels.PortainereeEndpoint, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*sdkmodels.PortainereeEndpoint), args.Error(1)
+	return args.Get(0).(*apimodels.PortainereeEndpoint), args.Error(1)
 }
 
 // UpdateEndpoint mocks the UpdateEndpoint method
@@ -156,21 +156,21 @@ func (m *MockPortainerAPI) UpdateEndpoint(id int64, tagIds *[]int64, userAccesse
 }
 
 // GetSettings mocks the GetSettings method
-func (m *MockPortainerAPI) GetSettings() (*sdkmodels.PortainereeSettings, error) {
+func (m *MockPortainerAPI) GetSettings() (*apimodels.PortainereeSettings, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*sdkmodels.PortainereeSettings), args.Error(1)
+	return args.Get(0).(*apimodels.PortainereeSettings), args.Error(1)
 }
 
 // ListTags mocks the ListTags method
-func (m *MockPortainerAPI) ListTags() ([]*sdkmodels.PortainerTag, error) {
+func (m *MockPortainerAPI) ListTags() ([]*apimodels.PortainerTag, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*sdkmodels.PortainerTag), args.Error(1)
+	return args.Get(0).([]*apimodels.PortainerTag), args.Error(1)
 }
 
 // CreateTag mocks the CreateTag method
@@ -180,21 +180,21 @@ func (m *MockPortainerAPI) CreateTag(name string) (int64, error) {
 }
 
 // ListTeams mocks the ListTeams method
-func (m *MockPortainerAPI) ListTeams() ([]*sdkmodels.PortainerTeam, error) {
+func (m *MockPortainerAPI) ListTeams() ([]*apimodels.PortainerTeam, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*sdkmodels.PortainerTeam), args.Error(1)
+	return args.Get(0).([]*apimodels.PortainerTeam), args.Error(1)
 }
 
 // ListTeamMemberships mocks the ListTeamMemberships method
-func (m *MockPortainerAPI) ListTeamMemberships() ([]*sdkmodels.PortainerTeamMembership, error) {
+func (m *MockPortainerAPI) ListTeamMemberships() ([]*apimodels.PortainerTeamMembership, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*sdkmodels.PortainerTeamMembership), args.Error(1)
+	return args.Get(0).([]*apimodels.PortainerTeamMembership), args.Error(1)
 }
 
 // CreateTeam mocks the CreateTeam method
@@ -222,12 +222,12 @@ func (m *MockPortainerAPI) CreateTeamMembership(teamId int, userId int) error {
 }
 
 // ListUsers mocks the ListUsers method
-func (m *MockPortainerAPI) ListUsers() ([]*sdkmodels.PortainereeUser, error) {
+func (m *MockPortainerAPI) ListUsers() ([]*apimodels.PortainereeUser, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*sdkmodels.PortainereeUser), args.Error(1)
+	return args.Get(0).([]*apimodels.PortainereeUser), args.Error(1)
 }
 
 // UpdateUserRole mocks the UpdateUserRole method

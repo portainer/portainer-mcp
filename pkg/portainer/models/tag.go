@@ -3,7 +3,7 @@ package models
 import (
 	"strconv"
 
-	"github.com/portainer/client-api-go/v2/pkg/models"
+	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 )
 
 type EnvironmentTag struct {
@@ -12,10 +12,10 @@ type EnvironmentTag struct {
 	EnvironmentIds []int  `json:"environment_ids"`
 }
 
-func ConvertTagToEnvironmentTag(e *models.PortainerTag) EnvironmentTag {
-	environmentIDs := make([]int, 0, len(e.Endpoints))
+func ConvertTagToEnvironmentTag(rawTag *apimodels.PortainerTag) EnvironmentTag {
+	environmentIDs := make([]int, 0, len(rawTag.Endpoints))
 
-	for endpointID := range e.Endpoints {
+	for endpointID := range rawTag.Endpoints {
 		id, err := strconv.Atoi(endpointID)
 		if err == nil {
 			environmentIDs = append(environmentIDs, id)
@@ -23,8 +23,8 @@ func ConvertTagToEnvironmentTag(e *models.PortainerTag) EnvironmentTag {
 	}
 
 	return EnvironmentTag{
-		ID:             int(e.ID),
-		Name:           e.Name,
+		ID:             int(rawTag.ID),
+		Name:           rawTag.Name,
 		EnvironmentIds: environmentIDs,
 	}
 }
