@@ -6,12 +6,14 @@ import (
 	"os"
 
 	"github.com/mark3labs/mcp-go/mcp"
+	"golang.org/x/mod/semver"
 	"gopkg.in/yaml.v3"
 )
 
 // ToolsConfig represents the entire YAML configuration
 type ToolsConfig struct {
-	Tools []ToolDefinition `yaml:"tools"`
+	Version string           `yaml:"version"`
+	Tools   []ToolDefinition `yaml:"tools"`
 }
 
 // ToolDefinition represents a single tool in the YAML config
@@ -32,7 +34,8 @@ type ParameterDefinition struct {
 }
 
 // LoadToolsFromYAML loads tool definitions from a YAML file
-func LoadToolsFromYAML(filePath string) (map[string]mcp.Tool, error) {
+// It returns the tools and the version of the tools.yaml file
+func LoadToolsFromYAML(filePath string, minimumVersion string) (map[string]mcp.Tool, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
@@ -43,11 +46,23 @@ func LoadToolsFromYAML(filePath string) (map[string]mcp.Tool, error) {
 		return nil, err
 	}
 
-	return ConvertToolDefinitions(config.Tools), nil
+	if config.Version == "" {
+		return nil, fmt.Errorf("missing version in tools.yaml")
+	}
+
+	if !semver.IsValid(config.Version) {
+		return nil, fmt.Errorf("invalid version in tools.yaml: %s", config.Version)
+	}
+
+	if semver.Compare(config.Version, minimumVersion) < 0 {
+		return nil, fmt.Errorf("tools.yaml version %s is below the minimum required version %s", config.Version, minimumVersion)
+	}
+
+	return convertToolDefinitions(config.Tools), nil
 }
 
-// ConvertToolDefinitions converts YAML tool definitions to mcp.Tool objects
-func ConvertToolDefinitions(defs []ToolDefinition) map[string]mcp.Tool {
+// convertToolDefinitions converts YAML tool definitions to mcp.Tool objects
+func convertToolDefinitions(defs []ToolDefinition) map[string]mcp.Tool {
 	tools := make(map[string]mcp.Tool, len(defs))
 
 	for _, def := range defs {

@@ -1,4 +1,5 @@
 ---
+version: v1.0
 tools:
   ## Access Groups
   ## An access group is the equivalent of an Endpoint Group in Portainer.

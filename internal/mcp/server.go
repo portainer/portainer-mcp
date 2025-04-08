@@ -11,6 +11,11 @@ import (
 	"github.com/portainer/portainer-mcp/pkg/toolgen"
 )
 
+const (
+	// MinimumToolsVersion is the minimum supported version of the tools.yaml file
+	MinimumToolsVersion = "1.0"
+)
+
 // PortainerClient defines the interface for the wrapper client used by the MCP server
 type PortainerClient interface {
 	// Tag methods
@@ -66,7 +71,7 @@ type PortainerMCPServer struct {
 }
 
 func NewPortainerMCPServer(serverURL, token, toolsPath string) (*PortainerMCPServer, error) {
-	tools, err := toolgen.LoadToolsFromYAML(toolsPath)
+	tools, err := toolgen.LoadToolsFromYAML(toolsPath, MinimumToolsVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load tools: %w", err)
 	}
