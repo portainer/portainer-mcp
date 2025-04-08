@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	github.com/docker/go-connections v0.5.0
 	github.com/mark3labs/mcp-go v0.15.0
-	github.com/portainer/client-api-go/v2 v2.27.2-0.20250407070027-8601a4c528d0
+	github.com/portainer/client-api-go/v2 v2.28.1
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.36.0
