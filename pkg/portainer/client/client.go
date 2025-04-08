@@ -33,6 +33,7 @@ type PortainerAPIClient interface {
 	CreateTeamMembership(teamId int, userId int) error
 	ListUsers() ([]*apimodels.PortainereeUser, error)
 	UpdateUserRole(id int, role int64) error
+	GetVersion() (string, error)
 }
 
 // PortainerClient is a wrapper around the Portainer SDK client

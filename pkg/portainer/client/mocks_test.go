@@ -235,3 +235,9 @@ func (m *MockPortainerAPI) UpdateUserRole(id int, role int64) error {
 	args := m.Called(id, role)
 	return args.Error(0)
 }
+
+// GetVersion mocks the GetVersion method
+func (m *MockPortainerAPI) GetVersion() (string, error) {
+	args := m.Called()
+	return args.String(0), args.Error(1)
+}

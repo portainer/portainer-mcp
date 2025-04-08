@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/portainer/portainer-mcp/internal/mcp"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	// SDK imports kept for reference
@@ -24,7 +25,7 @@ import (
 )
 
 const (
-	portainerImage    = "portainer/portainer-ee:2.27.1"
+	portainerImage    = "portainer/portainer-ee:" + mcp.SupportedPortainerVersion
 	defaultAPIPortTCP = "9443/tcp"
 	adminPassword     = "$2y$05$CiHrhW6R6whDVlu7Wdgl0eccb3rg1NWl/mMiO93vQiRIF1SHNFRsS" // Bcrypt hash of "adminpassword123"
 	// Timeout for the container to start and be ready to use
@@ -42,10 +43,16 @@ type PortainerContainer struct {
 }
 
 // NewPortainerContainer creates and starts a new Portainer container for testing
+// using the supported version
 func NewPortainerContainer(ctx context.Context) (*PortainerContainer, error) {
+	return NewPortainerContainerWithImage(ctx, portainerImage)
+}
+
+// NewPortainerContainerWithImage creates and starts a Portainer container with a specific image
+func NewPortainerContainerWithImage(ctx context.Context, image string) (*PortainerContainer, error) {
 	// Default container configuration
 	req := testcontainers.ContainerRequest{
-		Image:        portainerImage,
+		Image:        image,
 		ExposedPorts: []string{defaultAPIPortTCP},
 		WaitingFor: wait.ForAll(
 			// Wait for the HTTPS server to start

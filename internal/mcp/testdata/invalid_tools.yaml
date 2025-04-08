@@ -1,4 +1,4 @@
-version: v1.0
+version: "0.5"
 tools:
   - name: test_tool
     description: Test tool description
@@ -6,4 +6,4 @@ tools:
       - name: test_param
         type: string
         description: A test parameter
-        required: true 
+        required: true

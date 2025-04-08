@@ -226,3 +226,11 @@ func (m *MockPortainerClient) GetSettings() (models.PortainerSettings, error) {
 	}
 	return args.Get(0).(models.PortainerSettings), args.Error(1)
 }
+
+func (m *MockPortainerClient) GetVersion() (string, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return "", args.Error(1)
+	}
+	return args.Get(0).(string), args.Error(1)
+}
