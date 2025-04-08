@@ -11,11 +11,14 @@ import (
 )
 
 func (s *PortainerMCPServer) AddEnvironmentGroupFeatures() {
-	s.addToolIfExists(ToolCreateEnvironmentGroup, s.HandleCreateEnvironmentGroup())
 	s.addToolIfExists(ToolListEnvironmentGroups, s.HandleGetEnvironmentGroups())
-	s.addToolIfExists(ToolUpdateEnvironmentGroupName, s.HandleUpdateEnvironmentGroupName())
-	s.addToolIfExists(ToolUpdateEnvironmentGroupEnvironments, s.HandleUpdateEnvironmentGroupEnvironments())
-	s.addToolIfExists(ToolUpdateEnvironmentGroupTags, s.HandleUpdateEnvironmentGroupTags())
+
+	if !s.readOnly {
+		s.addToolIfExists(ToolCreateEnvironmentGroup, s.HandleCreateEnvironmentGroup())
+		s.addToolIfExists(ToolUpdateEnvironmentGroupName, s.HandleUpdateEnvironmentGroupName())
+		s.addToolIfExists(ToolUpdateEnvironmentGroupEnvironments, s.HandleUpdateEnvironmentGroupEnvironments())
+		s.addToolIfExists(ToolUpdateEnvironmentGroupTags, s.HandleUpdateEnvironmentGroupTags())
+	}
 }
 
 func (s *PortainerMCPServer) HandleGetEnvironmentGroups() server.ToolHandlerFunc {

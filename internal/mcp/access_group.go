@@ -11,13 +11,16 @@ import (
 )
 
 func (s *PortainerMCPServer) AddAccessGroupFeatures() {
-	s.addToolIfExists(ToolCreateAccessGroup, s.HandleCreateAccessGroup())
 	s.addToolIfExists(ToolListAccessGroups, s.HandleGetAccessGroups())
-	s.addToolIfExists(ToolUpdateAccessGroupName, s.HandleUpdateAccessGroupName())
-	s.addToolIfExists(ToolUpdateAccessGroupUserAccesses, s.HandleUpdateAccessGroupUserAccesses())
-	s.addToolIfExists(ToolUpdateAccessGroupTeamAccesses, s.HandleUpdateAccessGroupTeamAccesses())
-	s.addToolIfExists(ToolAddEnvironmentToAccessGroup, s.HandleAddEnvironmentToAccessGroup())
-	s.addToolIfExists(ToolRemoveEnvironmentFromAccessGroup, s.HandleRemoveEnvironmentFromAccessGroup())
+
+	if !s.readOnly {
+		s.addToolIfExists(ToolCreateAccessGroup, s.HandleCreateAccessGroup())
+		s.addToolIfExists(ToolUpdateAccessGroupName, s.HandleUpdateAccessGroupName())
+		s.addToolIfExists(ToolUpdateAccessGroupUserAccesses, s.HandleUpdateAccessGroupUserAccesses())
+		s.addToolIfExists(ToolUpdateAccessGroupTeamAccesses, s.HandleUpdateAccessGroupTeamAccesses())
+		s.addToolIfExists(ToolAddEnvironmentToAccessGroup, s.HandleAddEnvironmentToAccessGroup())
+		s.addToolIfExists(ToolRemoveEnvironmentFromAccessGroup, s.HandleRemoveEnvironmentFromAccessGroup())
+	}
 }
 
 func (s *PortainerMCPServer) HandleGetAccessGroups() server.ToolHandlerFunc {

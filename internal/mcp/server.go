@@ -72,9 +72,10 @@ type PortainerClient interface {
 // PortainerMCPServer is the main server that handles MCP protocol communication
 // with AI assistants and translates them into Portainer API calls.
 type PortainerMCPServer struct {
-	srv   *server.MCPServer
-	cli   PortainerClient
-	tools map[string]mcp.Tool
+	srv      *server.MCPServer
+	cli      PortainerClient
+	tools    map[string]mcp.Tool
+	readOnly bool
 }
 
 // ServerOption is a function that configures the server
@@ -82,7 +83,8 @@ type ServerOption func(*serverOptions)
 
 // serverOptions contains all configurable options for the server
 type serverOptions struct {
-	client PortainerClient
+	client   PortainerClient
+	readOnly bool
 }
 
 // WithClient sets a custom client for the server.
@@ -90,6 +92,14 @@ type serverOptions struct {
 func WithClient(client PortainerClient) ServerOption {
 	return func(opts *serverOptions) {
 		opts.client = client
+	}
+}
+
+// WithReadOnly sets the server to read-only mode.
+// This will prevent the server from registering write tools.
+func WithReadOnly(readOnly bool) ServerOption {
+	return func(opts *serverOptions) {
+		opts.readOnly = readOnly
 	}
 }
 
@@ -147,8 +157,9 @@ func NewPortainerMCPServer(serverURL, token, toolsPath string, options ...Server
 			server.WithResourceCapabilities(true, true),
 			server.WithLogging(),
 		),
-		cli:   portainerClient,
-		tools: tools,
+		cli:      portainerClient,
+		tools:    tools,
+		readOnly: opts.readOnly,
 	}, nil
 }
 

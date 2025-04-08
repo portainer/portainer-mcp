@@ -12,9 +12,12 @@ import (
 
 func (s *PortainerMCPServer) AddEnvironmentFeatures() {
 	s.addToolIfExists(ToolListEnvironments, s.HandleGetEnvironments())
-	s.addToolIfExists(ToolUpdateEnvironmentTags, s.HandleUpdateEnvironmentTags())
-	s.addToolIfExists(ToolUpdateEnvironmentUserAccesses, s.HandleUpdateEnvironmentUserAccesses())
-	s.addToolIfExists(ToolUpdateEnvironmentTeamAccesses, s.HandleUpdateEnvironmentTeamAccesses())
+
+	if !s.readOnly {
+		s.addToolIfExists(ToolUpdateEnvironmentTags, s.HandleUpdateEnvironmentTags())
+		s.addToolIfExists(ToolUpdateEnvironmentUserAccesses, s.HandleUpdateEnvironmentUserAccesses())
+		s.addToolIfExists(ToolUpdateEnvironmentTeamAccesses, s.HandleUpdateEnvironmentTeamAccesses())
+	}
 }
 
 func (s *PortainerMCPServer) HandleGetEnvironments() server.ToolHandlerFunc {
