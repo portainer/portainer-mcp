@@ -34,6 +34,32 @@ With Claude Desktop, configure it like so:
 
 Replace `[IP]`, `[PORT]` and `[TOKEN]` with the IP, port and API access token associated with your Portainer instance.
 
+## Tool Customization
+
+By default, the tool definitions are embedded in the binary. The application will create a tools file at the default location if one doesn't already exist.
+
+You can customize the tool definitions by specifying a custom tools file path using the `-tools` flag:
+
+```
+{
+    "mcpServers": {
+        "portainer": {
+            "command": "/path/to/portainer-mcp",
+            "args": [
+                "-server",
+                "[IP]:[PORT]",
+                "-token",
+                "[TOKEN]",
+                "-tools",
+                "/path/to/custom/tools.yaml"
+            ]
+        }
+    }
+}
+```
+
+The default tools file is available for reference at `internal/tooldef/tools.yaml` in the source code. You can modify the descriptions of the tools and their parameters to alter how AI models interpret and decide to use them. **Important:** Do not change the tool names or parameter definitions (other than descriptions), as this will prevent the tools from being properly registered and functioning correctly.
+
 ## Read-Only Mode
 
 For security-conscious users, the application can be run in read-only mode. This mode ensures that only read operations are available, completely preventing any modifications to your Portainer resources.
