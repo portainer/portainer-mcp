@@ -11,10 +11,13 @@ import (
 )
 
 func (s *PortainerMCPServer) AddStackFeatures() {
-	s.addToolIfExists(ToolCreateStack, s.HandleCreateStack())
 	s.addToolIfExists(ToolListStacks, s.HandleGetStacks())
-	s.addToolIfExists(ToolUpdateStack, s.HandleUpdateStack())
 	s.addToolIfExists(ToolGetStackFile, s.HandleGetStackFile())
+
+	if !s.readOnly {
+		s.addToolIfExists(ToolCreateStack, s.HandleCreateStack())
+		s.addToolIfExists(ToolUpdateStack, s.HandleUpdateStack())
+	}
 }
 
 func (s *PortainerMCPServer) HandleGetStacks() server.ToolHandlerFunc {

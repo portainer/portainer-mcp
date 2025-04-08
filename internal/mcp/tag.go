@@ -11,8 +11,11 @@ import (
 )
 
 func (s *PortainerMCPServer) AddTagFeatures() {
-	s.addToolIfExists(ToolCreateEnvironmentTag, s.HandleCreateEnvironmentTag())
 	s.addToolIfExists(ToolListEnvironmentTags, s.HandleGetEnvironmentTags())
+
+	if !s.readOnly {
+		s.addToolIfExists(ToolCreateEnvironmentTag, s.HandleCreateEnvironmentTag())
+	}
 }
 
 func (s *PortainerMCPServer) HandleGetEnvironmentTags() server.ToolHandlerFunc {

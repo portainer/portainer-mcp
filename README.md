@@ -34,6 +34,34 @@ With Claude Desktop, configure it like so:
 
 Replace `[IP]`, `[PORT]` and `[TOKEN]` with the IP, port and API access token associated with your Portainer instance.
 
+## Read-Only Mode
+
+For security-conscious users, the application can be run in read-only mode. This mode ensures that only read operations are available, completely preventing any modifications to your Portainer resources.
+
+To enable read-only mode, add the `-read-only` flag to your command arguments:
+
+```
+{
+    "mcpServers": {
+        "portainer": {
+            "command": "/path/to/portainer-mcp",
+            "args": [
+                "-server",
+                "[IP]:[PORT]",
+                "-token",
+                "[TOKEN]",
+                "-read-only"
+            ]
+        }
+    }
+}
+```
+
+When using read-only mode:
+- Only read tools (list, get) will be available to the AI model
+- All write tools (create, update, delete) are not loaded
+
+
 # Portainer Version Support
 
 This tool is pinned to support a specific version of Portainer. The application will validate the Portainer server version at startup and fail if it doesn't match the required version.
@@ -42,7 +70,7 @@ This tool is pinned to support a specific version of Portainer. The application 
 |--------------|----------------------------|
 | current      | 2.27.1                     |
 
-# Supported capabilities
+# Supported Capabilities
 
 The following table lists the currently (latest version) supported operations through MCP tools:
 

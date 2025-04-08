@@ -11,10 +11,13 @@ import (
 )
 
 func (s *PortainerMCPServer) AddTeamFeatures() {
-	s.addToolIfExists(ToolCreateTeam, s.HandleCreateTeam())
 	s.addToolIfExists(ToolListTeams, s.HandleGetTeams())
-	s.addToolIfExists(ToolUpdateTeamName, s.HandleUpdateTeamName())
-	s.addToolIfExists(ToolUpdateTeamMembers, s.HandleUpdateTeamMembers())
+
+	if !s.readOnly {
+		s.addToolIfExists(ToolCreateTeam, s.HandleCreateTeam())
+		s.addToolIfExists(ToolUpdateTeamName, s.HandleUpdateTeamName())
+		s.addToolIfExists(ToolUpdateTeamMembers, s.HandleUpdateTeamMembers())
+	}
 }
 
 func (s *PortainerMCPServer) HandleCreateTeam() server.ToolHandlerFunc {

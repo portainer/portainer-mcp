@@ -12,7 +12,10 @@ import (
 
 func (s *PortainerMCPServer) AddUserFeatures() {
 	s.addToolIfExists(ToolListUsers, s.HandleGetUsers())
-	s.addToolIfExists(ToolUpdateUserRole, s.HandleUpdateUserRole())
+
+	if !s.readOnly {
+		s.addToolIfExists(ToolUpdateUserRole, s.HandleUpdateUserRole())
+	}
 }
 
 func (s *PortainerMCPServer) HandleGetUsers() server.ToolHandlerFunc {
