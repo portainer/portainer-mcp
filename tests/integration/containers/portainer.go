@@ -43,10 +43,16 @@ type PortainerContainer struct {
 }
 
 // NewPortainerContainer creates and starts a new Portainer container for testing
+// using the supported version
 func NewPortainerContainer(ctx context.Context) (*PortainerContainer, error) {
+	return NewPortainerContainerWithImage(ctx, portainerImage)
+}
+
+// NewPortainerContainerWithImage creates and starts a Portainer container with a specific image
+func NewPortainerContainerWithImage(ctx context.Context, image string) (*PortainerContainer, error) {
 	// Default container configuration
 	req := testcontainers.ContainerRequest{
-		Image:        portainerImage,
+		Image:        image,
 		ExposedPorts: []string{defaultAPIPortTCP},
 		WaitingFor: wait.ForAll(
 			// Wait for the HTTPS server to start
