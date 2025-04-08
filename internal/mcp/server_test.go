@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -11,19 +12,27 @@ import (
 )
 
 func TestNewPortainerMCPServer(t *testing.T) {
+	// Define paths to test data files
+	validToolsPath := "testdata/valid_tools.yaml"
+	invalidToolsPath := "testdata/invalid_tools.yaml"
+
 	tests := []struct {
 		name          string
 		serverURL     string
 		token         string
 		toolsPath     string
+		mockSetup     func(*MockPortainerClient)
 		expectError   bool
 		errorContains string
 	}{
 		{
-			name:        "successful initialization",
-			serverURL:   "https://portainer.example.com",
-			token:       "valid-token",
-			toolsPath:   "testdata/valid_tools.yaml",
+			name:      "successful initialization with supported version",
+			serverURL: "https://portainer.example.com",
+			token:     "valid-token",
+			toolsPath: validToolsPath,
+			mockSetup: func(m *MockPortainerClient) {
+				m.On("GetVersion").Return(SupportedPortainerVersion, nil)
+			},
 			expectError: false,
 		},
 		{
@@ -31,19 +40,61 @@ func TestNewPortainerMCPServer(t *testing.T) {
 			serverURL:     "https://portainer.example.com",
 			token:         "valid-token",
 			toolsPath:     "testdata/nonexistent.yaml",
+			mockSetup:     func(m *MockPortainerClient) {},
 			expectError:   true,
 			errorContains: "failed to load tools",
+		},
+		{
+			name:          "invalid tools version",
+			serverURL:     "https://portainer.example.com",
+			token:         "valid-token",
+			toolsPath:     invalidToolsPath,
+			mockSetup:     func(m *MockPortainerClient) {},
+			expectError:   true,
+			errorContains: "invalid version in tools.yaml",
+		},
+		{
+			name:      "API communication error",
+			serverURL: "https://portainer.example.com",
+			token:     "valid-token",
+			toolsPath: validToolsPath,
+			mockSetup: func(m *MockPortainerClient) {
+				m.On("GetVersion").Return("", errors.New("connection error"))
+			},
+			expectError:   true,
+			errorContains: "failed to get Portainer server version",
+		},
+		{
+			name:      "unsupported Portainer version",
+			serverURL: "https://portainer.example.com",
+			token:     "valid-token",
+			toolsPath: validToolsPath,
+			mockSetup: func(m *MockPortainerClient) {
+				m.On("GetVersion").Return("2.0.0", nil)
+			},
+			expectError:   true,
+			errorContains: "unsupported Portainer server version",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server, err := NewPortainerMCPServer(tt.serverURL, tt.token, tt.toolsPath)
+			// Create and configure the mock client
+			mockClient := new(MockPortainerClient)
+			tt.mockSetup(mockClient)
+
+			// Create server with mock client using the WithClient option
+			server, err := NewPortainerMCPServer(
+				tt.serverURL,
+				tt.token,
+				tt.toolsPath,
+				WithClient(mockClient),
+			)
 
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {
-					assert.ErrorContains(t, err, tt.errorContains)
+					assert.Contains(t, err.Error(), tt.errorContains)
 				}
 				assert.Nil(t, server)
 			} else {
@@ -53,6 +104,9 @@ func TestNewPortainerMCPServer(t *testing.T) {
 				assert.NotNil(t, server.cli)
 				assert.NotNil(t, server.tools)
 			}
+
+			// Verify that all expected methods were called
+			mockClient.AssertExpectations(t)
 		})
 	}
 }

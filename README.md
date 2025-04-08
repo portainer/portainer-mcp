@@ -34,9 +34,17 @@ With Claude Desktop, configure it like so:
 
 Replace `[IP]`, `[PORT]` and `[TOKEN]` with the IP, port and API access token associated with your Portainer instance.
 
+# Portainer Version Support
+
+This tool is pinned to support a specific version of Portainer. The application will validate the Portainer server version at startup and fail if it doesn't match the required version.
+
+| MCP Version  | Supported Portainer Version |
+|--------------|----------------------------|
+| current      | 2.27.1                     |
+
 # Supported capabilities
 
-The following table lists the currently supported operations through MCP tools:
+The following table lists the currently (latest version) supported operations through MCP tools:
 
 | Resource | Operation | Description |
 |----------|-----------|-------------|

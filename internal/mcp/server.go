@@ -14,6 +14,8 @@ import (
 const (
 	// MinimumToolsVersion is the minimum supported version of the tools.yaml file
 	MinimumToolsVersion = "1.0"
+	// SupportedPortainerVersion is the version of Portainer that is supported by this tool
+	SupportedPortainerVersion = "2.27.1"
 )
 
 // PortainerClient defines the interface for the wrapper client used by the MCP server
@@ -62,18 +64,80 @@ type PortainerClient interface {
 
 	// Settings methods
 	GetSettings() (models.PortainerSettings, error)
+
+	// Version methods
+	GetVersion() (string, error)
 }
 
+// PortainerMCPServer is the main server that handles MCP protocol communication
+// with AI assistants and translates them into Portainer API calls.
 type PortainerMCPServer struct {
 	srv   *server.MCPServer
 	cli   PortainerClient
 	tools map[string]mcp.Tool
 }
 
-func NewPortainerMCPServer(serverURL, token, toolsPath string) (*PortainerMCPServer, error) {
+// ServerOption is a function that configures the server
+type ServerOption func(*serverOptions)
+
+// serverOptions contains all configurable options for the server
+type serverOptions struct {
+	client PortainerClient
+}
+
+// WithClient sets a custom client for the server.
+// This is primarily used for testing to inject mock clients.
+func WithClient(client PortainerClient) ServerOption {
+	return func(opts *serverOptions) {
+		opts.client = client
+	}
+}
+
+// NewPortainerMCPServer creates a new Portainer MCP server.
+//
+// This server provides an implementation of the MCP protocol for Portainer,
+// allowing AI assistants to interact with Portainer through a structured API.
+//
+// Parameters:
+//   - serverURL: The base URL of the Portainer server (e.g., "https://portainer.example.com")
+//   - token: The API token for authenticating with the Portainer server
+//   - toolsPath: Path to the tools.yaml file that defines the available MCP tools
+//   - options: Optional functional options for customizing server behavior (e.g., WithClient)
+//
+// Returns:
+//   - A configured PortainerMCPServer instance ready to be started
+//   - An error if initialization fails
+//
+// Possible errors:
+//   - Failed to load tools from the specified path
+//   - Failed to communicate with the Portainer server
+//   - Incompatible Portainer server version
+func NewPortainerMCPServer(serverURL, token, toolsPath string, options ...ServerOption) (*PortainerMCPServer, error) {
+	opts := &serverOptions{}
+
+	for _, option := range options {
+		option(opts)
+	}
+
 	tools, err := toolgen.LoadToolsFromYAML(toolsPath, MinimumToolsVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load tools: %w", err)
+	}
+
+	var portainerClient PortainerClient
+	if opts.client != nil {
+		portainerClient = opts.client
+	} else {
+		portainerClient = client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(true))
+	}
+
+	version, err := portainerClient.GetVersion()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Portainer server version: %w", err)
+	}
+
+	if version != SupportedPortainerVersion {
+		return nil, fmt.Errorf("unsupported Portainer server version: %s, only version %s is supported", version, SupportedPortainerVersion)
 	}
 
 	return &PortainerMCPServer{
@@ -83,11 +147,13 @@ func NewPortainerMCPServer(serverURL, token, toolsPath string) (*PortainerMCPSer
 			server.WithResourceCapabilities(true, true),
 			server.WithLogging(),
 		),
-		cli:   client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(true)),
+		cli:   portainerClient,
 		tools: tools,
 	}, nil
 }
 
+// Start begins listening for MCP protocol messages on standard input/output.
+// This is a blocking call that will run until the connection is closed.
 func (s *PortainerMCPServer) Start() error {
 	return server.ServeStdio(s.srv)
 }
