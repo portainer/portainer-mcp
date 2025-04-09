@@ -1,5 +1,7 @@
 # Portainer MCP
 
+Chat with your Portainer server!
+
 ## Overview
 
 Portainer MCP is a work in progress implementation of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) for Portainer environments. This project aims to provide a standardized way to connect Portainer's container management capabilities with AI models and other services.
