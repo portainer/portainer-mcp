@@ -96,7 +96,7 @@ This tool is pinned to support a specific version of Portainer. The application 
 
 | MCP Version  | Supported Portainer Version |
 |--------------|----------------------------|
-| current      | 2.27.1                     |
+| current      | 2.28.1                     |
 
 # Supported Capabilities
 
