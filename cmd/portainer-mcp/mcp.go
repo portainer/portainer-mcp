@@ -9,6 +9,7 @@ import (
 )
 
 const defaultToolsPath = "tools.yaml"
+const version = "0.1.0"
 
 func main() {
 	serverFlag := flag.String("server", "", "The Portainer server URL")
@@ -44,6 +45,7 @@ func main() {
 		Str("token", *tokenFlag).
 		Str("tools", toolsPath).
 		Bool("read-only", *readOnlyFlag).
+		Str("version", version).
 		Msg("Starting Portainer MCP server")
 
 	server, err := mcp.NewPortainerMCPServer(*serverFlag, *tokenFlag, toolsPath, mcp.WithReadOnly(*readOnlyFlag))
