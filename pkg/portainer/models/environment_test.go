@@ -112,36 +112,55 @@ func TestConvertEndpointToEnvironment(t *testing.T) {
 
 func TestConvertEnvironmentStatus(t *testing.T) {
 	tests := []struct {
-		name   string
-		status int
-		want   string
+		name     string
+		endpoint *models.PortainereeEndpoint
+		want     string
 	}{
 		{
-			name:   "active status",
-			status: 1,
-			want:   EnvironmentStatusActive,
+			name: "standard environment - active status",
+			endpoint: &models.PortainereeEndpoint{
+				Status: 1,
+				Type:   1, // docker-local
+			},
+			want: EnvironmentStatusActive,
 		},
 		{
-			name:   "inactive status",
-			status: 2,
-			want:   EnvironmentStatusInactive,
+			name: "standard environment - inactive status",
+			endpoint: &models.PortainereeEndpoint{
+				Status: 2,
+				Type:   2, // docker-agent
+			},
+			want: EnvironmentStatusInactive,
 		},
 		{
-			name:   "unknown status",
-			status: 0,
-			want:   EnvironmentStatusUnknown,
+			name: "standard environment - unknown status",
+			endpoint: &models.PortainereeEndpoint{
+				Status: 0,
+				Type:   3, // azure-aci
+			},
+			want: EnvironmentStatusUnknown,
 		},
 		{
-			name:   "invalid status",
-			status: 99,
-			want:   EnvironmentStatusUnknown,
+			name: "edge environment - active with heartbeat",
+			endpoint: &models.PortainereeEndpoint{
+				Type:      4, // docker-edge-agent
+				Heartbeat: true,
+			},
+			want: EnvironmentStatusActive,
+		},
+		{
+			name: "edge environment - inactive without heartbeat",
+			endpoint: &models.PortainereeEndpoint{
+				Type:      7, // kubernetes-edge-agent
+				Heartbeat: false,
+			},
+			want: EnvironmentStatusInactive,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			endpoint := &models.PortainereeEndpoint{Status: int64(tt.status)}
-			got := convertEnvironmentStatus(endpoint)
+			got := convertEnvironmentStatus(tt.endpoint)
 			if got != tt.want {
 				t.Errorf("convertEnvironmentStatus() = %v, want %v", got, tt.want)
 			}

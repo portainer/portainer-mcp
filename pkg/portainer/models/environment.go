@@ -47,6 +47,13 @@ func ConvertEndpointToEnvironment(rawEndpoint *apimodels.PortainereeEndpoint) En
 }
 
 func convertEnvironmentStatus(rawEndpoint *apimodels.PortainereeEndpoint) string {
+	if rawEndpoint.Type == 4 || rawEndpoint.Type == 7 {
+		return convertEdgeEnvironmentStatus(rawEndpoint)
+	}
+	return convertStandardEnvironmentStatus(rawEndpoint)
+}
+
+func convertStandardEnvironmentStatus(rawEndpoint *apimodels.PortainereeEndpoint) string {
 	switch rawEndpoint.Status {
 	case 1:
 		return EnvironmentStatusActive
@@ -55,6 +62,13 @@ func convertEnvironmentStatus(rawEndpoint *apimodels.PortainereeEndpoint) string
 	default:
 		return EnvironmentStatusUnknown
 	}
+}
+
+func convertEdgeEnvironmentStatus(rawEndpoint *apimodels.PortainereeEndpoint) string {
+	if rawEndpoint.Heartbeat {
+		return EnvironmentStatusActive
+	}
+	return EnvironmentStatusInactive
 }
 
 func convertEnvironmentType(rawEndpoint *apimodels.PortainereeEndpoint) string {

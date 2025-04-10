@@ -30,11 +30,16 @@ With Claude Desktop, configure it like so:
                 "[IP]:[PORT]",
                 "-token",
                 "[TOKEN]"
+                "-tools",
+                "/tmp/tools.yaml"
             ]
         }
     }
 }
 ```
+
+> [!NOTE]
+> By default, the tool looks for "tools.yaml" in the same directory as the binary. You may need to modify this path as described above, particularly when using AI assistants like Claude that have restricted write permissions to the working directory.
 
 Replace `[IP]`, `[PORT]` and `[TOKEN]` with the IP, port and API access token associated with your Portainer instance.
 
@@ -141,5 +146,4 @@ The following table lists the currently (latest version) supported operations th
 | **Users** |
 | | ListUsers | List all available users |
 | | UpdateUser | Update an existing user |
-| **Settings** |
 | | GetSettings | Get the settings of the Portainer instance |
