@@ -1,6 +1,8 @@
 # Portainer MCP
 
-Chat with your Portainer server!
+Ever wished you could just ask Portainer what's going on?
+
+![portainer-mcp-demo](https://downloads.portainer.io/mcp-demo1.gif)
 
 ## Overview
 

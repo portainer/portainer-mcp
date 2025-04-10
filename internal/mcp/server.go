@@ -15,7 +15,7 @@ const (
 	// MinimumToolsVersion is the minimum supported version of the tools.yaml file
 	MinimumToolsVersion = "1.0"
 	// SupportedPortainerVersion is the version of Portainer that is supported by this tool
-	SupportedPortainerVersion = "2.27.1"
+	SupportedPortainerVersion = "2.28.1"
 )
 
 // PortainerClient defines the interface for the wrapper client used by the MCP server
