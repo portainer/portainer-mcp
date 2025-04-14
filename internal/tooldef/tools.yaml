@@ -425,6 +425,7 @@ tools:
           - POST
           - PUT
           - DELETE
+          - HEAD
       - name: body
         description: "The body of the Docker API operation to proxy. Must be a JSON string.
           Example: {'Image': 'nginx:latest', 'Name': 'my-container'}"

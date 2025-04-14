@@ -248,5 +248,8 @@ func (m *MockPortainerAPI) GetVersion() (string, error) {
 // ProxyDockerRequest mocks the ProxyDockerRequest method
 func (m *MockPortainerAPI) ProxyDockerRequest(environmentId int, dockerAPIPath string, method string, body io.Reader) (*http.Response, error) {
 	args := m.Called(environmentId, dockerAPIPath, method, body)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*http.Response), args.Error(1)
 }

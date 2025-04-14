@@ -38,6 +38,9 @@ func (s *PortainerMCPServer) handleDockerProxy() server.ToolHandlerFunc {
 		if err != nil {
 			return nil, err
 		}
+		if !isValidHTTPMethod(method) {
+			return nil, fmt.Errorf("invalid method: %s", method)
+		}
 
 		body, err := parser.GetString("body", false)
 		if err != nil {

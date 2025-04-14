@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -34,6 +35,11 @@ func parseAccessMap(entries []any) (map[int]string, error) {
 	}
 
 	return accessMap, nil
+}
+
+func isValidHTTPMethod(method string) bool {
+	validMethods := []string{"GET", "POST", "PUT", "DELETE", "HEAD"}
+	return slices.Contains(validMethods, method)
 }
 
 // CreateMCPRequest creates a new MCP tool request with the given arguments
