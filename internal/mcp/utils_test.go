@@ -125,3 +125,31 @@ func TestParseAccessMap(t *testing.T) {
 		})
 	}
 }
+
+func TestIsValidHTTPMethod(t *testing.T) {
+	tests := []struct {
+		name   string
+		method string
+		expect bool
+	}{
+		{"Valid GET", "GET", true},
+		{"Valid POST", "POST", true},
+		{"Valid PUT", "PUT", true},
+		{"Valid DELETE", "DELETE", true},
+		{"Valid HEAD", "HEAD", true},
+		{"Invalid lowercase get", "get", false},
+		{"Invalid PATCH", "PATCH", false},
+		{"Invalid OPTIONS", "OPTIONS", false},
+		{"Invalid Empty", "", false},
+		{"Invalid Random", "RANDOM", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isValidHTTPMethod(tt.method)
+			if got != tt.expect {
+				t.Errorf("isValidHTTPMethod(%q) = %v, want %v", tt.method, got, tt.expect)
+			}
+		})
+	}
+}
