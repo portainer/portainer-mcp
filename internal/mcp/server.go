@@ -72,10 +72,12 @@ type PortainerClient interface {
 // PortainerMCPServer is the main server that handles MCP protocol communication
 // with AI assistants and translates them into Portainer API calls.
 type PortainerMCPServer struct {
-	srv      *server.MCPServer
-	cli      PortainerClient
-	tools    map[string]mcp.Tool
-	readOnly bool
+	srv       *server.MCPServer
+	cli       PortainerClient
+	tools     map[string]mcp.Tool
+	readOnly  bool
+	serverURL string
+	token     string
 }
 
 // ServerOption is a function that configures the server
@@ -160,6 +162,9 @@ func NewPortainerMCPServer(serverURL, token, toolsPath string, options ...Server
 		cli:      portainerClient,
 		tools:    tools,
 		readOnly: opts.readOnly,
+		// TMP: replace with a client later
+		serverURL: serverURL,
+		token:     token,
 	}, nil
 }
 

@@ -401,3 +401,32 @@ tools:
           - admin
           - user
           - edge_admin
+
+  ## Docker Proxy
+  ## ------------------------------------------------------------
+  - name: dockerProxy
+    description: Proxy Docker requests to a specific Portainer environment.
+      This tool can be used with any Docker API operation as documented in the Docker Engine API specification (https://docs.docker.com/reference/api/engine/version/v1.48/).
+    parameters:
+      - name: environmentId
+        description: The ID of the environment to proxy Docker requests to
+        type: number
+        required: true
+      - name: dockerAPIPath
+        description: "The route of the Docker API operation to proxy. Must include the leading slash. Example: /containers/json"
+        type: string
+        required: true
+      - name: method
+        description: The HTTP method to use to proxy the Docker API operation
+        type: string
+        required: true
+        enum:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+      - name: body
+        description: "The body of the Docker API operation to proxy. Must be a JSON string.
+          Example: {'Image': 'nginx:latest', 'Name': 'my-container'}"
+        type: string
+        required: false
