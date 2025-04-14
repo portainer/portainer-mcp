@@ -14,11 +14,11 @@ import (
 
 func (s *PortainerMCPServer) AddDockerProxyFeatures() {
 	if !s.readOnly {
-		s.addToolIfExists(ToolDockerProxy, s.handleDockerProxy())
+		s.addToolIfExists(ToolDockerProxy, s.HandleDockerProxy())
 	}
 }
 
-func (s *PortainerMCPServer) handleDockerProxy() server.ToolHandlerFunc {
+func (s *PortainerMCPServer) HandleDockerProxy() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 

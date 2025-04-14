@@ -442,7 +442,7 @@ tools:
               description: The value of the query parameter
       - name: headers
         description: "The headers to include in the Docker API operation. Must be an array of key-value pairs.
-          Example: [{key: 'Authorization', value: 'Bearer <token>'}]"
+          Example: [{key: 'Content-Type', value: 'application/json'}]"
         type: array
         required: false
         items:

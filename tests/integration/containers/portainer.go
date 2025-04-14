@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/portainer/portainer-mcp/internal/mcp"
 	"github.com/testcontainers/testcontainers-go"
@@ -25,9 +26,9 @@ import (
 )
 
 const (
-	portainerImage    = "portainer/portainer-ee:" + mcp.SupportedPortainerVersion
-	defaultAPIPortTCP = "9443/tcp"
-	adminPassword     = "$2y$05$CiHrhW6R6whDVlu7Wdgl0eccb3rg1NWl/mMiO93vQiRIF1SHNFRsS" // Bcrypt hash of "adminpassword123"
+	defaultPortainerImage = "portainer/portainer-ee:" + mcp.SupportedPortainerVersion
+	defaultAPIPortTCP     = "9443/tcp"
+	adminPassword         = "$2y$05$CiHrhW6R6whDVlu7Wdgl0eccb3rg1NWl/mMiO93vQiRIF1SHNFRsS" // Bcrypt hash of "adminpassword123"
 	// Timeout for the container to start and be ready to use
 	startupTimeout = time.Second * 5
 	// Timeout for the requests to the API
@@ -42,17 +43,45 @@ type PortainerContainer struct {
 	apiToken string
 }
 
-// NewPortainerContainer creates and starts a new Portainer container for testing
-// using the supported version
-func NewPortainerContainer(ctx context.Context) (*PortainerContainer, error) {
-	return NewPortainerContainerWithImage(ctx, portainerImage)
+// portainerContainerConfig holds the configuration for creating a Portainer container
+type portainerContainerConfig struct {
+	Image            string
+	BindDockerSocket bool
 }
 
-// NewPortainerContainerWithImage creates and starts a Portainer container with a specific image
-func NewPortainerContainerWithImage(ctx context.Context, image string) (*PortainerContainer, error) {
-	// Default container configuration
+// PortainerContainerOption defines a function type for applying options to Portainer container configuration
+type PortainerContainerOption func(*portainerContainerConfig)
+
+// WithImage sets a custom Portainer image
+func WithImage(image string) PortainerContainerOption {
+	return func(cfg *portainerContainerConfig) {
+		cfg.Image = image
+	}
+}
+
+// WithDockerSocketBind configures the container to bind mount the Docker socket
+func WithDockerSocketBind(bind bool) PortainerContainerOption {
+	return func(cfg *portainerContainerConfig) {
+		cfg.BindDockerSocket = bind
+	}
+}
+
+// NewPortainerContainer creates and starts a new Portainer container with the specified options
+func NewPortainerContainer(ctx context.Context, opts ...PortainerContainerOption) (*PortainerContainer, error) {
+	// Default configuration
+	cfg := &portainerContainerConfig{
+		Image:            defaultPortainerImage,
+		BindDockerSocket: false,
+	}
+
+	// Apply provided options
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	// Container request configuration
 	req := testcontainers.ContainerRequest{
-		Image:        image,
+		Image:        cfg.Image,
 		ExposedPorts: []string{defaultAPIPortTCP},
 		WaitingFor: wait.ForAll(
 			// Wait for the HTTPS server to start
@@ -76,10 +105,15 @@ func NewPortainerContainerWithImage(ctx context.Context, image string) (*Portain
 			"--log-level",
 			"DEBUG",
 		},
+		HostConfigModifier: func(hostConfig *container.HostConfig) {
+			if cfg.BindDockerSocket {
+				hostConfig.Binds = append(hostConfig.Binds, "/var/run/docker.sock:/var/run/docker.sock")
+			}
+		},
 	}
 
 	// Create and start the container
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+	cntr, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
 	})
@@ -88,23 +122,28 @@ func NewPortainerContainerWithImage(ctx context.Context, image string) (*Portain
 	}
 
 	// Get the host and port mapping
-	host, err := container.Host(ctx)
+	host, err := cntr.Host(ctx)
 	if err != nil {
+		cntr.Terminate(ctx) // Clean up if we fail post-start
 		return nil, fmt.Errorf("failed to get container host: %w", err)
 	}
 
-	mappedPort, err := container.MappedPort(ctx, nat.Port(defaultAPIPortTCP))
+	mappedPort, err := cntr.MappedPort(ctx, nat.Port(defaultAPIPortTCP))
 	if err != nil {
+		cntr.Terminate(ctx) // Clean up if we fail post-start
 		return nil, fmt.Errorf("failed to get mapped port: %w", err)
 	}
 
 	pc := &PortainerContainer{
-		Container: container,
+		Container: cntr,
 		APIPort:   mappedPort,
 		APIHost:   host,
 	}
 
+	// Register API token after successful container start and port mapping
 	if err := pc.registerAPIToken(); err != nil {
+		// Attempt to clean up the container if token registration fails
+		cntr.Terminate(ctx)
 		return nil, fmt.Errorf("failed to register API token: %w", err)
 	}
 

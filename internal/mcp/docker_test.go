@@ -137,7 +137,7 @@ func TestHandleDockerProxy_ParameterValidation(t *testing.T) {
 			server := &PortainerMCPServer{}
 
 			request := CreateMCPRequest(tt.inputParams)
-			handler := server.handleDockerProxy()
+			handler := server.HandleDockerProxy()
 			result, err := handler(context.Background(), request)
 
 			assert.Error(t, err)
@@ -272,7 +272,7 @@ func TestHandleDockerProxy_ClientInteraction(t *testing.T) {
 			}
 
 			request := CreateMCPRequest(tc.input)
-			handler := server.handleDockerProxy()
+			handler := server.HandleDockerProxy()
 			result, err := handler(context.Background(), request)
 
 			if tc.expect.errSubstring != "" {
