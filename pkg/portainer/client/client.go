@@ -1,7 +1,6 @@
 package client
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/portainer/client-api-go/v2/client"
@@ -37,7 +36,7 @@ type PortainerAPIClient interface {
 	ListUsers() ([]*apimodels.PortainereeUser, error)
 	UpdateUserRole(id int, role int64) error
 	GetVersion() (string, error)
-	ProxyDockerRequest(environmentId int, dockerAPIPath string, method string, body io.Reader) (*http.Response, error)
+	ProxyDockerRequest(environmentId int, opts client.ProxyRequestOptions) (*http.Response, error)
 }
 
 // PortainerClient is a wrapper around the Portainer SDK client

@@ -37,6 +37,33 @@ func parseAccessMap(entries []any) (map[int]string, error) {
 	return accessMap, nil
 }
 
+// parseKeyValueMap parses a slice of map[string]any into a map[string]string,
+// expecting each map to have "key" and "value" string fields.
+func parseKeyValueMap(items []any) (map[string]string, error) {
+	resultMap := map[string]string{}
+
+	for _, item := range items {
+		itemMap, ok := item.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("invalid item: %v", item)
+		}
+
+		key, ok := itemMap["key"].(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid key: %v", itemMap["key"])
+		}
+
+		value, ok := itemMap["value"].(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid value: %v", itemMap["value"])
+		}
+
+		resultMap[key] = value
+	}
+
+	return resultMap, nil
+}
+
 func isValidHTTPMethod(method string) bool {
 	validMethods := []string{"GET", "POST", "PUT", "DELETE", "HEAD"}
 	return slices.Contains(validMethods, method)

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/portainer/client-api-go/v2/client"
+	"github.com/portainer/portainer-mcp/pkg/portainer/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,51 +17,55 @@ func TestProxyDockerRequest(t *testing.T) {
 	tests := []struct {
 		name             string
 		environmentId    int
-		dockerAPIPath    string
-		method           string
-		body             io.Reader // nil is a valid value for no body
+		opts             models.DockerProxyRequestOptions
 		mockResponse     *http.Response
 		mockError        error
 		expectedError    bool
 		expectedStatus   int
-		expectedRespBody string // Add expected response body content
+		expectedRespBody string
 	}{
 		{
-			name:          "successful GET request",
-			environmentId: 1,
-			dockerAPIPath: "/containers/json",
-			method:        "GET",
-			body:          nil, // Explicitly nil for no body
+			name: "GET request with query parameters",
+			opts: models.DockerProxyRequestOptions{
+				EnvironmentID: 1,
+				Method:        "GET",
+				Path:          "/images/json",
+				QueryParams:   map[string]string{"all": "true", "filter": "dangling"},
+			},
 			mockResponse: &http.Response{
 				StatusCode: http.StatusOK,
-				Body:       io.NopCloser(strings.NewReader(`[{"Id":"123"}]`)), // Simulate a response body
+				Body:       io.NopCloser(strings.NewReader(`[{"Id":"img1"}]`)),
 			},
 			mockError:        nil,
 			expectedError:    false,
 			expectedStatus:   http.StatusOK,
-			expectedRespBody: `[{"Id":"123"}]`,
+			expectedRespBody: `[{"Id":"img1"}]`,
 		},
 		{
-			name:          "POST request with body",
-			environmentId: 2,
-			dockerAPIPath: "/containers/create",
-			method:        "POST",
-			body:          bytes.NewBufferString(`{"Image": "nginx"}`),
+			name: "POST request with custom headers",
+			opts: models.DockerProxyRequestOptions{
+				EnvironmentID: 2,
+				Method:        "POST",
+				Path:          "/networks/create",
+				Headers:       map[string]string{"X-Custom-Header": "value1", "Authorization": "Bearer token"},
+				Body:          bytes.NewBufferString(`{"Name": "my-network"}`),
+			},
 			mockResponse: &http.Response{
 				StatusCode: http.StatusCreated,
-				Body:       io.NopCloser(strings.NewReader(`{"Id": "456"}`)), // Simulate creation response
+				Body:       io.NopCloser(strings.NewReader(`{"Id": "net1"}`)),
 			},
 			mockError:        nil,
 			expectedError:    false,
 			expectedStatus:   http.StatusCreated,
-			expectedRespBody: `{"Id": "456"}`,
+			expectedRespBody: `{"Id": "net1"}`,
 		},
 		{
-			name:             "API error",
-			environmentId:    1,
-			dockerAPIPath:    "/version",
-			method:           "GET",
-			body:             nil,
+			name: "API error",
+			opts: models.DockerProxyRequestOptions{
+				EnvironmentID: 3,
+				Method:        "GET",
+				Path:          "/version",
+			},
 			mockResponse:     nil,
 			mockError:        errors.New("failed to proxy request"),
 			expectedError:    true,
@@ -71,17 +77,18 @@ func TestProxyDockerRequest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockAPI := new(MockPortainerAPI)
-
-			// Pass tt.body directly. testify/mock should handle matching typed nil interfaces.
-			mockAPI.On("ProxyDockerRequest", tt.environmentId, tt.dockerAPIPath, tt.method, tt.body).Return(tt.mockResponse, tt.mockError)
+			opts := client.ProxyRequestOptions{
+				Method:        tt.opts.Method,
+				DockerAPIPath: tt.opts.Path,
+				QueryParams:   tt.opts.QueryParams,
+				Headers:       tt.opts.Headers,
+				Body:          tt.opts.Body,
+			}
+			mockAPI.On("ProxyDockerRequest", tt.opts.EnvironmentID, opts).Return(tt.mockResponse, tt.mockError)
 
 			client := &PortainerClient{cli: mockAPI}
 
-			// Make a copy of the body if it's a bytes.Buffer or similar, as io.Reader reads can consume it.
-			// For this test setup, since we control the mock, we pass the original tt.body.
-			// If the function being tested *read* the body, we'd need to be more careful.
-			resp, err := client.ProxyDockerRequest(tt.environmentId, tt.dockerAPIPath, tt.method, tt.body)
-
+			resp, err := client.ProxyDockerRequest(tt.opts)
 			if tt.expectedError {
 				assert.Error(t, err)
 				assert.EqualError(t, err, tt.mockError.Error())

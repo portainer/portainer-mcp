@@ -2,7 +2,6 @@ package mcp
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 
@@ -71,7 +70,7 @@ type PortainerClient interface {
 	GetVersion() (string, error)
 
 	// Docker Proxy methods
-	ProxyDockerRequest(environmentId int, dockerAPIPath string, method string, body io.Reader) (*http.Response, error)
+	ProxyDockerRequest(opts models.DockerProxyRequestOptions) (*http.Response, error)
 }
 
 // PortainerMCPServer is the main server that handles MCP protocol communication

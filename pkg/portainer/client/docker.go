@@ -1,17 +1,34 @@
 package client
 
 import (
-	"io"
 	"net/http"
+
+	"github.com/portainer/client-api-go/v2/client"
+	"github.com/portainer/portainer-mcp/pkg/portainer/models"
 )
 
 // ProxyDockerRequest proxies a Docker API request to a specific Portainer environment.
 //
 // Parameters:
-//   - environmentId: The ID of the environment to proxy the request to
-//   - dockerAPIPath: The path of the Docker API operation to proxy. Must include the leading slash. Example: /containers/json
-//   - method: The HTTP method to use for the request
-//   - body: The body of the request. Can be set to nil for requests that do not have a body.
-func (c *PortainerClient) ProxyDockerRequest(environmentId int, dockerAPIPath string, method string, body io.Reader) (*http.Response, error) {
-	return c.cli.ProxyDockerRequest(environmentId, dockerAPIPath, method, body)
+//   - opts: Options defining the proxied request (environmentID, method, path, query params, headers, body)
+//
+// Returns:
+//   - *http.Response: The response from the Docker API
+//   - error: Any error that occurred during the request
+func (c *PortainerClient) ProxyDockerRequest(opts models.DockerProxyRequestOptions) (*http.Response, error) {
+	proxyOpts := client.ProxyRequestOptions{
+		Method:        opts.Method,
+		DockerAPIPath: opts.Path,
+		Body:          opts.Body,
+	}
+
+	if len(opts.QueryParams) > 0 {
+		proxyOpts.QueryParams = opts.QueryParams
+	}
+
+	if len(opts.Headers) > 0 {
+		proxyOpts.Headers = opts.Headers
+	}
+
+	return c.cli.ProxyDockerRequest(opts.EnvironmentID, proxyOpts)
 }
