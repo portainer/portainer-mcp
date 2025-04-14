@@ -42,7 +42,6 @@ func main() {
 
 	log.Info().
 		Str("server", *serverFlag).
-		Str("token", *tokenFlag).
 		Str("tools", toolsPath).
 		Bool("read-only", *readOnlyFlag).
 		Str("version", version).
