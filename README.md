@@ -95,7 +95,7 @@ To enable read-only mode, add the `-read-only` flag to your command arguments:
 When using read-only mode:
 - Only read tools (list, get) will be available to the AI model
 - All write tools (create, update, delete) are not loaded
-
+- The Docker proxy requests tool is not loaded
 
 # Portainer Version Support
 
@@ -147,3 +147,5 @@ The following table lists the currently (latest version) supported operations th
 | | ListUsers | List all available users |
 | | UpdateUser | Update an existing user |
 | | GetSettings | Get the settings of the Portainer instance |
+| **Docker** |
+| | DockerProxy | Proxy ANY Docker API requests |
