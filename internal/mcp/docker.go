@@ -2,11 +2,8 @@ package mcp
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"io"
-	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -47,7 +44,7 @@ func (s *PortainerMCPServer) handleDockerProxy() server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		response, err := s.dockerAPIRequest(environmentId, dockerAPIPath, method, strings.NewReader(body))
+		response, err := s.cli.ProxyDockerRequest(environmentId, dockerAPIPath, method, strings.NewReader(body))
 		if err != nil {
 			return nil, fmt.Errorf("failed to send Docker API request: %w", err)
 		}
@@ -59,25 +56,4 @@ func (s *PortainerMCPServer) handleDockerProxy() server.ToolHandlerFunc {
 
 		return mcp.NewToolResultText(string(responseBody)), nil
 	}
-}
-
-func (s *PortainerMCPServer) dockerAPIRequest(environmentId int, dockerAPIPath string, method string, body io.Reader) (*http.Response, error) {
-	id := strconv.Itoa(environmentId)
-	url := fmt.Sprintf("https://%s/api/endpoints/%s/docker%s", s.serverURL, id, dockerAPIPath)
-
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("x-api-key", s.token)
-
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
-	}
-	return client.Do(req)
 }
