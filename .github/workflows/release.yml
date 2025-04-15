@@ -1,0 +1,38 @@
+on:
+  release:
+    types: [created]
+
+permissions:
+    contents: write
+    packages: write
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
+        exclude:
+          - goarch: "amd64"
+            goos: darwin
+          - goarch: "arm64"
+            goos: linux
+    steps:
+    - uses: actions/checkout@v4
+
+    - id: get_version
+      uses: battila7/get-version-action@v2
+
+    - name: Set build time
+      run: echo BUILD_TIME=$(date) >> ${GITHUB_ENV}
+
+    - uses: wangyoucao577/go-release-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        project_path: "./cmd/portainer-mcp"
+        build_flags: "-a --installsuffix cgo"
+        ldflags: -s -w -X "main.Version=${{ steps.get_version.outputs.version }}" -X "main.BuildDate=${{ env.BUILD_TIME }}" -X main.Commit=${{ github.sha }}
