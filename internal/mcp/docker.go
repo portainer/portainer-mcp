@@ -13,21 +13,27 @@ import (
 )
 
 func (s *PortainerMCPServer) AddDockerProxyFeatures() {
-	if !s.readOnly {
-		s.addToolIfExists(ToolDockerProxy, s.HandleDockerProxy())
-	}
+	s.addToolIfExists(ToolDockerProxy, s.HandleDockerProxy())
 }
 
 func (s *PortainerMCPServer) HandleDockerProxy() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		parser := toolgen.NewParameterParser(request)
 
-		environmentId, err := parser.GetInt("environmentId", true)
+		method, err := parser.GetString("method", true)
 		if err != nil {
 			return nil, err
 		}
+		if !isValidHTTPMethod(method) {
+			return nil, fmt.Errorf("invalid method: %s", method)
+		}
 
-		method, err := parser.GetString("method", true)
+		// In read-only mode, only allow GET requests
+		if s.readOnly && method != "GET" {
+			return nil, fmt.Errorf("only GET requests are allowed in read-only mode")
+		}
+
+		environmentId, err := parser.GetInt("environmentId", true)
 		if err != nil {
 			return nil, err
 		}
