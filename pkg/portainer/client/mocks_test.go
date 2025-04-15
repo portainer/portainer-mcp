@@ -1,6 +1,9 @@
 package client
 
 import (
+	"net/http"
+
+	"github.com/portainer/client-api-go/v2/client"
 	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/mock"
 )
@@ -240,4 +243,13 @@ func (m *MockPortainerAPI) UpdateUserRole(id int, role int64) error {
 func (m *MockPortainerAPI) GetVersion() (string, error) {
 	args := m.Called()
 	return args.String(0), args.Error(1)
+}
+
+// ProxyDockerRequest mocks the ProxyDockerRequest method
+func (m *MockPortainerAPI) ProxyDockerRequest(environmentId int, opts client.ProxyRequestOptions) (*http.Response, error) {
+	args := m.Called(environmentId, opts)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*http.Response), args.Error(1)
 }

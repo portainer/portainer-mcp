@@ -3,6 +3,7 @@ package mcp
 import (
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -67,6 +68,9 @@ type PortainerClient interface {
 
 	// Version methods
 	GetVersion() (string, error)
+
+	// Docker Proxy methods
+	ProxyDockerRequest(opts models.DockerProxyRequestOptions) (*http.Response, error)
 }
 
 // PortainerMCPServer is the main server that handles MCP protocol communication

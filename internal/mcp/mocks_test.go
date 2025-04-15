@@ -1,6 +1,8 @@
 package mcp
 
 import (
+	"net/http"
+
 	"github.com/portainer/portainer-mcp/pkg/portainer/models"
 	"github.com/stretchr/testify/mock"
 )
@@ -233,4 +235,13 @@ func (m *MockPortainerClient) GetVersion() (string, error) {
 		return "", args.Error(1)
 	}
 	return args.Get(0).(string), args.Error(1)
+}
+
+// Docker Proxy methods
+func (m *MockPortainerClient) ProxyDockerRequest(opts models.DockerProxyRequestOptions) (*http.Response, error) {
+	args := m.Called(opts)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*http.Response), args.Error(1)
 }

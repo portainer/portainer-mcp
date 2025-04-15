@@ -36,6 +36,7 @@ const (
 	ToolUpdateEnvironmentGroupName         = "updateEnvironmentGroupName"
 	ToolUpdateEnvironmentGroupEnvironments = "updateEnvironmentGroupEnvironments"
 	ToolUpdateEnvironmentGroupTags         = "updateEnvironmentGroupTags"
+	ToolDockerProxy                        = "dockerProxy"
 )
 
 // Access levels for users and teams

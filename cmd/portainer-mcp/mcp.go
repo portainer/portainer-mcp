@@ -60,6 +60,7 @@ func main() {
 	server.AddUserFeatures()
 	server.AddTeamFeatures()
 	server.AddAccessGroupFeatures()
+	server.AddDockerProxyFeatures()
 
 	err = server.Start()
 	if err != nil {

@@ -51,7 +51,7 @@ func TestServerInitializationUnsupportedVersion(t *testing.T) {
 	// Start a Portainer container with unsupported version
 	ctx := context.Background()
 
-	portainer, err := containers.NewPortainerContainerWithImage(ctx, unsupportedImage)
+	portainer, err := containers.NewPortainerContainer(ctx, containers.WithImage(unsupportedImage))
 	require.NoError(t, err, "Failed to start unsupported Portainer container")
 
 	// Ensure container is terminated at the end of the test

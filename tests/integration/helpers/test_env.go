@@ -24,10 +24,10 @@ type TestEnv struct {
 }
 
 // NewTestEnv creates a new test environment with Portainer container and clients
-func NewTestEnv(t *testing.T) *TestEnv {
+func NewTestEnv(t *testing.T, opts ...containers.PortainerContainerOption) *TestEnv {
 	ctx := context.Background()
 
-	portainer, err := containers.NewPortainerContainer(ctx)
+	portainer, err := containers.NewPortainerContainer(ctx, opts...)
 	require.NoError(t, err, "Failed to start Portainer container")
 
 	host, port := portainer.GetHostAndPort()
