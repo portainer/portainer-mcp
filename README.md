@@ -146,10 +146,10 @@ When using read-only mode:
 
 This tool is pinned to support a specific version of Portainer. The application will validate the Portainer server version at startup and fail if it doesn't match the required version.
 
-| MCP Version  | Supported Portainer Version |
+| Portainer MCP Version  | Supported Portainer Version |
 |--------------|----------------------------|
-| 0.1.0        | 2.28.1                     |
-| 0.2.0        | 2.28.1                     |
+| 0.1.0 | 2.28.1 |
+| 0.2.0 | 2.28.1 |
 
 # Supported Capabilities
 
