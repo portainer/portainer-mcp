@@ -1,6 +1,7 @@
 # Portainer MCP
 [![Go Report Card](https://goreportcard.com/badge/github.com/portainer/portainer-mcp)](https://goreportcard.com/report/github.com/portainer/portainer-mcp)
-[![Go Coverage](https://github.com/portainer/portainer-mcp/wiki/coverage.svg)](https://raw.githack.com/wiki/USER/REPO/coverage.html)
+[![Go Coverage](https://github.com/portainer/portainer-mcp/wiki/coverage.svg)](https://raw.githack.com/wiki/portainer/portainer-mcp/coverage.html)
+
 Ever wished you could just ask Portainer what's going on?
 
 ![portainer-mcp-demo](https://downloads.portainer.io/mcp-demo3.gif)
