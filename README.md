@@ -74,7 +74,7 @@ With Claude Desktop, configure it like so:
                 "-server",
                 "[IP]:[PORT]",
                 "-token",
-                "[TOKEN]"
+                "[TOKEN]",
                 "-tools",
                 "/tmp/tools.yaml"
             ]
@@ -84,7 +84,7 @@ With Claude Desktop, configure it like so:
 ```
 
 > [!NOTE]
-> By default, the tool looks for "tools.yaml" in the same directory as the binary. You may need to modify this path as described above, particularly when using AI assistants like Claude that have restricted write permissions to the working directory.
+> By default, the tool looks for "tools.yaml" in the same directory as the binary. If the file does not exist, it will be created there with the default tool definitions. You may need to modify this path as described above, particularly when using AI assistants like Claude that have restricted write permissions to the working directory.
 
 Replace `[IP]`, `[PORT]` and `[TOKEN]` with the IP, port and API access token associated with your Portainer instance.
 
@@ -114,7 +114,8 @@ You can customize the tool definitions by specifying a custom tools file path us
 
 The default tools file is available for reference at `internal/tooldef/tools.yaml` in the source code. You can modify the descriptions of the tools and their parameters to alter how AI models interpret and decide to use them. You can even decide to remove some tools if you don't wish to use them.
 
-**Important:** Do not change the tool names or parameter definitions (other than descriptions), as this will prevent the tools from being properly registered and functioning correctly.
+> [!WARNING]
+> Do not change the tool names or parameter definitions (other than descriptions), as this will prevent the tools from being properly registered and functioning correctly.
 
 ## Read-Only Mode
 
