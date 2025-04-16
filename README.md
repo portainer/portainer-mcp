@@ -1,5 +1,6 @@
 # Portainer MCP
 [![Go Report Card](https://goreportcard.com/badge/github.com/portainer/portainer-mcp)](https://goreportcard.com/report/github.com/portainer/portainer-mcp)
+![coverage](https://raw.githubusercontent.com/portainer/portainer-mcp/badges/.badges/main/coverage.svg)
 
 Ever wished you could just ask Portainer what's going on?
 
