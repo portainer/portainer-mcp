@@ -26,7 +26,10 @@ inspector: build
 	npx @modelcontextprotocol/inspector dist/portainer-mcp
 
 test:
-	go test -v $(shell go list ./... | grep -v /tests/)
+	go test -v $(shell go list ./... | grep -v /tests/integration/)
+
+test-coverage:
+	go test -v $(shell go list ./... | grep -v /tests/integration/) -coverprofile=./coverage.out
 
 test-integration:
 	go test -v ./tests/...
