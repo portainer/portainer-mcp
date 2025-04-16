@@ -459,3 +459,61 @@ tools:
           Example: {'Image': 'nginx:latest', 'Name': 'my-container'}"
         type: string
         required: false
+
+  ## Kubernetes Proxy
+  ## ------------------------------------------------------------
+  - name: kubernetesProxy
+    description: Proxy Kubernetes requests to a specific Portainer environment.
+      This tool can be used with any Kubernetes API operation as documented in the Kubernetes API specification (https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/).
+    parameters:
+      - name: environmentId
+        description: The ID of the environment to proxy Kubernetes requests to
+        type: number
+        required: true
+      - name: method
+        description: The HTTP method to use to proxy the Kubernetes API operation
+        type: string
+        required: true
+        enum:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - HEAD
+      - name: kubernetesAPIPath
+        description: "The route of the Kubernetes API operation to proxy. Must include the leading slash. Example: /api/v1/namespaces/default/pods"
+        type: string
+        required: true
+      - name: queryParams
+        description: "The query parameters to include in the Kubernetes API operation. Must be an array of key-value pairs.
+          Example: [{key: 'watch', value: 'true'}, {key: 'fieldSelector', value: 'metadata.name=my-pod'}]"
+        type: array
+        required: false
+        items:
+          type: object
+          properties:
+            key:
+              type: string
+              description: The key of the query parameter
+            value:
+              type: string
+              description: The value of the query parameter
+      - name: headers
+        description: "The headers to include in the Kubernetes API operation. Must be an array of key-value pairs.
+          Example: [{key: 'Content-Type', value: 'application/json'}]"
+        type: array
+        required: false
+        items:
+          type: object
+          properties:
+            key:
+              type: string
+              description: The key of the header
+            value:
+              type: string
+              description: The value of the header
+      - name: body
+        description: "The body of the Kubernetes API operation to proxy. Must be a JSON string.
+          Example: {'apiVersion': 'v1', 'kind': 'Pod', 'metadata': {'name': 'my-pod'}}"
+        type: string
+        required: false

@@ -37,6 +37,7 @@ type PortainerAPIClient interface {
 	UpdateUserRole(id int, role int64) error
 	GetVersion() (string, error)
 	ProxyDockerRequest(environmentId int, opts client.ProxyRequestOptions) (*http.Response, error)
+	ProxyKubernetesRequest(environmentId int, opts client.ProxyRequestOptions) (*http.Response, error)
 }
 
 // PortainerClient is a wrapper around the Portainer SDK client

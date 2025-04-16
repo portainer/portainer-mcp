@@ -71,6 +71,9 @@ type PortainerClient interface {
 
 	// Docker Proxy methods
 	ProxyDockerRequest(opts models.DockerProxyRequestOptions) (*http.Response, error)
+
+	// Kubernetes Proxy methods
+	ProxyKubernetesRequest(opts models.KubernetesProxyRequestOptions) (*http.Response, error)
 }
 
 // PortainerMCPServer is the main server that handles MCP protocol communication

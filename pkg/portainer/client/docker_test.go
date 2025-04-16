@@ -78,11 +78,11 @@ func TestProxyDockerRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockAPI := new(MockPortainerAPI)
 			opts := client.ProxyRequestOptions{
-				Method:        tt.opts.Method,
-				DockerAPIPath: tt.opts.Path,
-				QueryParams:   tt.opts.QueryParams,
-				Headers:       tt.opts.Headers,
-				Body:          tt.opts.Body,
+				Method:      tt.opts.Method,
+				APIPath:     tt.opts.Path,
+				QueryParams: tt.opts.QueryParams,
+				Headers:     tt.opts.Headers,
+				Body:        tt.opts.Body,
 			}
 			mockAPI.On("ProxyDockerRequest", tt.opts.EnvironmentID, opts).Return(tt.mockResponse, tt.mockError)
 

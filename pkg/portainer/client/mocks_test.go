@@ -253,3 +253,12 @@ func (m *MockPortainerAPI) ProxyDockerRequest(environmentId int, opts client.Pro
 	}
 	return args.Get(0).(*http.Response), args.Error(1)
 }
+
+// ProxyKubernetesRequest mocks the ProxyKubernetesRequest method
+func (m *MockPortainerAPI) ProxyKubernetesRequest(environmentId int, opts client.ProxyRequestOptions) (*http.Response, error) {
+	args := m.Called(environmentId, opts)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*http.Response), args.Error(1)
+}
