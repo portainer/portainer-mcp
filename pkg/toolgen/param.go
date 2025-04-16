@@ -18,6 +18,13 @@ func NewParameterParser(request mcp.CallToolRequest) *ParameterParser {
 	}
 }
 
+func PrintSomething(test bool) {
+	fmt.Println("Something")
+	if test {
+		fmt.Println("Test")
+	}
+}
+
 // GetString extracts a string parameter from the request
 func (p *ParameterParser) GetString(name string, required bool) (string, error) {
 	value, ok := p.args[name]
