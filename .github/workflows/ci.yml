@@ -41,18 +41,18 @@ jobs:
           name: code-coverage
           path: coverage.out
 
-  # code_coverage:
-  #   name: "Code coverage report"
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   permissions:
-  #     contents: read
-  #     actions: read
-  #     pull-requests: write
-  #   steps:
-  #     - name: "checkout the current branch"
-  #       uses: actions/checkout@v4
-  #     - uses: fgrosse/go-coverage-report@v1.2.0
-  #       with:
-  #         # coverage-artifact-name: "code-coverage-upload"
-  #         coverage-file-name: "coverage.out"
+  code_coverage:
+    name: "Code coverage report"
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - name: "checkout the current branch"
+        uses: actions/checkout@v4
+      - uses: fgrosse/go-coverage-report@v1.2.0
+        with:
+          # coverage-artifact-name: "code-coverage-upload"
+          coverage-file-name: "coverage.out"
