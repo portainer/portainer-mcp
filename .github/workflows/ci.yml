@@ -1,7 +1,5 @@
 name: CI
 
-# permissions: read-all
-
 on:
   push:
     branches: [ "main" ]
@@ -32,7 +30,6 @@ jobs:
         uses: vladopajic/go-test-coverage@v2
         with:
           profile: coverage.out
-          # exclude-paths: ^tests/integration
           git-token: ${{ github.ref_name == 'main' && secrets.GITHUB_TOKEN || '' }}
           git-branch: badges
       - name: "Archive code coverage results"
@@ -54,5 +51,4 @@ jobs:
         uses: actions/checkout@v4
       - uses: fgrosse/go-coverage-report@v1.2.0
         with:
-          # coverage-artifact-name: "code-coverage-upload"
           coverage-file-name: "coverage.out"

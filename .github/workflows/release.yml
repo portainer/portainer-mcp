@@ -22,13 +22,10 @@ jobs:
             goos: linux
     steps:
     - uses: actions/checkout@v4
-
     - id: get_version
       uses: battila7/get-version-action@v2
-
     - name: Set build time
       run: echo BUILD_TIME=$(date) >> ${GITHUB_ENV}
-
     - uses: wangyoucao577/go-release-action@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
