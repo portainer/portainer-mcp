@@ -194,3 +194,17 @@ The following table lists the currently (latest version) supported operations th
 | | GetSettings | Get the settings of the Portainer instance | 0.1.0 |
 | **Docker** | | | |
 | | DockerProxy | Proxy ANY Docker API requests | 0.2.0 |
+
+# Development
+
+## Code Statistics
+
+The repository includes a helper script `cloc.sh` to calculate lines of code and other metrics for the Go source files using the `cloc` tool. You might need to install `cloc` first (e.g., `sudo apt install cloc` or `brew install cloc`).
+
+Run the script from the repository root to see the default summary output:
+
+```bash
+./cloc.sh
+```
+
+Refer to the comment header within the `cloc.sh` script for details on available flags to retrieve specific metrics.
