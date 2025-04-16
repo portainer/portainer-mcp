@@ -1,6 +1,6 @@
-name: Makefile CI
+name: CI
 
-permissions: read-all
+# permissions: read-all
 
 on:
   push:
@@ -36,7 +36,7 @@ jobs:
       - name: "Archive code coverage results"
         uses: actions/upload-artifact@v4
         with:
-          name: code-coverage-upload
+          name: code-coverage
           path: coverage.out
 
   code_coverage:
@@ -48,7 +48,7 @@ jobs:
       actions: read
       pull-requests: write
     steps:
-      - uses: fgrosse/go-coverage-report@v1.1.1
+      - uses: fgrosse/go-coverage-report@v1.2.0
         with:
-          coverage-artifact-name: "code-coverage-upload"
+          # coverage-artifact-name: "code-coverage-upload"
           coverage-file-name: "coverage.out"
