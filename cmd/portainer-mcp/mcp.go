@@ -71,6 +71,7 @@ func main() {
 	server.AddTeamFeatures()
 	server.AddAccessGroupFeatures()
 	server.AddDockerProxyFeatures()
+	server.AddKubernetesProxyFeatures()
 
 	err = server.Start()
 	if err != nil {
