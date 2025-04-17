@@ -24,42 +24,41 @@ It is currently designed to work with a Portainer administrator API token.
 
 You can download pre-built binaries for Linux (amd64) and macOS (arm64) from the [**Latest Release Page**](https://github.com/portainer/portainer-mcp/releases/latest). Find the appropriate archive for your operating system and architecture under the "Assets" section.
 
-1.  **Download the archive.** You can usually download this directly from the release page.
+**Download the archive:**
+You can usually download this directly from the release page. Alternatively, you can use `curl`. Here's an example for macOS (ARM64) version `v0.2.0`:
 
-    Alternatively, you can use `curl`. Here are examples for downloading the archive for version `v0.2.0`:
+```bash
+# Example for macOS (ARM64) - adjust version and architecture as needed
+curl -Lo portainer-mcp-v0.2.0-darwin-arm64.tar.gz https://github.com/portainer/portainer-mcp/releases/download/v0.2.0/portainer-mcp-v0.2.0-darwin-arm64.tar.gz
+```
 
-    *   **Linux (AMD64):**
-        ```bash
-        curl -Lo portainer-mcp-v0.2.0-linux-amd64.tar.gz https://github.com/portainer/portainer-mcp/releases/download/v0.2.0/portainer-mcp-v0.2.0-linux-amd64.tar.gz
-        ```
-    *   **macOS (ARM64):**
-        ```bash
-        curl -Lo portainer-mcp-v0.2.0-darwin-arm64.tar.gz https://github.com/portainer/portainer-mcp/releases/download/v0.2.0/portainer-mcp-v0.2.0-darwin-arm64.tar.gz
-        ```
+(Linux AMD64 binaries are also available on the release page.)
 
-2.  **(Optional but recommended) Verify the checksum.** First, download the corresponding `.md5` checksum file. Use `curl` with the appropriate URL, replacing `<VERSION>`, `<OS>`, and `<ARCH>`.
+**(Optional but recommended) Verify the checksum:**
+First, download the corresponding `.md5` checksum file from the release page.
+Example for macOS (ARM64) `v0.2.0`:
 
-    *   **Example for `v0.2.0` on Linux (AMD64):**
-        ```bash
-        curl -Lo portainer-mcp-v0.2.0-linux-amd64.tar.gz.md5 https://github.com/portainer/portainer-mcp/releases/download/v0.2.0/portainer-mcp-v0.2.0-linux-amd64.tar.gz.md5
-        # Now verify
-        md5sum -c portainer-mcp-v0.2.0-linux-amd64.tar.gz.md5
-        ```
-    *   **Example for `v0.2.0` on macOS (ARM64):**
-        ```bash
-        curl -Lo portainer-mcp-v0.2.0-darwin-arm64.tar.gz.md5 https://github.com/portainer/portainer-mcp/releases/download/v0.2.0/portainer-mcp-v0.2.0-darwin-arm64.tar.gz.md5
-        # Now verify (output should match the content of the .md5 file)
-        if [ "$(md5 -q portainer-mcp-v0.2.0-darwin-arm64.tar.gz)" = "$(cat portainer-mcp-v0.2.0-darwin-arm64.tar.gz.md5)" ]; then echo "OK"; else echo "FAILED"; fi
-        ```
-        If the verification command outputs "OK", the file is intact.
+```bash
+# Download the checksum file (adjust version/arch)
+curl -Lo portainer-mcp-v0.2.0-darwin-arm64.tar.gz.md5 https://github.com/portainer/portainer-mcp/releases/download/v0.2.0/portainer-mcp-v0.2.0-darwin-arm64.tar.gz.md5
+# Now verify (output should match the content of the .md5 file)
+if [ "$(md5 -q portainer-mcp-v0.2.0-darwin-arm64.tar.gz)" = "$(cat portainer-mcp-v0.2.0-darwin-arm64.tar.gz.md5)" ]; then echo "OK"; else echo "FAILED"; fi
+```
 
-3.  **Extract the archive:**
-    ```bash
-    tar -xzf portainer-mcp-v<VERSION>-<OS>-<ARCH>.tar.gz
-    ```
-    Replace `<VERSION>`, `<OS>`, and `<ARCH>` with the appropriate values (e.g., `v0.2.0-linux-amd64`). This will extract the `portainer-mcp` executable.
+(For Linux, you can use `md5sum -c <checksum_file_name>.md5`)
+If the verification command outputs "OK", the file is intact.
 
-4.  **Move the executable** to a location in your `$PATH` (e.g., `/usr/local/bin`) or note its location for the configuration step below.
+**Extract the archive:**
+
+```bash
+# Adjust the filename based on the downloaded version/OS/architecture
+tar -xzf portainer-mcp-v0.2.0-darwin-arm64.tar.gz
+```
+
+This will extract the `portainer-mcp` executable.
+
+**Move the executable:**
+Move the executable to a location in your `$PATH` (e.g., `/usr/local/bin`) or note its location for the configuration step below.
 
 # Usage
 
