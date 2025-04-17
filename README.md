@@ -4,7 +4,7 @@
 
 Ever wished you could just ask Portainer what's going on?
 
-![portainer-mcp-demo](https://downloads.portainer.io/mcp-demo3.gif)
+![portainer-mcp-demo](https://downloads.portainer.io/mcp-demo5.gif)
 
 ## Overview
 
