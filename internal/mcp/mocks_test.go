@@ -245,3 +245,12 @@ func (m *MockPortainerClient) ProxyDockerRequest(opts models.DockerProxyRequestO
 	}
 	return args.Get(0).(*http.Response), args.Error(1)
 }
+
+// Kubernetes Proxy methods
+func (m *MockPortainerClient) ProxyKubernetesRequest(opts models.KubernetesProxyRequestOptions) (*http.Response, error) {
+	args := m.Called(opts)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*http.Response), args.Error(1)
+}

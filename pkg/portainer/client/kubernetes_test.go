@@ -13,11 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestProxyDockerRequest(t *testing.T) {
+func TestProxyKubernetesRequest(t *testing.T) {
 	tests := []struct {
 		name             string
-		environmentId    int
-		opts             models.DockerProxyRequestOptions
+		opts             models.KubernetesProxyRequestOptions
 		mockResponse     *http.Response
 		mockError        error
 		expectedError    bool
@@ -26,69 +25,86 @@ func TestProxyDockerRequest(t *testing.T) {
 	}{
 		{
 			name: "GET request with query parameters",
-			opts: models.DockerProxyRequestOptions{
+			opts: models.KubernetesProxyRequestOptions{
 				EnvironmentID: 1,
 				Method:        "GET",
-				Path:          "/images/json",
-				QueryParams:   map[string]string{"all": "true", "filter": "dangling"},
+				Path:          "/api/v1/pods",
+				QueryParams:   map[string]string{"namespace": "default", "labelSelector": "app=myapp"},
 			},
 			mockResponse: &http.Response{
 				StatusCode: http.StatusOK,
-				Body:       io.NopCloser(strings.NewReader(`[{"Id":"img1"}]`)),
+				Body:       io.NopCloser(strings.NewReader(`{"items": [{"metadata": {"name": "pod1"}}]}`)),
 			},
 			mockError:        nil,
 			expectedError:    false,
 			expectedStatus:   http.StatusOK,
-			expectedRespBody: `[{"Id":"img1"}]`,
+			expectedRespBody: `{"items": [{"metadata": {"name": "pod1"}}]}`,
 		},
 		{
-			name: "POST request with custom headers",
-			opts: models.DockerProxyRequestOptions{
+			name: "POST request with custom headers and body",
+			opts: models.KubernetesProxyRequestOptions{
 				EnvironmentID: 2,
 				Method:        "POST",
-				Path:          "/networks/create",
-				Headers:       map[string]string{"X-Custom-Header": "value1", "Authorization": "Bearer token"},
-				Body:          bytes.NewBufferString(`{"Name": "my-network"}`),
+				Path:          "/api/v1/namespaces/default/services",
+				Headers:       map[string]string{"X-Custom-Header": "value1", "Content-Type": "application/json"},
+				Body:          bytes.NewBufferString(`{"apiVersion": "v1", "kind": "Service", "metadata": {"name": "my-service"}}`),
 			},
 			mockResponse: &http.Response{
 				StatusCode: http.StatusCreated,
-				Body:       io.NopCloser(strings.NewReader(`{"Id": "net1"}`)),
+				Body:       io.NopCloser(strings.NewReader(`{"metadata": {"name": "my-service"}}`)),
 			},
 			mockError:        nil,
 			expectedError:    false,
 			expectedStatus:   http.StatusCreated,
-			expectedRespBody: `{"Id": "net1"}`,
+			expectedRespBody: `{"metadata": {"name": "my-service"}}`,
 		},
 		{
 			name: "API error",
-			opts: models.DockerProxyRequestOptions{
+			opts: models.KubernetesProxyRequestOptions{
 				EnvironmentID: 3,
 				Method:        "GET",
 				Path:          "/version",
 			},
 			mockResponse:     nil,
-			mockError:        errors.New("failed to proxy request"),
+			mockError:        errors.New("failed to proxy kubernetes request"),
 			expectedError:    true,
 			expectedStatus:   0,  // Not applicable
 			expectedRespBody: "", // Not applicable
+		},
+		{
+			name: "Request with no params, headers, or body",
+			opts: models.KubernetesProxyRequestOptions{
+				EnvironmentID: 4,
+				Method:        "GET",
+				Path:          "/healthz",
+			},
+			mockResponse: &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader("ok")),
+			},
+			mockError:        nil,
+			expectedError:    false,
+			expectedStatus:   http.StatusOK,
+			expectedRespBody: "ok",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockAPI := new(MockPortainerAPI)
-			opts := client.ProxyRequestOptions{
+			proxyOpts := client.ProxyRequestOptions{
 				Method:      tt.opts.Method,
 				APIPath:     tt.opts.Path,
 				QueryParams: tt.opts.QueryParams,
 				Headers:     tt.opts.Headers,
 				Body:        tt.opts.Body,
 			}
-			mockAPI.On("ProxyDockerRequest", tt.opts.EnvironmentID, opts).Return(tt.mockResponse, tt.mockError)
+			mockAPI.On("ProxyKubernetesRequest", tt.opts.EnvironmentID, proxyOpts).Return(tt.mockResponse, tt.mockError)
 
-			client := &PortainerClient{cli: mockAPI}
+			portainerClient := &PortainerClient{cli: mockAPI}
 
-			resp, err := client.ProxyDockerRequest(tt.opts)
+			resp, err := portainerClient.ProxyKubernetesRequest(tt.opts)
+
 			if tt.expectedError {
 				assert.Error(t, err)
 				assert.EqualError(t, err, tt.mockError.Error())
@@ -104,6 +120,8 @@ func TestProxyDockerRequest(t *testing.T) {
 					bodyBytes, readErr := io.ReadAll(resp.Body)
 					assert.NoError(t, readErr)
 					assert.Equal(t, tt.expectedRespBody, string(bodyBytes))
+				} else if tt.expectedRespBody != "" {
+					assert.Fail(t, "Expected a response body but got nil")
 				}
 			}
 

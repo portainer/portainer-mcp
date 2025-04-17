@@ -7,15 +7,15 @@ import (
 	"github.com/portainer/portainer-mcp/pkg/portainer/models"
 )
 
-// ProxyDockerRequest proxies a Docker API request to a specific Portainer environment.
+// ProxyKubernetesRequest proxies a Kubernetes API request to a specific Portainer environment.
 //
 // Parameters:
 //   - opts: Options defining the proxied request (environmentID, method, path, query params, headers, body)
 //
 // Returns:
-//   - *http.Response: The response from the Docker API
+//   - *http.Response: The response from the Kubernetes API
 //   - error: Any error that occurred during the request
-func (c *PortainerClient) ProxyDockerRequest(opts models.DockerProxyRequestOptions) (*http.Response, error) {
+func (c *PortainerClient) ProxyKubernetesRequest(opts models.KubernetesProxyRequestOptions) (*http.Response, error) {
 	proxyOpts := client.ProxyRequestOptions{
 		Method:  opts.Method,
 		APIPath: opts.Path,
@@ -30,5 +30,5 @@ func (c *PortainerClient) ProxyDockerRequest(opts models.DockerProxyRequestOptio
 		proxyOpts.Headers = opts.Headers
 	}
 
-	return c.cli.ProxyDockerRequest(opts.EnvironmentID, proxyOpts)
+	return c.cli.ProxyKubernetesRequest(opts.EnvironmentID, proxyOpts)
 }
