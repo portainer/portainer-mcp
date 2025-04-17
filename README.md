@@ -144,6 +144,7 @@ When using read-only mode:
 - Only read tools (list, get) will be available to the AI model
 - All write tools (create, update, delete) are not loaded
 - The Docker proxy requests tool is not loaded
+- The Kubernetes proxy requests tool is not loaded
 
 # Portainer Version Support
 
@@ -198,6 +199,8 @@ The following table lists the currently (latest version) supported operations th
 | | GetSettings | Get the settings of the Portainer instance | 0.1.0 |
 | **Docker** | | | |
 | | DockerProxy | Proxy ANY Docker API requests | 0.2.0 |
+| **Kubernetes** | | | |
+| | KubernetesProxy | Proxy ANY Kubernetes API requests | 0.3.0 |
 
 # Development
 
