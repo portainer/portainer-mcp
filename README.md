@@ -4,7 +4,7 @@
 
 Ever wished you could just ask Portainer what's going on?
 
-Now you can! Portainer MCP connects your AI assistant directly to your Portainer environments. Manage users and environments, or dive deeper by executing any Docker or Kubernetes command directly through the AI.
+Now you can! Portainer MCP connects your AI assistant directly to your Portainer environments. Manage Portainer resources such as users and environments, or dive deeper by executing any Docker or Kubernetes command directly through the AI.
 
 ![portainer-mcp-demo](https://downloads.portainer.io/mcp-demo5.gif)
 
