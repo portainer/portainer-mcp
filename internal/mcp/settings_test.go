@@ -67,11 +67,15 @@ func TestHandleGetSettings(t *testing.T) {
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			if tt.expectError {
-				assert.Error(t, err)
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for API errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent")
 				if tt.errorContains != "" {
-					assert.ErrorContains(t, err, tt.errorContains)
+					assert.Contains(t, textContent.Text, tt.errorContains)
 				}
-				assert.Nil(t, result)
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)

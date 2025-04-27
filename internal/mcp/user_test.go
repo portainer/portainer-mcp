@@ -52,9 +52,14 @@ func TestHandleGetUsers(t *testing.T) {
 
 			// Verify results
 			if tt.expectError {
-				assert.Error(t, err)
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for API errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent")
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
 				}
 			} else {
 				assert.NoError(t, err)
@@ -161,12 +166,20 @@ func TestHandleUpdateUserRole(t *testing.T) {
 
 			// Verify results
 			if tt.expectError {
-				assert.Error(t, err)
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
-				}
-				if tt.inputRole == "invalid_role" {
-					assert.ErrorContains(t, err, "invalid role")
+					assert.NoError(t, err)
+					assert.NotNil(t, result)
+					assert.True(t, result.IsError, "result.IsError should be true for API errors")
+					assert.Len(t, result.Content, 1)
+					textContent, ok := result.Content[0].(mcp.TextContent)
+					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.Error(t, err)
+					assert.Nil(t, result)
+					if tt.inputRole == "invalid_role" {
+						assert.ErrorContains(t, err, "invalid role")
+					}
 				}
 			} else {
 				assert.NoError(t, err)

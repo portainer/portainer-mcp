@@ -48,9 +48,14 @@ func TestHandleGetEnvironmentGroups(t *testing.T) {
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			if tt.expectError {
-				assert.Error(t, err)
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for API errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent")
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
 				}
 			} else {
 				assert.NoError(t, err)
@@ -141,9 +146,17 @@ func TestHandleCreateEnvironmentGroup(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
-				assert.Error(t, err)
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.NoError(t, err)
+					assert.NotNil(t, result)
+					assert.True(t, result.IsError, "result.IsError should be true for API errors")
+					assert.Len(t, result.Content, 1)
+					textContent, ok := result.Content[0].(mcp.TextContent)
+					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.Error(t, err)
+					assert.Nil(t, result)
 				}
 			} else {
 				assert.NoError(t, err)
@@ -231,9 +244,17 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
-				assert.Error(t, err)
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.NoError(t, err)
+					assert.NotNil(t, result)
+					assert.True(t, result.IsError, "result.IsError should be true for API errors")
+					assert.Len(t, result.Content, 1)
+					textContent, ok := result.Content[0].(mcp.TextContent)
+					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.Error(t, err)
+					assert.Nil(t, result)
 				}
 			} else {
 				assert.NoError(t, err)
@@ -342,9 +363,17 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
-				assert.Error(t, err)
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.NoError(t, err)
+					assert.NotNil(t, result)
+					assert.True(t, result.IsError, "result.IsError should be true for API errors")
+					assert.Len(t, result.Content, 1)
+					textContent, ok := result.Content[0].(mcp.TextContent)
+					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.Error(t, err)
+					assert.Nil(t, result)
 				}
 			} else {
 				assert.NoError(t, err)
@@ -453,9 +482,17 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
-				assert.Error(t, err)
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.NoError(t, err)
+					assert.NotNil(t, result)
+					assert.True(t, result.IsError, "result.IsError should be true for API errors")
+					assert.Len(t, result.Content, 1)
+					textContent, ok := result.Content[0].(mcp.TextContent)
+					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.Error(t, err)
+					assert.Nil(t, result)
 				}
 			} else {
 				assert.NoError(t, err)

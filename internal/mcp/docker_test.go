@@ -276,9 +276,13 @@ func TestHandleDockerProxy_ClientInteraction(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tc.expect.errSubstring != "" {
-				assert.Error(t, err)
-				assert.ErrorContains(t, err, tc.expect.errSubstring)
-				assert.Nil(t, result)
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
+				assert.Contains(t, textContent.Text, tc.expect.errSubstring)
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)
