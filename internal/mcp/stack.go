@@ -42,7 +42,7 @@ func (s *PortainerMCPServer) HandleGetStackFile() server.ToolHandlerFunc {
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		stackFile, err := s.cli.GetStackFile(id)
@@ -60,17 +60,17 @@ func (s *PortainerMCPServer) HandleCreateStack() server.ToolHandlerFunc {
 
 		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
 		}
 
 		file, err := parser.GetString("file", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid file parameter", err), nil
 		}
 
 		environmentGroupIds, err := parser.GetArrayOfIntegers("environmentGroupIds", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid environmentGroupIds parameter", err), nil
 		}
 
 		id, err := s.cli.CreateStack(name, file, environmentGroupIds)
@@ -88,17 +88,17 @@ func (s *PortainerMCPServer) HandleUpdateStack() server.ToolHandlerFunc {
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		file, err := parser.GetString("file", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid file parameter", err), nil
 		}
 
 		environmentGroupIds, err := parser.GetArrayOfIntegers("environmentGroupIds", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid environmentGroupIds parameter", err), nil
 		}
 
 		err = s.cli.UpdateStack(id, file, environmentGroupIds)

@@ -43,12 +43,12 @@ func (s *PortainerMCPServer) HandleCreateEnvironmentGroup() server.ToolHandlerFu
 
 		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
 		}
 
 		environmentIds, err := parser.GetArrayOfIntegers("environmentIds", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid environmentIds parameter", err), nil
 		}
 
 		id, err := s.cli.CreateEnvironmentGroup(name, environmentIds)
@@ -66,12 +66,12 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupName() server.ToolHandl
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
 		}
 
 		err = s.cli.UpdateEnvironmentGroupName(id, name)
@@ -89,17 +89,17 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupEnvironments() server.T
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
 		}
 
 		environmentIds, err := parser.GetArrayOfIntegers("environmentIds", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid environmentIds parameter", err), nil
 		}
 
 		err = s.cli.UpdateEnvironmentGroupEnvironments(id, name, environmentIds)
@@ -117,17 +117,17 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupTags() server.ToolHandl
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
 		}
 
 		tagIds, err := parser.GetArrayOfIntegers("tagIds", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid tagIds parameter", err), nil
 		}
 
 		err = s.cli.UpdateEnvironmentGroupTags(id, name, tagIds)

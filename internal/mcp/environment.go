@@ -41,12 +41,12 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentTags() server.ToolHandlerFun
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		tagIds, err := parser.GetArrayOfIntegers("tagIds", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid tagIds parameter", err), nil
 		}
 
 		err = s.cli.UpdateEnvironmentTags(id, tagIds)
@@ -64,12 +64,12 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentUserAccesses() server.ToolHa
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		userAccesses, err := parser.GetArrayOfObjects("userAccesses", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid userAccesses parameter", err), nil
 		}
 
 		userAccessesMap, err := parseAccessMap(userAccesses)
@@ -92,12 +92,12 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentTeamAccesses() server.ToolHa
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		teamAccesses, err := parser.GetArrayOfObjects("teamAccesses", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid teamAccesses parameter", err), nil
 		}
 
 		teamAccessesMap, err := parseAccessMap(teamAccesses)

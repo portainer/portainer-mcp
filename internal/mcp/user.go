@@ -40,16 +40,16 @@ func (s *PortainerMCPServer) HandleUpdateUserRole() server.ToolHandlerFunc {
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		role, err := parser.GetString("role", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid role parameter", err), nil
 		}
 
 		if !isValidUserRole(role) {
-			return nil, fmt.Errorf("invalid role %s: must be one of: %v", role, AllUserRoles)
+			return mcp.NewToolResultError(fmt.Sprintf("invalid role %s: must be one of: %v", role, AllUserRoles)), nil
 		}
 
 		err = s.cli.UpdateUserRole(id, role)

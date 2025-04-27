@@ -26,7 +26,7 @@ func (s *PortainerMCPServer) HandleCreateTeam() server.ToolHandlerFunc {
 
 		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
 		}
 
 		teamID, err := s.cli.CreateTeam(name)
@@ -60,12 +60,12 @@ func (s *PortainerMCPServer) HandleUpdateTeamName() server.ToolHandlerFunc {
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
 		}
 
 		err = s.cli.UpdateTeamName(id, name)
@@ -83,12 +83,12 @@ func (s *PortainerMCPServer) HandleUpdateTeamMembers() server.ToolHandlerFunc {
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		userIDs, err := parser.GetArrayOfIntegers("userIds", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid userIds parameter", err), nil
 		}
 
 		err = s.cli.UpdateTeamMembers(id, userIDs)

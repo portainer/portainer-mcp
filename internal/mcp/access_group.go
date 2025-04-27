@@ -45,12 +45,12 @@ func (s *PortainerMCPServer) HandleCreateAccessGroup() server.ToolHandlerFunc {
 
 		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
 		}
 
 		environmentIds, err := parser.GetArrayOfIntegers("environmentIds", false)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid environmentIds parameter", err), nil
 		}
 
 		groupID, err := s.cli.CreateAccessGroup(name, environmentIds)
@@ -68,12 +68,12 @@ func (s *PortainerMCPServer) HandleUpdateAccessGroupName() server.ToolHandlerFun
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		name, err := parser.GetString("name", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
 		}
 
 		err = s.cli.UpdateAccessGroupName(id, name)
@@ -91,12 +91,12 @@ func (s *PortainerMCPServer) HandleUpdateAccessGroupUserAccesses() server.ToolHa
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		userAccesses, err := parser.GetArrayOfObjects("userAccesses", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid userAccesses parameter", err), nil
 		}
 
 		userAccessesMap, err := parseAccessMap(userAccesses)
@@ -119,12 +119,12 @@ func (s *PortainerMCPServer) HandleUpdateAccessGroupTeamAccesses() server.ToolHa
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		teamAccesses, err := parser.GetArrayOfObjects("teamAccesses", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid teamAccesses parameter", err), nil
 		}
 
 		teamAccessesMap, err := parseAccessMap(teamAccesses)
@@ -147,12 +147,12 @@ func (s *PortainerMCPServer) HandleAddEnvironmentToAccessGroup() server.ToolHand
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		environmentId, err := parser.GetInt("environmentId", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid environmentId parameter", err), nil
 		}
 
 		err = s.cli.AddEnvironmentToAccessGroup(id, environmentId)
@@ -170,12 +170,12 @@ func (s *PortainerMCPServer) HandleRemoveEnvironmentFromAccessGroup() server.Too
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		environmentId, err := parser.GetInt("environmentId", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid environmentId parameter", err), nil
 		}
 
 		err = s.cli.RemoveEnvironmentFromAccessGroup(id, environmentId)
