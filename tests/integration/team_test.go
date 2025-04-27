@@ -125,7 +125,7 @@ func TestTeamManagement(t *testing.T) {
 
 		textContent, ok := result.Content[0].(mcpmodels.TextContent)
 		require.True(t, ok, "Expected text content in MCP response for team name update")
-		assert.Contains(t, textContent.Text, "Team updated successfully", "Success message mismatch for team name update")
+		assert.Contains(t, textContent.Text, "Team name updated successfully", "Success message mismatch for team name update")
 
 		// Verify by fetching team directly via raw client
 		rawTeam, err := env.RawClient.GetTeam(int64(testTeamID))

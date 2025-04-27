@@ -24,46 +24,46 @@ func (s *PortainerMCPServer) HandleKubernetesProxy() server.ToolHandlerFunc {
 
 		environmentId, err := parser.GetInt("environmentId", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid environmentId parameter", err), nil
 		}
 
 		method, err := parser.GetString("method", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid method parameter", err), nil
 		}
 		if !isValidHTTPMethod(method) {
-			return nil, fmt.Errorf("invalid method: %s", method)
+			return mcp.NewToolResultError(fmt.Sprintf("invalid method: %s", method)), nil
 		}
 
 		kubernetesAPIPath, err := parser.GetString("kubernetesAPIPath", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid kubernetesAPIPath parameter", err), nil
 		}
 		if !strings.HasPrefix(kubernetesAPIPath, "/") {
-			return nil, fmt.Errorf("kubernetesAPIPath must start with a leading slash")
+			return mcp.NewToolResultError("kubernetesAPIPath must start with a leading slash"), nil
 		}
 
 		queryParams, err := parser.GetArrayOfObjects("queryParams", false)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid queryParams parameter", err), nil
 		}
 		queryParamsMap, err := parseKeyValueMap(queryParams)
 		if err != nil {
-			return nil, fmt.Errorf("invalid query params: %w", err)
+			return mcp.NewToolResultErrorFromErr("invalid query params", err), nil
 		}
 
 		headers, err := parser.GetArrayOfObjects("headers", false)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid headers parameter", err), nil
 		}
 		headersMap, err := parseKeyValueMap(headers)
 		if err != nil {
-			return nil, fmt.Errorf("invalid headers: %w", err)
+			return mcp.NewToolResultErrorFromErr("invalid headers", err), nil
 		}
 
 		body, err := parser.GetString("body", false)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid body parameter", err), nil
 		}
 
 		opts := models.KubernetesProxyRequestOptions{
@@ -80,12 +80,12 @@ func (s *PortainerMCPServer) HandleKubernetesProxy() server.ToolHandlerFunc {
 
 		response, err := s.cli.ProxyKubernetesRequest(opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to send Kubernetes API request: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to send Kubernetes API request", err), nil
 		}
 
 		responseBody, err := io.ReadAll(response.Body)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read Kubernetes API response: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to read Kubernetes API response", err), nil
 		}
 
 		return mcp.NewToolResultText(string(responseBody)), nil

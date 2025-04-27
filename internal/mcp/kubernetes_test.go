@@ -119,9 +119,14 @@ func TestHandleKubernetesProxy_ParameterValidation(t *testing.T) {
 			handler := server.HandleKubernetesProxy()
 			result, err := handler(context.Background(), request)
 
-			assert.Error(t, err)
-			assert.ErrorContains(t, err, tt.expectedErrorMsg)
-			assert.Nil(t, result)
+			// All parameter/validation errors now return (result{IsError: true}, nil)
+			assert.NoError(t, err)   // Handler now returns nil error
+			assert.NotNil(t, result) // Handler returns a result object
+			assert.True(t, result.IsError, "result.IsError should be true for parameter validation errors")
+			assert.Len(t, result.Content, 1)                       // Expect one content item for the error message
+			textContent, ok := result.Content[0].(mcp.TextContent) // Content should be TextContent
+			assert.True(t, ok, "Result content should be mcp.TextContent for errors")
+			assert.Contains(t, textContent.Text, tt.expectedErrorMsg, "Error message mismatch")
 		})
 	}
 }
@@ -254,9 +259,13 @@ func TestHandleKubernetesProxy_ClientInteraction(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tc.expect.errSubstring != "" {
-				assert.Error(t, err)
-				assert.ErrorContains(t, err, tc.expect.errSubstring)
-				assert.Nil(t, result)
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
+				assert.Contains(t, textContent.Text, tc.expect.errSubstring)
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)

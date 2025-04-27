@@ -22,12 +22,12 @@ func (s *PortainerMCPServer) HandleGetUsers() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		users, err := s.cli.GetUsers()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get users: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to get users", err), nil
 		}
 
 		data, err := json.Marshal(users)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal users: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to marshal users", err), nil
 		}
 
 		return mcp.NewToolResultText(string(data)), nil
@@ -40,21 +40,21 @@ func (s *PortainerMCPServer) HandleUpdateUserRole() server.ToolHandlerFunc {
 
 		id, err := parser.GetInt("id", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
 		role, err := parser.GetString("role", true)
 		if err != nil {
-			return nil, err
+			return mcp.NewToolResultErrorFromErr("invalid role parameter", err), nil
 		}
 
 		if !isValidUserRole(role) {
-			return nil, fmt.Errorf("invalid role %s: must be one of: %v", role, AllUserRoles)
+			return mcp.NewToolResultError(fmt.Sprintf("invalid role %s: must be one of: %v", role, AllUserRoles)), nil
 		}
 
 		err = s.cli.UpdateUserRole(id, role)
 		if err != nil {
-			return nil, fmt.Errorf("error updating user. Error: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update user role", err), nil
 		}
 
 		return mcp.NewToolResultText("User updated successfully"), nil

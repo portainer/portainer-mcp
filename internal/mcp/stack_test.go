@@ -48,9 +48,16 @@ func TestHandleGetStacks(t *testing.T) {
 			result, err := handler(context.Background(), mcp.CallToolRequest{})
 
 			if tt.expectError {
-				assert.Error(t, err)
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter errors")
 				}
 			} else {
 				assert.NoError(t, err)
@@ -128,9 +135,16 @@ func TestHandleGetStackFile(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
-				assert.Error(t, err)
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter errors")
 				}
 			} else {
 				assert.NoError(t, err)
@@ -243,9 +257,16 @@ func TestHandleCreateStack(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
-				assert.Error(t, err)
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter errors")
 				}
 			} else {
 				assert.NoError(t, err)
@@ -352,9 +373,16 @@ func TestHandleUpdateStack(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
-				assert.Error(t, err)
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.ErrorContains(t, err, tt.mockError.Error())
+					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter errors")
 				}
 			} else {
 				assert.NoError(t, err)
