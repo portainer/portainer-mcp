@@ -29,12 +29,12 @@ func (s *PortainerMCPServer) HandleCreateTeam() server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		id, err := s.cli.CreateTeam(name)
+		teamID, err := s.cli.CreateTeam(name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create team: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to create team", err), nil
 		}
 
-		return mcp.NewToolResultText(fmt.Sprintf("Team created successfully with ID: %d", id)), nil
+		return mcp.NewToolResultText(fmt.Sprintf("Team created successfully with ID: %d", teamID)), nil
 	}
 }
 
@@ -42,12 +42,12 @@ func (s *PortainerMCPServer) HandleGetTeams() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		teams, err := s.cli.GetTeams()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get teams: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to get teams", err), nil
 		}
 
 		data, err := json.Marshal(teams)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal teams: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to marshal teams", err), nil
 		}
 
 		return mcp.NewToolResultText(string(data)), nil
@@ -70,10 +70,10 @@ func (s *PortainerMCPServer) HandleUpdateTeamName() server.ToolHandlerFunc {
 
 		err = s.cli.UpdateTeamName(id, name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update team. Error: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update team name", err), nil
 		}
 
-		return mcp.NewToolResultText("Team updated successfully"), nil
+		return mcp.NewToolResultText("Team name updated successfully"), nil
 	}
 }
 
@@ -86,14 +86,14 @@ func (s *PortainerMCPServer) HandleUpdateTeamMembers() server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		userIds, err := parser.GetArrayOfIntegers("userIds", true)
+		userIDs, err := parser.GetArrayOfIntegers("userIds", true)
 		if err != nil {
 			return nil, err
 		}
 
-		err = s.cli.UpdateTeamMembers(id, userIds)
+		err = s.cli.UpdateTeamMembers(id, userIDs)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update team members. Error: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update team members", err), nil
 		}
 
 		return mcp.NewToolResultText("Team members updated successfully"), nil

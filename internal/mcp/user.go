@@ -22,12 +22,12 @@ func (s *PortainerMCPServer) HandleGetUsers() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		users, err := s.cli.GetUsers()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get users: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to get users", err), nil
 		}
 
 		data, err := json.Marshal(users)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal users: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to marshal users", err), nil
 		}
 
 		return mcp.NewToolResultText(string(data)), nil
@@ -54,7 +54,7 @@ func (s *PortainerMCPServer) HandleUpdateUserRole() server.ToolHandlerFunc {
 
 		err = s.cli.UpdateUserRole(id, role)
 		if err != nil {
-			return nil, fmt.Errorf("error updating user. Error: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update user role", err), nil
 		}
 
 		return mcp.NewToolResultText("User updated successfully"), nil

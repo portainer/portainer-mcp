@@ -22,12 +22,12 @@ func (s *PortainerMCPServer) HandleGetEnvironmentTags() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		environmentTags, err := s.cli.GetEnvironmentTags()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get environment tags: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to get environment tags", err), nil
 		}
 
 		data, err := json.Marshal(environmentTags)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal environment tags: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to marshal environment tags", err), nil
 		}
 
 		return mcp.NewToolResultText(string(data)), nil
@@ -45,7 +45,7 @@ func (s *PortainerMCPServer) HandleCreateEnvironmentTag() server.ToolHandlerFunc
 
 		id, err := s.cli.CreateEnvironmentTag(name)
 		if err != nil {
-			return nil, fmt.Errorf("error creating environment tag. Error: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to create environment tag", err), nil
 		}
 
 		return mcp.NewToolResultText(fmt.Sprintf("Environment tag created successfully with ID: %d", id)), nil

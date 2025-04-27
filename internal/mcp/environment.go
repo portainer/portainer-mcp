@@ -3,7 +3,6 @@ package mcp
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -24,12 +23,12 @@ func (s *PortainerMCPServer) HandleGetEnvironments() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		environments, err := s.cli.GetEnvironments()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get environments: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to get environments", err), nil
 		}
 
 		data, err := json.Marshal(environments)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal environments: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to marshal environments", err), nil
 		}
 
 		return mcp.NewToolResultText(string(data)), nil
@@ -52,7 +51,7 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentTags() server.ToolHandlerFun
 
 		err = s.cli.UpdateEnvironmentTags(id, tagIds)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update environment tags: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update environment tags", err), nil
 		}
 
 		return mcp.NewToolResultText("Environment tags updated successfully"), nil
@@ -75,12 +74,12 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentUserAccesses() server.ToolHa
 
 		userAccessesMap, err := parseAccessMap(userAccesses)
 		if err != nil {
-			return nil, fmt.Errorf("invalid user accesses: %w", err)
+			return mcp.NewToolResultErrorFromErr("invalid user accesses", err), nil
 		}
 
 		err = s.cli.UpdateEnvironmentUserAccesses(id, userAccessesMap)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update environment user accesses: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update environment user accesses", err), nil
 		}
 
 		return mcp.NewToolResultText("Environment user accesses updated successfully"), nil
@@ -103,12 +102,12 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentTeamAccesses() server.ToolHa
 
 		teamAccessesMap, err := parseAccessMap(teamAccesses)
 		if err != nil {
-			return nil, fmt.Errorf("invalid team accesses: %w", err)
+			return mcp.NewToolResultErrorFromErr("invalid team accesses", err), nil
 		}
 
 		err = s.cli.UpdateEnvironmentTeamAccesses(id, teamAccessesMap)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update environment team accesses: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update environment team accesses", err), nil
 		}
 
 		return mcp.NewToolResultText("Environment team accesses updated successfully"), nil

@@ -25,12 +25,12 @@ func (s *PortainerMCPServer) HandleGetEnvironmentGroups() server.ToolHandlerFunc
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		edgeGroups, err := s.cli.GetEnvironmentGroups()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get environment groups: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to get environment groups", err), nil
 		}
 
 		data, err := json.Marshal(edgeGroups)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal environment groups: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to marshal environment groups", err), nil
 		}
 
 		return mcp.NewToolResultText(string(data)), nil
@@ -53,7 +53,7 @@ func (s *PortainerMCPServer) HandleCreateEnvironmentGroup() server.ToolHandlerFu
 
 		id, err := s.cli.CreateEnvironmentGroup(name, environmentIds)
 		if err != nil {
-			return nil, fmt.Errorf("error creating environment group. Error: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to create environment group", err), nil
 		}
 
 		return mcp.NewToolResultText(fmt.Sprintf("Environment group created successfully with ID: %d", id)), nil
@@ -76,7 +76,7 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupName() server.ToolHandl
 
 		err = s.cli.UpdateEnvironmentGroupName(id, name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update environment group name: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update environment group name", err), nil
 		}
 
 		return mcp.NewToolResultText("Environment group name updated successfully"), nil
@@ -104,7 +104,7 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupEnvironments() server.T
 
 		err = s.cli.UpdateEnvironmentGroupEnvironments(id, name, environmentIds)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update environment group environments: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update environment group environments", err), nil
 		}
 
 		return mcp.NewToolResultText("Environment group environments updated successfully"), nil
@@ -132,7 +132,7 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupTags() server.ToolHandl
 
 		err = s.cli.UpdateEnvironmentGroupTags(id, name, tagIds)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update environment group tags: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update environment group tags", err), nil
 		}
 
 		return mcp.NewToolResultText("Environment group tags updated successfully"), nil

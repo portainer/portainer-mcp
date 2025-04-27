@@ -27,12 +27,12 @@ func (s *PortainerMCPServer) HandleGetAccessGroups() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		accessGroups, err := s.cli.GetAccessGroups()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get access groups: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to get access groups", err), nil
 		}
 
 		data, err := json.Marshal(accessGroups)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal access groups: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to marshal access groups", err), nil
 		}
 
 		return mcp.NewToolResultText(string(data)), nil
@@ -55,7 +55,7 @@ func (s *PortainerMCPServer) HandleCreateAccessGroup() server.ToolHandlerFunc {
 
 		groupID, err := s.cli.CreateAccessGroup(name, environmentIds)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create access group: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to create access group", err), nil
 		}
 
 		return mcp.NewToolResultText(fmt.Sprintf("Access group created successfully with ID: %d", groupID)), nil
@@ -78,7 +78,7 @@ func (s *PortainerMCPServer) HandleUpdateAccessGroupName() server.ToolHandlerFun
 
 		err = s.cli.UpdateAccessGroupName(id, name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update access group name: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update access group name", err), nil
 		}
 
 		return mcp.NewToolResultText("Access group name updated successfully"), nil
@@ -101,12 +101,12 @@ func (s *PortainerMCPServer) HandleUpdateAccessGroupUserAccesses() server.ToolHa
 
 		userAccessesMap, err := parseAccessMap(userAccesses)
 		if err != nil {
-			return nil, fmt.Errorf("invalid user accesses: %w", err)
+			return mcp.NewToolResultErrorFromErr("invalid user accesses", err), nil
 		}
 
 		err = s.cli.UpdateAccessGroupUserAccesses(id, userAccessesMap)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update access group user accesses: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update access group user accesses", err), nil
 		}
 
 		return mcp.NewToolResultText("Access group user accesses updated successfully"), nil
@@ -129,12 +129,12 @@ func (s *PortainerMCPServer) HandleUpdateAccessGroupTeamAccesses() server.ToolHa
 
 		teamAccessesMap, err := parseAccessMap(teamAccesses)
 		if err != nil {
-			return nil, fmt.Errorf("invalid team accesses: %w", err)
+			return mcp.NewToolResultErrorFromErr("invalid team accesses", err), nil
 		}
 
 		err = s.cli.UpdateAccessGroupTeamAccesses(id, teamAccessesMap)
 		if err != nil {
-			return nil, fmt.Errorf("failed to update access group team accesses: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update access group team accesses", err), nil
 		}
 
 		return mcp.NewToolResultText("Access group team accesses updated successfully"), nil
@@ -157,7 +157,7 @@ func (s *PortainerMCPServer) HandleAddEnvironmentToAccessGroup() server.ToolHand
 
 		err = s.cli.AddEnvironmentToAccessGroup(id, environmentId)
 		if err != nil {
-			return nil, fmt.Errorf("failed to add environment to access group: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to add environment to access group", err), nil
 		}
 
 		return mcp.NewToolResultText("Environment added to access group successfully"), nil
@@ -180,7 +180,7 @@ func (s *PortainerMCPServer) HandleRemoveEnvironmentFromAccessGroup() server.Too
 
 		err = s.cli.RemoveEnvironmentFromAccessGroup(id, environmentId)
 		if err != nil {
-			return nil, fmt.Errorf("failed to remove environment from access group: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to remove environment from access group", err), nil
 		}
 
 		return mcp.NewToolResultText("Environment removed from access group successfully"), nil

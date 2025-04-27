@@ -80,12 +80,12 @@ func (s *PortainerMCPServer) HandleKubernetesProxy() server.ToolHandlerFunc {
 
 		response, err := s.cli.ProxyKubernetesRequest(opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to send Kubernetes API request: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to send Kubernetes API request", err), nil
 		}
 
 		responseBody, err := io.ReadAll(response.Body)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read Kubernetes API response: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to read Kubernetes API response", err), nil
 		}
 
 		return mcp.NewToolResultText(string(responseBody)), nil

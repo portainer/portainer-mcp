@@ -24,12 +24,12 @@ func (s *PortainerMCPServer) HandleGetStacks() server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		stacks, err := s.cli.GetStacks()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get stacks: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to get stacks", err), nil
 		}
 
 		data, err := json.Marshal(stacks)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal stacks: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to marshal stacks", err), nil
 		}
 
 		return mcp.NewToolResultText(string(data)), nil
@@ -45,12 +45,12 @@ func (s *PortainerMCPServer) HandleGetStackFile() server.ToolHandlerFunc {
 			return nil, err
 		}
 
-		content, err := s.cli.GetStackFile(id)
+		stackFile, err := s.cli.GetStackFile(id)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get stack file. Error: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to get stack file", err), nil
 		}
 
-		return mcp.NewToolResultText(content), nil
+		return mcp.NewToolResultText(stackFile), nil
 	}
 }
 
@@ -75,7 +75,7 @@ func (s *PortainerMCPServer) HandleCreateStack() server.ToolHandlerFunc {
 
 		id, err := s.cli.CreateStack(name, file, environmentGroupIds)
 		if err != nil {
-			return nil, fmt.Errorf("error creating stack. Error: %w", err)
+			return mcp.NewToolResultErrorFromErr("error creating stack", err), nil
 		}
 
 		return mcp.NewToolResultText(fmt.Sprintf("Stack created successfully with ID: %d", id)), nil
@@ -103,7 +103,7 @@ func (s *PortainerMCPServer) HandleUpdateStack() server.ToolHandlerFunc {
 
 		err = s.cli.UpdateStack(id, file, environmentGroupIds)
 		if err != nil {
-			return nil, fmt.Errorf("error updating stack. Error: %w", err)
+			return mcp.NewToolResultErrorFromErr("failed to update stack", err), nil
 		}
 
 		return mcp.NewToolResultText("Stack updated successfully"), nil
