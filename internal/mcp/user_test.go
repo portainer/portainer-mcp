@@ -166,19 +166,18 @@ func TestHandleUpdateUserRole(t *testing.T) {
 
 			// Verify results
 			if tt.expectError {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.NoError(t, err)
-					assert.NotNil(t, result)
-					assert.True(t, result.IsError, "result.IsError should be true for API errors")
-					assert.Len(t, result.Content, 1)
-					textContent, ok := result.Content[0].(mcp.TextContent)
-					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
 					assert.Contains(t, textContent.Text, tt.mockError.Error())
 				} else {
-					assert.Error(t, err)
-					assert.Nil(t, result)
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter/validation errors")
 					if tt.inputRole == "invalid_role" {
-						assert.ErrorContains(t, err, "invalid role")
+						assert.Contains(t, textContent.Text, "invalid role")
 					}
 				}
 			} else {

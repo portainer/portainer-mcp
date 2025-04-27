@@ -51,12 +51,14 @@ func TestHandleGetAccessGroups(t *testing.T) {
 			if tt.expectError {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)
-				assert.True(t, result.IsError, "result.IsError should be true for API errors")
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
 				assert.Len(t, result.Content, 1)
 				textContent, ok := result.Content[0].(mcp.TextContent)
-				assert.True(t, ok, "Result content should be mcp.TextContent")
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
 					assert.Contains(t, textContent.Text, tt.mockError.Error())
+				} else {
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter errors")
 				}
 			} else {
 				assert.NoError(t, err)
@@ -168,17 +170,16 @@ func TestHandleCreateAccessGroup(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.NoError(t, err)
-					assert.NotNil(t, result)
-					assert.True(t, result.IsError, "result.IsError should be true for API errors")
-					assert.Len(t, result.Content, 1)
-					textContent, ok := result.Content[0].(mcp.TextContent)
-					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
 					assert.Contains(t, textContent.Text, tt.mockError.Error())
 				} else {
-					assert.Error(t, err)
-					assert.Nil(t, result)
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter errors")
 				}
 			} else {
 				assert.NoError(t, err)
@@ -262,17 +263,16 @@ func TestHandleUpdateAccessGroupName(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.NoError(t, err)
-					assert.NotNil(t, result)
-					assert.True(t, result.IsError, "result.IsError should be true for API errors")
-					assert.Len(t, result.Content, 1)
-					textContent, ok := result.Content[0].(mcp.TextContent)
-					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
 					assert.Contains(t, textContent.Text, tt.mockError.Error())
 				} else {
-					assert.Error(t, err)
-					assert.Nil(t, result)
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter errors")
 				}
 			} else {
 				assert.NoError(t, err)
@@ -397,28 +397,18 @@ func TestHandleUpdateAccessGroupUserAccesses(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.NoError(t, err)
-					assert.NotNil(t, result)
-					assert.True(t, result.IsError, "result.IsError should be true for API errors")
-					assert.Len(t, result.Content, 1)
-					textContent, ok := result.Content[0].(mcp.TextContent)
-					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
 					assert.Contains(t, textContent.Text, tt.mockError.Error())
 				} else {
-					// Specific check for invalid access level which now also uses NewToolResultErrorFromErr
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter/validation errors")
 					if strings.Contains(tt.name, "invalid access level") {
-						assert.NoError(t, err)
-						assert.NotNil(t, result)
-						assert.True(t, result.IsError, "result.IsError should be true for invalid access level")
-						assert.Len(t, result.Content, 1)
-						textContent, ok := result.Content[0].(mcp.TextContent)
-						assert.True(t, ok, "Result content should be mcp.TextContent for invalid access level")
-						assert.Contains(t, textContent.Text, "invalid access level")
-					} else {
-						// Other validation errors still use fmt.Errorf
-						assert.Error(t, err)
-						assert.Nil(t, result)
+						assert.Contains(t, textContent.Text, "invalid user accesses")
 					}
 				}
 			} else {
@@ -544,28 +534,18 @@ func TestHandleUpdateAccessGroupTeamAccesses(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.NoError(t, err)
-					assert.NotNil(t, result)
-					assert.True(t, result.IsError, "result.IsError should be true for API errors")
-					assert.Len(t, result.Content, 1)
-					textContent, ok := result.Content[0].(mcp.TextContent)
-					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
 					assert.Contains(t, textContent.Text, tt.mockError.Error())
 				} else {
-					// Specific check for invalid access level which now also uses NewToolResultErrorFromErr
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter/validation errors")
 					if strings.Contains(tt.name, "invalid access level") {
-						assert.NoError(t, err)
-						assert.NotNil(t, result)
-						assert.True(t, result.IsError, "result.IsError should be true for invalid access level")
-						assert.Len(t, result.Content, 1)
-						textContent, ok := result.Content[0].(mcp.TextContent)
-						assert.True(t, ok, "Result content should be mcp.TextContent for invalid access level")
-						assert.Contains(t, textContent.Text, "invalid access level")
-					} else {
-						// Other validation errors still use fmt.Errorf
-						assert.Error(t, err)
-						assert.Nil(t, result)
+						assert.Contains(t, textContent.Text, "invalid team accesses")
 					}
 				}
 			} else {
@@ -650,17 +630,16 @@ func TestHandleAddEnvironmentToAccessGroup(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.NoError(t, err)
-					assert.NotNil(t, result)
-					assert.True(t, result.IsError, "result.IsError should be true for API errors")
-					assert.Len(t, result.Content, 1)
-					textContent, ok := result.Content[0].(mcp.TextContent)
-					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
 					assert.Contains(t, textContent.Text, tt.mockError.Error())
 				} else {
-					assert.Error(t, err)
-					assert.Nil(t, result)
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter errors")
 				}
 			} else {
 				assert.NoError(t, err)
@@ -744,17 +723,16 @@ func TestHandleRemoveEnvironmentFromAccessGroup(t *testing.T) {
 			result, err := handler(context.Background(), request)
 
 			if tt.expectError {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.True(t, result.IsError, "result.IsError should be true for expected errors")
+				assert.Len(t, result.Content, 1)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok, "Result content should be mcp.TextContent for errors")
 				if tt.mockError != nil {
-					assert.NoError(t, err)
-					assert.NotNil(t, result)
-					assert.True(t, result.IsError, "result.IsError should be true for API errors")
-					assert.Len(t, result.Content, 1)
-					textContent, ok := result.Content[0].(mcp.TextContent)
-					assert.True(t, ok, "Result content should be mcp.TextContent for API error")
 					assert.Contains(t, textContent.Text, tt.mockError.Error())
 				} else {
-					assert.Error(t, err)
-					assert.Nil(t, result)
+					assert.NotEmpty(t, textContent.Text, "Error message should not be empty for parameter errors")
 				}
 			} else {
 				assert.NoError(t, err)
