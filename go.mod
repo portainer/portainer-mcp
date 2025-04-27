@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	github.com/docker/docker v28.0.1+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/mark3labs/mcp-go v0.15.0
+	github.com/mark3labs/mcp-go v0.23.1
 	github.com/portainer/client-api-go/v2 v2.28.2-0.20250416214744-bec9753ebee0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
@@ -67,6 +67,7 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shirou/gopsutil/v4 v4.25.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
