@@ -273,7 +273,6 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 	tests := []struct {
 		name        string
 		inputID     int
-		inputName   string
 		inputEnvIDs []int
 		mockError   error
 		expectError bool
@@ -282,13 +281,11 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 		{
 			name:        "successful environments update",
 			inputID:     1,
-			inputName:   "group1",
 			inputEnvIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
 				return request
 			},
@@ -296,37 +293,21 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 		{
 			name:        "api error",
 			inputID:     1,
-			inputName:   "group1",
 			inputEnvIDs: []int{1, 2, 3},
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
 				return request
 			},
 		},
 		{
 			name:        "missing id parameter",
-			inputName:   "group1",
 			inputEnvIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["name"] = "group1"
-				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
-				return request
-			},
-		},
-		{
-			name:        "missing name parameter",
-			inputID:     1,
-			inputEnvIDs: []int{1, 2, 3},
-			mockError:   nil,
-			expectError: true,
-			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
 				return request
 			},
@@ -334,7 +315,6 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 		{
 			name:        "missing environmentIds parameter",
 			inputID:     1,
-			inputName:   "group1",
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
@@ -349,7 +329,7 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockClient := &MockPortainerClient{}
 			if !tt.expectError || tt.mockError != nil {
-				mockClient.On("UpdateEnvironmentGroupEnvironments", tt.inputID, tt.inputName, tt.inputEnvIDs).Return(tt.mockError)
+				mockClient.On("UpdateEnvironmentGroupEnvironments", tt.inputID, tt.inputEnvIDs).Return(tt.mockError)
 			}
 
 			server := &PortainerMCPServer{
@@ -391,7 +371,6 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 	tests := []struct {
 		name        string
 		inputID     int
-		inputName   string
 		inputTagIDs []int
 		mockError   error
 		expectError bool
@@ -400,13 +379,11 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 		{
 			name:        "successful tags update",
 			inputID:     1,
-			inputName:   "group1",
 			inputTagIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
 				return request
 			},
@@ -414,37 +391,21 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 		{
 			name:        "api error",
 			inputID:     1,
-			inputName:   "group1",
 			inputTagIDs: []int{1, 2, 3},
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "group1"
 				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
 				return request
 			},
 		},
 		{
 			name:        "missing id parameter",
-			inputName:   "group1",
 			inputTagIDs: []int{1, 2, 3},
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["name"] = "group1"
-				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
-				return request
-			},
-		},
-		{
-			name:        "missing name parameter",
-			inputID:     1,
-			inputTagIDs: []int{1, 2, 3},
-			mockError:   nil,
-			expectError: true,
-			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
 				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
 				return request
 			},
@@ -452,12 +413,10 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 		{
 			name:        "missing tagIds parameter",
 			inputID:     1,
-			inputName:   "group1",
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
 				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "group1"
 				return request
 			},
 		},
@@ -467,7 +426,7 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockClient := &MockPortainerClient{}
 			if !tt.expectError || tt.mockError != nil {
-				mockClient.On("UpdateEnvironmentGroupTags", tt.inputID, tt.inputName, tt.inputTagIDs).Return(tt.mockError)
+				mockClient.On("UpdateEnvironmentGroupTags", tt.inputID, tt.inputTagIDs).Return(tt.mockError)
 			}
 
 			server := &PortainerMCPServer{

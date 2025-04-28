@@ -104,13 +104,13 @@ func (m *MockPortainerClient) UpdateEnvironmentGroupName(id int, name string) er
 	return args.Error(0)
 }
 
-func (m *MockPortainerClient) UpdateEnvironmentGroupEnvironments(id int, name string, environmentIds []int) error {
-	args := m.Called(id, name, environmentIds)
+func (m *MockPortainerClient) UpdateEnvironmentGroupEnvironments(id int, environmentIds []int) error {
+	args := m.Called(id, environmentIds)
 	return args.Error(0)
 }
 
-func (m *MockPortainerClient) UpdateEnvironmentGroupTags(id int, name string, tagIds []int) error {
-	args := m.Called(id, name, tagIds)
+func (m *MockPortainerClient) UpdateEnvironmentGroupTags(id int, tagIds []int) error {
+	args := m.Called(id, tagIds)
 	return args.Error(0)
 }
 

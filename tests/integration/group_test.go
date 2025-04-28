@@ -154,7 +154,6 @@ func TestEnvironmentGroupManagement(t *testing.T) {
 		handler := env.MCPServer.HandleUpdateEnvironmentGroupTags()
 		request := mcp.CreateMCPRequest(map[string]any{
 			"id":     float64(testGroupID),
-			"name":   testGroupUpdatedName,
 			"tagIds": []any{float64(testTagID), float64(tagID2)},
 		})
 
@@ -185,7 +184,6 @@ func TestEnvironmentGroupManagement(t *testing.T) {
 		handler := env.MCPServer.HandleUpdateEnvironmentGroupEnvironments()
 		request := mcp.CreateMCPRequest(map[string]any{
 			"id":             float64(testGroupID),
-			"name":           testGroupUpdatedName,
 			"environmentIds": []any{float64(testEnvID), float64(env2ID)},
 		})
 

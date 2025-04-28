@@ -16,7 +16,7 @@ const (
 	// MinimumToolsVersion is the minimum supported version of the tools.yaml file
 	MinimumToolsVersion = "1.0"
 	// SupportedPortainerVersion is the version of Portainer that is supported by this tool
-	SupportedPortainerVersion = "2.28.1"
+	SupportedPortainerVersion = "2.29.2"
 )
 
 // PortainerClient defines the interface for the wrapper client used by the MCP server
@@ -35,8 +35,8 @@ type PortainerClient interface {
 	GetEnvironmentGroups() ([]models.Group, error)
 	CreateEnvironmentGroup(name string, environmentIds []int) (int, error)
 	UpdateEnvironmentGroupName(id int, name string) error
-	UpdateEnvironmentGroupEnvironments(id int, name string, environmentIds []int) error
-	UpdateEnvironmentGroupTags(id int, name string, tagIds []int) error
+	UpdateEnvironmentGroupEnvironments(id int, environmentIds []int) error
+	UpdateEnvironmentGroupTags(id int, tagIds []int) error
 
 	// Access Group methods
 	GetAccessGroups() ([]models.AccessGroup, error)

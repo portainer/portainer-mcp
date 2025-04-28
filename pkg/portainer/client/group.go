@@ -55,7 +55,7 @@ func (c *PortainerClient) CreateEnvironmentGroup(name string, environmentIds []i
 // Returns:
 //   - An error if the operation fails
 func (c *PortainerClient) UpdateEnvironmentGroupName(id int, name string) error {
-	err := c.cli.UpdateEdgeGroup(int64(id), name, nil, nil)
+	err := c.cli.UpdateEdgeGroup(int64(id), &name, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to update environment group name: %w", err)
 	}
@@ -67,14 +67,13 @@ func (c *PortainerClient) UpdateEnvironmentGroupName(id int, name string) error 
 //
 // Parameters:
 //   - id: The ID of the environment group to update
-//   - name: The name of the environment group, required.
 //   - environmentIds: A slice of environment IDs to include in the group
 //
 // Returns:
 //   - An error if the operation fails
-func (c *PortainerClient) UpdateEnvironmentGroupEnvironments(id int, name string, environmentIds []int) error {
+func (c *PortainerClient) UpdateEnvironmentGroupEnvironments(id int, environmentIds []int) error {
 	envs := utils.IntToInt64Slice(environmentIds)
-	err := c.cli.UpdateEdgeGroup(int64(id), name, &envs, nil)
+	err := c.cli.UpdateEdgeGroup(int64(id), nil, &envs, nil)
 	if err != nil {
 		return fmt.Errorf("failed to update environment group environments: %w", err)
 	}
@@ -86,14 +85,13 @@ func (c *PortainerClient) UpdateEnvironmentGroupEnvironments(id int, name string
 //
 // Parameters:
 //   - id: The ID of the environment group to update
-//   - name: The name of the environment group, required.
 //   - tagIds: A slice of tag IDs to include in the group
 //
 // Returns:
 //   - An error if the operation fails
-func (c *PortainerClient) UpdateEnvironmentGroupTags(id int, name string, tagIds []int) error {
+func (c *PortainerClient) UpdateEnvironmentGroupTags(id int, tagIds []int) error {
 	tags := utils.IntToInt64Slice(tagIds)
-	err := c.cli.UpdateEdgeGroup(int64(id), name, nil, &tags)
+	err := c.cli.UpdateEdgeGroup(int64(id), nil, nil, &tags)
 	if err != nil {
 		return fmt.Errorf("failed to update environment group tags: %w", err)
 	}

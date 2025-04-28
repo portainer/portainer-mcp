@@ -11,7 +11,7 @@ import (
 type PortainerAPIClient interface {
 	ListEdgeGroups() ([]*apimodels.EdgegroupsDecoratedEdgeGroup, error)
 	CreateEdgeGroup(name string, environmentIds []int64) (int64, error)
-	UpdateEdgeGroup(id int64, name string, environmentIds *[]int64, tagIds *[]int64) error
+	UpdateEdgeGroup(id int64, name *string, environmentIds *[]int64, tagIds *[]int64) error
 	ListEdgeStacks() ([]*apimodels.PortainereeEdgeStack, error)
 	CreateEdgeStack(name string, file string, environmentGroupIds []int64) (int64, error)
 	UpdateEdgeStack(id int64, file string, environmentGroupIds []int64) error
