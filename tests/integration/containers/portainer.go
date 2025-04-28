@@ -27,8 +27,6 @@ const (
 	adminPassword         = "$2y$05$CiHrhW6R6whDVlu7Wdgl0eccb3rg1NWl/mMiO93vQiRIF1SHNFRsS" // Bcrypt hash of "adminpassword123"
 	// Timeout for the container to start and be ready to use
 	startupTimeout = time.Second * 5
-	// Timeout for the requests to the API
-	requestTimeout = time.Second * 3
 )
 
 // PortainerContainer represents a Portainer container for testing
