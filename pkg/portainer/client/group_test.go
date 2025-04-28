@@ -159,7 +159,7 @@ func TestUpdateEnvironmentGroupName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockAPI := new(MockPortainerAPI)
-			mockAPI.On("UpdateEdgeGroup", int64(tt.groupID), tt.newName, mock.Anything, mock.Anything).Return(tt.mockError)
+			mockAPI.On("UpdateEdgeGroup", int64(tt.groupID), &tt.newName, mock.Anything, mock.Anything).Return(tt.mockError)
 
 			client := &PortainerClient{cli: mockAPI}
 
@@ -179,7 +179,6 @@ func TestUpdateEnvironmentGroupEnvironments(t *testing.T) {
 	tests := []struct {
 		name           string
 		groupID        int
-		groupName      string
 		environmentIds []int
 		mockError      error
 		expectedError  bool
@@ -187,13 +186,11 @@ func TestUpdateEnvironmentGroupEnvironments(t *testing.T) {
 		{
 			name:           "successful update",
 			groupID:        1,
-			groupName:      "test-group",
 			environmentIds: []int{1, 2, 3},
 		},
 		{
 			name:           "update error",
 			groupID:        1,
-			groupName:      "error-group",
 			environmentIds: []int{1},
 			mockError:      errors.New("failed to update group environments"),
 			expectedError:  true,
@@ -201,7 +198,6 @@ func TestUpdateEnvironmentGroupEnvironments(t *testing.T) {
 		{
 			name:           "empty environments",
 			groupID:        1,
-			groupName:      "empty-group",
 			environmentIds: []int{},
 		},
 	}
@@ -209,11 +205,11 @@ func TestUpdateEnvironmentGroupEnvironments(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockAPI := new(MockPortainerAPI)
-			mockAPI.On("UpdateEdgeGroup", int64(tt.groupID), tt.groupName, mock.Anything, mock.Anything).Return(tt.mockError)
+			mockAPI.On("UpdateEdgeGroup", int64(tt.groupID), mock.Anything, mock.Anything, mock.Anything).Return(tt.mockError)
 
 			client := &PortainerClient{cli: mockAPI}
 
-			err := client.UpdateEnvironmentGroupEnvironments(tt.groupID, tt.groupName, tt.environmentIds)
+			err := client.UpdateEnvironmentGroupEnvironments(tt.groupID, tt.environmentIds)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -229,41 +225,37 @@ func TestUpdateEnvironmentGroupTags(t *testing.T) {
 	tests := []struct {
 		name          string
 		groupID       int
-		groupName     string
 		tagIds        []int
 		mockError     error
 		expectedError bool
 	}{
 		{
-			name:      "successful update",
-			groupID:   1,
-			groupName: "test-group",
-			tagIds:    []int{1, 2, 3},
+			name:    "successful update",
+			groupID: 1,
+			tagIds:  []int{1, 2, 3},
 		},
 		{
 			name:          "update error",
 			groupID:       1,
-			groupName:     "error-group",
 			tagIds:        []int{1},
 			mockError:     errors.New("failed to update group tags"),
 			expectedError: true,
 		},
 		{
-			name:      "empty tags",
-			groupID:   1,
-			groupName: "empty-group",
-			tagIds:    []int{},
+			name:    "empty tags",
+			groupID: 1,
+			tagIds:  []int{},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockAPI := new(MockPortainerAPI)
-			mockAPI.On("UpdateEdgeGroup", int64(tt.groupID), tt.groupName, mock.Anything, mock.Anything).Return(tt.mockError)
+			mockAPI.On("UpdateEdgeGroup", int64(tt.groupID), mock.Anything, mock.Anything, mock.Anything).Return(tt.mockError)
 
 			client := &PortainerClient{cli: mockAPI}
 
-			err := client.UpdateEnvironmentGroupTags(tt.groupID, tt.groupName, tt.tagIds)
+			err := client.UpdateEnvironmentGroupTags(tt.groupID, tt.tagIds)
 
 			if tt.expectedError {
 				assert.Error(t, err)

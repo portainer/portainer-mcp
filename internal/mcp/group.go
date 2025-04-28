@@ -92,17 +92,12 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupEnvironments() server.T
 			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
-		name, err := parser.GetString("name", true)
-		if err != nil {
-			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
-		}
-
 		environmentIds, err := parser.GetArrayOfIntegers("environmentIds", true)
 		if err != nil {
 			return mcp.NewToolResultErrorFromErr("invalid environmentIds parameter", err), nil
 		}
 
-		err = s.cli.UpdateEnvironmentGroupEnvironments(id, name, environmentIds)
+		err = s.cli.UpdateEnvironmentGroupEnvironments(id, environmentIds)
 		if err != nil {
 			return mcp.NewToolResultErrorFromErr("failed to update environment group environments", err), nil
 		}
@@ -120,17 +115,12 @@ func (s *PortainerMCPServer) HandleUpdateEnvironmentGroupTags() server.ToolHandl
 			return mcp.NewToolResultErrorFromErr("invalid id parameter", err), nil
 		}
 
-		name, err := parser.GetString("name", true)
-		if err != nil {
-			return mcp.NewToolResultErrorFromErr("invalid name parameter", err), nil
-		}
-
 		tagIds, err := parser.GetArrayOfIntegers("tagIds", true)
 		if err != nil {
 			return mcp.NewToolResultErrorFromErr("invalid tagIds parameter", err), nil
 		}
 
-		err = s.cli.UpdateEnvironmentGroupTags(id, name, tagIds)
+		err = s.cli.UpdateEnvironmentGroupTags(id, tagIds)
 		if err != nil {
 			return mcp.NewToolResultErrorFromErr("failed to update environment group tags", err), nil
 		}

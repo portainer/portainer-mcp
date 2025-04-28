@@ -1,28 +1,24 @@
 package containers
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
+	"github.com/go-openapi/runtime"
+	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/strfmt"
+	"github.com/portainer/client-api-go/v2/pkg/client"
+	"github.com/portainer/client-api-go/v2/pkg/client/auth"
+	"github.com/portainer/client-api-go/v2/pkg/client/users"
+	"github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/portainer/portainer-mcp/internal/mcp"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	// SDK imports kept for reference
-	// "github.com/go-openapi/runtime"
-	// httptransport "github.com/go-openapi/runtime/client"
-	// "github.com/go-openapi/strfmt"
-	// client "github.com/portainer/client-api-go/v2/pkg/client"
-	// "github.com/portainer/client-api-go/v2/pkg/client/auth"
-	// "github.com/portainer/client-api-go/v2/pkg/client/users"
-	// "github.com/portainer/client-api-go/v2/pkg/models"
 )
 
 const (
@@ -31,8 +27,6 @@ const (
 	adminPassword         = "$2y$05$CiHrhW6R6whDVlu7Wdgl0eccb3rg1NWl/mMiO93vQiRIF1SHNFRsS" // Bcrypt hash of "adminpassword123"
 	// Timeout for the container to start and be ready to use
 	startupTimeout = time.Second * 5
-	// Timeout for the requests to the API
-	requestTimeout = time.Second * 3
 )
 
 // PortainerContainer represents a Portainer container for testing
@@ -166,141 +160,52 @@ func (pc *PortainerContainer) GetAPIToken() string {
 
 // registerAPIToken registers an API token for the admin user
 func (pc *PortainerContainer) registerAPIToken() error {
-	// SDK implementation kept as reference - doesn't work currently because of an issue with the client-api-go
-	// See: https://github.com/portainer/portainer-suite/pull/604
-	// Once this PR is merged and a new version of the client-api-go is released, we can use it again
-	/*
-		transport := httptransport.New(
-			fmt.Sprintf("%s:%s", pc.APIHost, pc.APIPort.Port()),
-			"/api",
-			[]string{"https"},
-		)
+	transport := httptransport.New(
+		fmt.Sprintf("%s:%s", pc.APIHost, pc.APIPort.Port()),
+		"/api",
+		[]string{"https"},
+	)
 
-		transport.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		}
-
-		portainerClient := client.New(transport, strfmt.Default)
-
-		username := "admin"
-		password := "adminpassword123"
-		params := auth.NewAuthenticateUserParams().WithBody(&models.AuthAuthenticatePayload{
-			Username: &username,
-			Password: &password,
-		})
-
-		authResp, err := portainerClient.Auth.AuthenticateUser(params)
-		if err != nil {
-			return fmt.Errorf("failed to authenticate user: %w", err)
-		}
-
-		token := authResp.Payload.Jwt
-
-		// Setup JWT authentication
-		jwtAuth := runtime.ClientAuthInfoWriterFunc(func(r runtime.ClientRequest, _ strfmt.Registry) error {
-			return r.SetHeaderParam("Authorization", fmt.Sprintf("Bearer %s", token))
-		})
-		transport.DefaultAuthentication = jwtAuth
-
-		description := "test-api-key"
-		createTokenParams := users.NewUserGenerateAPIKeyParams().WithID(1).WithBody(&models.UsersUserAccessTokenCreatePayload{
-			Description: &description,
-			Password:    &password,
-		})
-
-		createTokenResp, err := portainerClient.Users.UserGenerateAPIKey(createTokenParams, nil)
-		// Because of the issue with the client-api-go, this will return an error even though the API key is created
-		if err != nil {
-			return fmt.Errorf("failed to generate API key: %w", err)
-		}
-
-		pc.apiToken = createTokenResp.Payload.RawAPIKey
-	*/
-
-	// Direct HTTP implementation
-	// alternative to the SDK implementation above
-	httpClient := &http.Client{
-		Timeout: requestTimeout,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
+	transport.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
 		},
 	}
 
-	baseURL := pc.GetAPIBaseURL()
+	portainerClient := client.New(transport, strfmt.Default)
 
-	// Step 1: Authenticate admin user
-	authPayload := map[string]string{
-		"username": "admin",
-		"password": "adminpassword123",
-	}
-	authBody, err := json.Marshal(authPayload)
+	username := "admin"
+	password := "adminpassword123"
+	params := auth.NewAuthenticateUserParams().WithBody(&models.AuthAuthenticatePayload{
+		Username: &username,
+		Password: &password,
+	})
+
+	authResp, err := portainerClient.Auth.AuthenticateUser(params)
 	if err != nil {
-		return fmt.Errorf("failed to marshal auth payload: %w", err)
+		return fmt.Errorf("failed to authenticate user: %w", err)
 	}
 
-	authReq, err := http.NewRequest(http.MethodPost, baseURL+"/api/auth", bytes.NewBuffer(authBody))
+	token := authResp.Payload.Jwt
+
+	// Setup JWT authentication
+	jwtAuth := runtime.ClientAuthInfoWriterFunc(func(r runtime.ClientRequest, _ strfmt.Registry) error {
+		return r.SetHeaderParam("Authorization", fmt.Sprintf("Bearer %s", token))
+	})
+	transport.DefaultAuthentication = jwtAuth
+
+	description := "test-api-key"
+	createTokenParams := users.NewUserGenerateAPIKeyParams().WithID(1).WithBody(&models.UsersUserAccessTokenCreatePayload{
+		Description: &description,
+		Password:    &password,
+	})
+
+	createTokenResp, err := portainerClient.Users.UserGenerateAPIKey(createTokenParams, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create auth request: %w", err)
-	}
-	authReq.Header.Set("Content-Type", "application/json")
-
-	authResp, err := httpClient.Do(authReq)
-	if err != nil {
-		return fmt.Errorf("failed to send auth request: %w", err)
-	}
-	defer authResp.Body.Close()
-
-	if authResp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(authResp.Body)
-		return fmt.Errorf("auth request failed with status %d: %s", authResp.StatusCode, string(body))
+		return fmt.Errorf("failed to generate API key: %w", err)
 	}
 
-	var authResult struct {
-		Jwt string `json:"jwt"`
-	}
-	if err := json.NewDecoder(authResp.Body).Decode(&authResult); err != nil {
-		return fmt.Errorf("failed to decode auth response: %w", err)
-	}
+	pc.apiToken = createTokenResp.Payload.RawAPIKey
 
-	// Step 2: Generate API key
-	apiKeyPayload := map[string]string{
-		"description": "test-api-key",
-		"password":    "adminpassword123",
-	}
-	apiKeyBody, err := json.Marshal(apiKeyPayload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal API key payload: %w", err)
-	}
-
-	apiKeyReq, err := http.NewRequest(http.MethodPost, baseURL+"/api/users/1/tokens", bytes.NewBuffer(apiKeyBody))
-	if err != nil {
-		return fmt.Errorf("failed to create API key request: %w", err)
-	}
-	apiKeyReq.Header.Set("Content-Type", "application/json")
-	apiKeyReq.Header.Set("Authorization", "Bearer "+authResult.Jwt)
-
-	apiKeyResp, err := httpClient.Do(apiKeyReq)
-	if err != nil {
-		return fmt.Errorf("failed to send API key request: %w", err)
-	}
-	defer apiKeyResp.Body.Close()
-
-	if apiKeyResp.StatusCode != http.StatusCreated && apiKeyResp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(apiKeyResp.Body)
-		return fmt.Errorf("API key request failed with status %d: %s", apiKeyResp.StatusCode, string(body))
-	}
-
-	var apiKeyResult struct {
-		RawAPIKey string `json:"rawAPIKey"`
-	}
-	if err := json.NewDecoder(apiKeyResp.Body).Decode(&apiKeyResult); err != nil {
-		return fmt.Errorf("failed to decode API key response: %w", err)
-	}
-
-	pc.apiToken = apiKeyResult.RawAPIKey
 	return nil
 }

@@ -235,10 +235,6 @@ tools:
         description: The ID of the environment group to update
         type: number
         required: true
-      - name: name
-        description: The name for the environment group. Passing the current name is required for this operation.
-        type: string
-        required: true
       - name: environmentIds
         description: >-
           The IDs of the environments that should be part of the group.
@@ -255,10 +251,6 @@ tools:
       - name: id
         description: The ID of the environment group to update
         type: number
-        required: true
-      - name: name
-        description: The name for the environment group. Passing the current name is required for this operation.
-        type: string
         required: true
       - name: tagIds
         description: >-

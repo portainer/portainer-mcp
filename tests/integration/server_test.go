@@ -13,7 +13,7 @@ import (
 
 const (
 	toolsPath        = "../../internal/tooldef/tools.yaml"
-	unsupportedImage = "portainer/portainer-ee:2.26.1" // Older version than SupportedPortainerVersion
+	unsupportedImage = "portainer/portainer-ee:2.29.1" // Older version than SupportedPortainerVersion
 )
 
 // TestServerInitialization verifies that the Portainer MCP server

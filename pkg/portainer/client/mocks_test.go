@@ -69,7 +69,7 @@ func (m *MockPortainerAPI) CreateEdgeGroup(name string, environmentIds []int64) 
 }
 
 // UpdateEdgeGroup mocks the UpdateEdgeGroup method
-func (m *MockPortainerAPI) UpdateEdgeGroup(id int64, name string, environmentIds *[]int64, tagIds *[]int64) error {
+func (m *MockPortainerAPI) UpdateEdgeGroup(id int64, name *string, environmentIds *[]int64, tagIds *[]int64) error {
 	args := m.Called(id, name, environmentIds, tagIds)
 	return args.Error(0)
 }
