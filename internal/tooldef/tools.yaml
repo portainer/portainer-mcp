@@ -1,11 +1,17 @@
 ---
-version: v1.0
+version: v1.1
 tools:
   ## Access Groups
   ## An access group is the equivalent of an Endpoint Group in Portainer.
   ## ------------------------------------------------------------
   - name: listAccessGroups
     description: List all available access groups
+    annotations:
+      title: List Access Groups
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: createAccessGroup
     description: Create a new access group. Use access groups when you want to define
       accesses on more than one environment. Otherwise, define the accesses on
@@ -23,6 +29,12 @@ tools:
         type: array
         items:
           type: number
+    annotations:
+      title: Create Access Group
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
   - name: updateAccessGroupName
     description: Update the name of an existing access group.
     parameters:
@@ -34,6 +46,12 @@ tools:
         description: The name of the access group
         type: string
         required: true
+    annotations:
+      title: Update Access Group Name
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateAccessGroupUserAccesses
     description: Update the user accesses of an existing access group.
     parameters:
@@ -64,6 +82,12 @@ tools:
                 - standard_user
                 - readonly_user
                 - operator_user
+    annotations:
+      title: Update Access Group User Accesses
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateAccessGroupTeamAccesses
     description: Update the team accesses of an existing access group.
     parameters:
@@ -94,6 +118,12 @@ tools:
                 - standard_user
                 - readonly_user
                 - operator_user
+    annotations:
+      title: Update Access Group Team Accesses
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: addEnvironmentToAccessGroup
     description: Add an environment to an access group.
     parameters:
@@ -105,6 +135,12 @@ tools:
         description: The ID of the environment to add to the access group
         type: number
         required: true
+    annotations:
+      title: Add Environment To Access Group
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: removeEnvironmentFromAccessGroup
     description: Remove an environment from an access group.
     parameters:
@@ -116,10 +152,22 @@ tools:
         description: The ID of the environment to remove from the access group
         type: number
         required: true
+    annotations:
+      title: Remove Environment From Access Group
+      readOnlyHint: false
+      destructiveHint: true
+      idempotentHint: true
+      openWorldHint: false
   ## Environment
   ## ------------------------------------------------------------
   - name: listEnvironments
     description: List all available environments
+    annotations:
+      title: List Environments
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateEnvironmentTags
     description: Update the tags associated with an environment
     parameters:
@@ -137,6 +185,12 @@ tools:
         required: true
         items:
           type: number
+    annotations:
+      title: Update Environment Tags
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateEnvironmentUserAccesses
     description: Update the user access policies of an environment
     parameters:
@@ -168,6 +222,12 @@ tools:
                 - standard_user
                 - readonly_user
                 - operator_user
+    annotations:
+      title: Update Environment User Accesses
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateEnvironmentTeamAccesses
     description: Update the team access policies of an environment
     parameters:
@@ -199,6 +259,12 @@ tools:
                 - standard_user
                 - readonly_user
                 - operator_user
+    annotations:
+      title: Update Environment Team Accesses
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   ## Environment Groups
   ## An environment group is the equivalent of an Edge Group in Portainer.
   ## ------------------------------------------------------------
@@ -215,8 +281,20 @@ tools:
         required: true
         items:
           type: number
+    annotations:
+      title: Create Environment Group
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
   - name: listEnvironmentGroups
     description: List all available environment groups. Environment groups are the equivalent of Edge Groups in Portainer.
+    annotations:
+      title: List Environment Groups
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateEnvironmentGroupName
     description: Update the name of an environment group. Environment groups are the equivalent of Edge Groups in Portainer.
     parameters:
@@ -228,6 +306,12 @@ tools:
         description: The new name for the environment group
         type: string
         required: true
+    annotations:
+      title: Update Environment Group Name
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateEnvironmentGroupEnvironments
     description: Update the environments associated with an environment group. Environment groups are the equivalent of Edge Groups in Portainer.
     parameters:
@@ -245,6 +329,12 @@ tools:
         required: true
         items:
           type: number
+    annotations:
+      title: Update Environment Group Environments
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateEnvironmentGroupTags
     description: Update the tags associated with an environment group. Environment groups are the equivalent of Edge Groups in Portainer.
     parameters:
@@ -262,14 +352,32 @@ tools:
         required: true
         items:
           type: number
+    annotations:
+      title: Update Environment Group Tags
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   ## Settings
   ## ------------------------------------------------------------
   - name: getSettings
     description: Get the settings of the Portainer instance
+    annotations:
+      title: Get Settings
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   ## Stacks
   ## ------------------------------------------------------------
   - name: listStacks
     description: List all available stacks
+    annotations:
+      title: List Stacks
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: getStackFile
     description: Get the compose file for a specific stack ID
     parameters:
@@ -277,6 +385,12 @@ tools:
         description: The ID of the stack to get the compose file for
         type: number
         required: true
+    annotations:
+      title: Get Stack File
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: createStack
     description: Create a new stack
     parameters:
@@ -301,6 +415,12 @@ tools:
         required: true
         items:
           type: number
+    annotations:
+      title: Create Stack
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
   - name: updateStack
     description: Update an existing stack
     parameters:
@@ -324,6 +444,12 @@ tools:
         required: true
         items:
           type: number
+    annotations:
+      title: Update Stack
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   ## Tags
   ## ------------------------------------------------------------
   - name: createEnvironmentTag
@@ -333,8 +459,20 @@ tools:
         description: The name of the tag
         type: string
         required: true
+    annotations:
+      title: Create Environment Tag
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
   - name: listEnvironmentTags
     description: List all available environment tags
+    annotations:
+      title: List Environment Tags
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   ## Teams
   ## ------------------------------------------------------------
   - name: createTeam
@@ -344,8 +482,20 @@ tools:
         description: The name of the team
         type: string
         required: true
+    annotations:
+      title: Create Team
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
   - name: listTeams
     description: List all available teams
+    annotations:
+      title: List Teams
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateTeamName
     description: Update the name of an existing team
     parameters:
@@ -357,6 +507,12 @@ tools:
         description: The new name of the team
         type: string
         required: true
+    annotations:
+      title: Update Team Name
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateTeamMembers
     description: Update the members of an existing team
     parameters:
@@ -373,11 +529,23 @@ tools:
         required: true
         items:
           type: number
+    annotations:
+      title: Update Team Members
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
 
   ## Users
   ## ------------------------------------------------------------
   - name: listUsers
     description: List all available users
+    annotations:
+      title: List Users
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
   - name: updateUserRole
     description: Update an existing user
     parameters:
@@ -393,6 +561,12 @@ tools:
           - admin
           - user
           - edge_admin
+    annotations:
+      title: Update User Role
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
 
   ## Docker Proxy
   ## ------------------------------------------------------------
@@ -451,6 +625,12 @@ tools:
           Example: {'Image': 'nginx:latest', 'Name': 'my-container'}"
         type: string
         required: false
+    annotations:
+      title: Docker Proxy
+      readOnlyHint: true
+      destructiveHint: true
+      idempotentHint: true
+      openWorldHint: false
 
   ## Kubernetes Proxy
   ## ------------------------------------------------------------
@@ -509,3 +689,9 @@ tools:
           Example: {'apiVersion': 'v1', 'kind': 'Pod', 'metadata': {'name': 'my-pod'}}"
         type: string
         required: false
+    annotations:
+      title: Kubernetes Proxy
+      readOnlyHint: true
+      destructiveHint: true
+      idempotentHint: true
+      openWorldHint: false
