@@ -21,9 +21,10 @@ type ToolDefinition struct {
 	Name        string                `yaml:"name"`
 	Description string                `yaml:"description"`
 	Parameters  []ParameterDefinition `yaml:"parameters"`
+	Annotations Annotations           `yaml:"annotations"`
 }
 
-// ParameterDefinition represents a parameter in the YAML config
+// ParameterDefinition represents a tool parameter in the YAML config
 type ParameterDefinition struct {
 	Name        string         `yaml:"name"`
 	Type        string         `yaml:"type"`
@@ -31,6 +32,15 @@ type ParameterDefinition struct {
 	Enum        []string       `yaml:"enum,omitempty"`
 	Description string         `yaml:"description"`
 	Items       map[string]any `yaml:"items,omitempty"`
+}
+
+// Annotations represents a tool annotations in the YAML config
+type Annotations struct {
+	Title           string `yaml:"title"`
+	ReadOnlyHint    bool   `yaml:"readOnlyHint"`
+	DestructiveHint bool   `yaml:"destructiveHint"`
+	IdempotentHint  bool   `yaml:"idempotentHint"`
+	OpenWorldHint   bool   `yaml:"openWorldHint"`
 }
 
 // LoadToolsFromYAML loads tool definitions from a YAML file
@@ -85,7 +95,12 @@ func convertToolDefinition(def ToolDefinition) (mcp.Tool, error) {
 	}
 
 	if def.Description == "" {
-		return mcp.Tool{}, fmt.Errorf("tool description is required")
+		return mcp.Tool{}, fmt.Errorf("tool description is required for tool '%s'", def.Name)
+	}
+
+	var zeroAnnotations Annotations
+	if def.Annotations == zeroAnnotations {
+		return mcp.Tool{}, fmt.Errorf("annotations block is required for tool '%s'", def.Name)
 	}
 
 	options := []mcp.ToolOption{
@@ -96,7 +111,20 @@ func convertToolDefinition(def ToolDefinition) (mcp.Tool, error) {
 		options = append(options, convertParameter(param))
 	}
 
+	options = append(options, convertAnnotation(def.Annotations))
+
 	return mcp.NewTool(def.Name, options...), nil
+}
+
+// convertAnnotation converts a YAML annotation definition to an mcp option
+func convertAnnotation(annotation Annotations) mcp.ToolOption {
+	return mcp.WithToolAnnotation(mcp.ToolAnnotation{
+		Title:           annotation.Title,
+		ReadOnlyHint:    annotation.ReadOnlyHint,
+		DestructiveHint: annotation.DestructiveHint,
+		IdempotentHint:  annotation.IdempotentHint,
+		OpenWorldHint:   annotation.OpenWorldHint,
+	})
 }
 
 // convertParameter converts a YAML parameter definition to an mcp option
