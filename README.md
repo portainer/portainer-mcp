@@ -217,3 +217,34 @@ Run the script from the repository root to see the default summary output:
 ```
 
 Refer to the comment header within the `cloc.sh` script for details on available flags to retrieve specific metrics.
+
+## Token Counting
+
+To get an estimate of how many tokens your current tool definitions consume in prompts, you can use the provided Go program and shell script to query the Anthropic API's token counting endpoint.
+
+**1. Generate the Tools JSON:**
+
+First, use the `token-count` Go program to convert your YAML tool definitions into the JSON format required by the Anthropic API. Run this from the repository root:
+
+```bash
+# Replace internal/tooldef/tools.yaml with your YAML file if different
+# Replace .tmp/tools.json with your desired output path
+go run ./cmd/token-count -input internal/tooldef/tools.yaml -output .tmp/tools.json
+```
+
+This command reads the tool definitions from the specified input YAML file and writes a JSON array of tools (containing `name`, `description`, and `input_schema`) to the specified output file.
+
+**2. Query the Anthropic API:**
+
+Next, use the `token.sh` script to send these tool definitions along with a sample message to the Anthropic API. You will need an Anthropic API key for this step.
+
+```bash
+# Ensure you have jq installed
+# Replace sk-ant-xxxxxxxx with your actual Anthropic API key
+# Replace .tmp/tools.json with the path to the file generated in step 1
+./token.sh -k sk-ant-xxxxxxxx -i .tmp/tools.json
+```
+
+The script will output the JSON response from the Anthropic API, which includes the estimated token count for the provided tools and sample message under the `usage.input_tokens` field.
+
+This process helps in understanding the token cost associated with the toolset provided to the language model.
