@@ -156,6 +156,7 @@ This tool is pinned to support a specific version of Portainer. The application 
 | 0.1.0 | 2.28.1 |
 | 0.2.0 | 2.28.1 |
 | 0.3.0 | 2.28.1 |
+| 0.4.0 | 2.29.2 |
 
 # Supported Capabilities
 
