@@ -18,8 +18,6 @@ jobs:
         exclude:
           - goarch: "amd64"
             goos: darwin
-          - goarch: "arm64"
-            goos: linux
     steps:
     - uses: actions/checkout@v4
     - id: get_version
