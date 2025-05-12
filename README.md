@@ -24,7 +24,7 @@ It is currently designed to work with a Portainer administrator API token.
 
 ## Installation
 
-You can download pre-built binaries for Linux (amd64) and macOS (arm64) from the [**Latest Release Page**](https://github.com/portainer/portainer-mcp/releases/latest). Find the appropriate archive for your operating system and architecture under the "Assets" section.
+You can download pre-built binaries for Linux (amd64, arm64) and macOS (arm64) from the [**Latest Release Page**](https://github.com/portainer/portainer-mcp/releases/latest). Find the appropriate archive for your operating system and architecture under the "Assets" section.
 
 **Download the archive:**
 You can usually download this directly from the release page. Alternatively, you can use `curl`. Here's an example for macOS (ARM64) version `v0.2.0`:
