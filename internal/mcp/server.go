@@ -160,8 +160,8 @@ func NewPortainerMCPServer(serverURL, token, toolsPath string, options ...Server
 	return &PortainerMCPServer{
 		srv: server.NewMCPServer(
 			"Portainer MCP Server",
-			"0.1.0",
-			server.WithResourceCapabilities(true, true),
+			"0.5.1",
+			server.WithToolCapabilities(true),
 			server.WithLogging(),
 		),
 		cli:      portainerClient,
