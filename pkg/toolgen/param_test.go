@@ -10,13 +10,7 @@ import (
 // Helper function to create a ParameterParser with given arguments
 func newTestParser(args map[string]any) *ParameterParser {
 	return NewParameterParser(mcp.CallToolRequest{
-		Params: struct {
-			Name      string         `json:"name"`
-			Arguments map[string]any `json:"arguments,omitempty"`
-			Meta      *struct {
-				ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-			} `json:"_meta,omitempty"`
-		}{
+		Params: mcp.CallToolParams{
 			Arguments: args,
 		},
 	})

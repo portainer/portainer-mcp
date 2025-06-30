@@ -120,10 +120,10 @@ func convertToolDefinition(def ToolDefinition) (mcp.Tool, error) {
 func convertAnnotation(annotation Annotations) mcp.ToolOption {
 	return mcp.WithToolAnnotation(mcp.ToolAnnotation{
 		Title:           annotation.Title,
-		ReadOnlyHint:    annotation.ReadOnlyHint,
-		DestructiveHint: annotation.DestructiveHint,
-		IdempotentHint:  annotation.IdempotentHint,
-		OpenWorldHint:   annotation.OpenWorldHint,
+		ReadOnlyHint:    &annotation.ReadOnlyHint,
+		DestructiveHint: &annotation.DestructiveHint,
+		IdempotentHint:  &annotation.IdempotentHint,
+		OpenWorldHint:   &annotation.OpenWorldHint,
 	})
 }
 

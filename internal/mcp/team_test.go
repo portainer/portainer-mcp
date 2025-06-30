@@ -27,7 +27,9 @@ func TestHandleCreateTeam(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "test-team"
+				request.Params.Arguments = map[string]any{
+					"name": "test-team",
+				}
 			},
 		},
 		{
@@ -37,7 +39,9 @@ func TestHandleCreateTeam(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "test-team"
+				request.Params.Arguments = map[string]any{
+					"name": "test-team",
+				}
 			},
 		},
 		{
@@ -175,8 +179,10 @@ func TestHandleUpdateTeamName(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "new-name"
+				request.Params.Arguments = map[string]any{
+					"id":   float64(1),
+					"name": "new-name",
+				}
 			},
 		},
 		{
@@ -186,8 +192,10 @@ func TestHandleUpdateTeamName(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "new-name"
+				request.Params.Arguments = map[string]any{
+					"id":   float64(1),
+					"name": "new-name",
+				}
 			},
 		},
 		{
@@ -197,7 +205,9 @@ func TestHandleUpdateTeamName(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "new-name"
+				request.Params.Arguments = map[string]any{
+					"name": "new-name",
+				}
 			},
 		},
 		{
@@ -207,7 +217,9 @@ func TestHandleUpdateTeamName(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 			},
 		},
 	}
@@ -270,8 +282,10 @@ func TestHandleUpdateTeamMembers(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["userIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"id":      float64(1),
+					"userIds": []any{float64(1), float64(2), float64(3)},
+				}
 			},
 		},
 		{
@@ -281,8 +295,10 @@ func TestHandleUpdateTeamMembers(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["userIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"id":      float64(1),
+					"userIds": []any{float64(1), float64(2), float64(3)},
+				}
 			},
 		},
 		{
@@ -292,7 +308,9 @@ func TestHandleUpdateTeamMembers(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["userIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"userIds": []any{float64(1), float64(2), float64(3)},
+				}
 			},
 		},
 		{
@@ -302,7 +320,9 @@ func TestHandleUpdateTeamMembers(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 			},
 		},
 	}

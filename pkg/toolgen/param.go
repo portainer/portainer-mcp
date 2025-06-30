@@ -14,7 +14,7 @@ type ParameterParser struct {
 // NewParameterParser creates a new parameter parser for the given request
 func NewParameterParser(request mcp.CallToolRequest) *ParameterParser {
 	return &ParameterParser{
-		args: request.Params.Arguments,
+		args: request.GetArguments(),
 	}
 }
 

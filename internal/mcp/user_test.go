@@ -95,8 +95,10 @@ func TestHandleUpdateUserRole(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["role"] = "admin"
+				request.Params.Arguments = map[string]any{
+					"id":   float64(1),
+					"role": "admin",
+				}
 			},
 		},
 		{
@@ -106,8 +108,10 @@ func TestHandleUpdateUserRole(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["role"] = "admin"
+				request.Params.Arguments = map[string]any{
+					"id":   float64(1),
+					"role": "admin",
+				}
 			},
 		},
 		{
@@ -117,7 +121,9 @@ func TestHandleUpdateUserRole(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["role"] = "admin"
+				request.Params.Arguments = map[string]any{
+					"role": "admin",
+				}
 			},
 		},
 		{
@@ -127,7 +133,9 @@ func TestHandleUpdateUserRole(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 			},
 		},
 		{
@@ -137,8 +145,10 @@ func TestHandleUpdateUserRole(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["role"] = "invalid_role"
+				request.Params.Arguments = map[string]any{
+					"id":   float64(1),
+					"role": "invalid_role",
+				}
 			},
 		},
 	}

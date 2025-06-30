@@ -94,8 +94,10 @@ func TestHandleCreateEnvironmentGroup(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "group1"
-				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"name":           "group1",
+					"environmentIds": []any{float64(1), float64(2), float64(3)},
+				}
 			},
 		},
 		{
@@ -106,8 +108,10 @@ func TestHandleCreateEnvironmentGroup(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "group1"
-				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"name":           "group1",
+					"environmentIds": []any{float64(1), float64(2), float64(3)},
+				}
 			},
 		},
 		{
@@ -116,7 +120,9 @@ func TestHandleCreateEnvironmentGroup(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"environmentIds": []any{float64(1), float64(2), float64(3)},
+				}
 			},
 		},
 		{
@@ -125,7 +131,9 @@ func TestHandleCreateEnvironmentGroup(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "group1"
+				request.Params.Arguments = map[string]any{
+					"name": "group1",
+				}
 			},
 		},
 	}
@@ -188,8 +196,10 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "newname"
+				request.Params.Arguments = map[string]any{
+					"id":   float64(1),
+					"name": "newname",
+				}
 				return request
 			},
 		},
@@ -200,8 +210,10 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "newname"
+				request.Params.Arguments = map[string]any{
+					"id":   float64(1),
+					"name": "newname",
+				}
 				return request
 			},
 		},
@@ -211,7 +223,9 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["name"] = "newname"
+				request.Params.Arguments = map[string]any{
+					"name": "newname",
+				}
 				return request
 			},
 		},
@@ -221,7 +235,9 @@ func TestHandleUpdateEnvironmentGroupName(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 				return request
 			},
 		},
@@ -285,8 +301,10 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"id":             float64(1),
+					"environmentIds": []any{float64(1), float64(2), float64(3)},
+				}
 				return request
 			},
 		},
@@ -297,8 +315,10 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"id":             float64(1),
+					"environmentIds": []any{float64(1), float64(2), float64(3)},
+				}
 				return request
 			},
 		},
@@ -308,7 +328,9 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["environmentIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"environmentIds": []any{float64(1), float64(2), float64(3)},
+				}
 				return request
 			},
 		},
@@ -318,8 +340,10 @@ func TestHandleUpdateEnvironmentGroupEnvironments(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["name"] = "group1"
+				request.Params.Arguments = map[string]any{
+					"id":   float64(1),
+					"name": "group1",
+				}
 				return request
 			},
 		},
@@ -383,8 +407,10 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"id":     float64(1),
+					"tagIds": []any{float64(1), float64(2), float64(3)},
+				}
 				return request
 			},
 		},
@@ -395,8 +421,10 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"id":     float64(1),
+					"tagIds": []any{float64(1), float64(2), float64(3)},
+				}
 				return request
 			},
 		},
@@ -406,7 +434,9 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"tagIds": []any{float64(1), float64(2), float64(3)},
+				}
 				return request
 			},
 		},
@@ -416,7 +446,9 @@ func TestHandleUpdateEnvironmentGroupTags(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request mcp.CallToolRequest) mcp.CallToolRequest {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 				return request
 			},
 		},

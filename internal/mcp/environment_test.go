@@ -93,8 +93,10 @@ func TestHandleUpdateEnvironmentTags(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"id":     float64(1),
+					"tagIds": []any{float64(1), float64(2), float64(3)},
+				}
 			},
 		},
 		{
@@ -104,8 +106,10 @@ func TestHandleUpdateEnvironmentTags(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"id":     float64(1),
+					"tagIds": []any{float64(1), float64(2), float64(3)},
+				}
 			},
 		},
 		{
@@ -115,7 +119,9 @@ func TestHandleUpdateEnvironmentTags(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["tagIds"] = []any{float64(1), float64(2), float64(3)}
+				request.Params.Arguments = map[string]any{
+					"tagIds": []any{float64(1), float64(2), float64(3)},
+				}
 			},
 		},
 		{
@@ -125,7 +131,9 @@ func TestHandleUpdateEnvironmentTags(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 			},
 		},
 	}
@@ -191,10 +199,12 @@ func TestHandleUpdateEnvironmentUserAccesses(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["userAccesses"] = []any{
-					map[string]any{"id": float64(1), "access": "environment_administrator"},
-					map[string]any{"id": float64(2), "access": "standard_user"},
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+					"userAccesses": []any{
+						map[string]any{"id": float64(1), "access": "environment_administrator"},
+						map[string]any{"id": float64(2), "access": "standard_user"},
+					},
 				}
 			},
 		},
@@ -207,9 +217,11 @@ func TestHandleUpdateEnvironmentUserAccesses(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["userAccesses"] = []any{
-					map[string]any{"id": float64(1), "access": "environment_administrator"},
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+					"userAccesses": []any{
+						map[string]any{"id": float64(1), "access": "environment_administrator"},
+					},
 				}
 			},
 		},
@@ -219,8 +231,10 @@ func TestHandleUpdateEnvironmentUserAccesses(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["userAccesses"] = []any{
-					map[string]any{"id": float64(1), "access": "environment_administrator"},
+				request.Params.Arguments = map[string]any{
+					"userAccesses": []any{
+						map[string]any{"id": float64(1), "access": "environment_administrator"},
+					},
 				}
 			},
 		},
@@ -230,7 +244,9 @@ func TestHandleUpdateEnvironmentUserAccesses(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 			},
 		},
 		{
@@ -242,9 +258,11 @@ func TestHandleUpdateEnvironmentUserAccesses(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["userAccesses"] = []any{
-					map[string]any{"id": float64(1), "access": "invalid_access"},
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+					"userAccesses": []any{
+						map[string]any{"id": float64(1), "access": "invalid_access"},
+					},
 				}
 			},
 		},
@@ -314,10 +332,12 @@ func TestHandleUpdateEnvironmentTeamAccesses(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["teamAccesses"] = []any{
-					map[string]any{"id": float64(1), "access": "environment_administrator"},
-					map[string]any{"id": float64(2), "access": "standard_user"},
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+					"teamAccesses": []any{
+						map[string]any{"id": float64(1), "access": "environment_administrator"},
+						map[string]any{"id": float64(2), "access": "standard_user"},
+					},
 				}
 			},
 		},
@@ -330,9 +350,11 @@ func TestHandleUpdateEnvironmentTeamAccesses(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["teamAccesses"] = []any{
-					map[string]any{"id": float64(1), "access": "environment_administrator"},
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+					"teamAccesses": []any{
+						map[string]any{"id": float64(1), "access": "environment_administrator"},
+					},
 				}
 			},
 		},
@@ -342,8 +364,10 @@ func TestHandleUpdateEnvironmentTeamAccesses(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["teamAccesses"] = []any{
-					map[string]any{"id": float64(1), "access": "environment_administrator"},
+				request.Params.Arguments = map[string]any{
+					"teamAccesses": []any{
+						map[string]any{"id": float64(1), "access": "environment_administrator"},
+					},
 				}
 			},
 		},
@@ -353,7 +377,9 @@ func TestHandleUpdateEnvironmentTeamAccesses(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 			},
 		},
 		{
@@ -365,9 +391,11 @@ func TestHandleUpdateEnvironmentTeamAccesses(t *testing.T) {
 			mockError:   nil,
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["teamAccesses"] = []any{
-					map[string]any{"id": float64(1), "access": "invalid_access"},
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+					"teamAccesses": []any{
+						map[string]any{"id": float64(1), "access": "invalid_access"},
+					},
 				}
 			},
 		},
