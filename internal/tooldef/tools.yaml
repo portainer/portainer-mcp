@@ -1,5 +1,5 @@
 ---
-version: v1.1
+version: v1.2
 tools:
   ## Access Groups
   ## An access group is the equivalent of an Endpoint Group in Portainer.
@@ -693,5 +693,57 @@ tools:
       title: Kubernetes Proxy
       readOnlyHint: true
       destructiveHint: true
+      idempotentHint: true
+      openWorldHint: false
+  - name: getKubernetesResourceStripped
+    description: >-
+      Proxy GET requests to a specific Portainer environment for Kubernetes resources,
+      and automatically strips verbose metadata fields (such as 'managedFields') from the API response
+      to reduce its size. This tool is intended for retrieving Kubernetes resource
+      information where a leaner payload is desired.
+      This tool can be used with any GET Kubernetes API operation as documented
+      in the Kubernetes API specification (https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/).
+      For other methods (POST, PUT, DELETE, HEAD), use the 'kubernetesProxy' tool.
+    parameters:
+      - name: environmentId
+        description: The ID of the environment to proxy Kubernetes GET requests to
+        type: number
+        required: true
+      - name: kubernetesAPIPath
+        description: "The route of the Kubernetes API GET operation to proxy. Must include the leading slash. Example: /api/v1/namespaces/default/pods"
+        type: string
+        required: true
+      - name: queryParams
+        description: "The query parameters to include in the Kubernetes API operation. Must be an array of key-value pairs.
+          Example: [{key: 'watch', value: 'true'}, {key: 'fieldSelector', value: 'metadata.name=my-pod'}]"
+        type: array
+        required: false
+        items:
+          type: object
+          properties:
+            key:
+              type: string
+              description: The key of the query parameter
+            value:
+              type: string
+              description: The value of the query parameter
+      - name: headers
+        description: "The headers to include in the Kubernetes API operation. Must be an array of key-value pairs.
+          Example: [{key: 'Accept', value: 'application/json'}]"
+        type: array
+        required: false
+        items:
+          type: object
+          properties:
+            key:
+              type: string
+              description: The key of the header
+            value:
+              type: string
+              description: The value of the header
+    annotations:
+      title: Get Kubernetes Resource (Stripped)
+      readOnlyHint: true
+      destructiveHint: false
       idempotentHint: true
       openWorldHint: false

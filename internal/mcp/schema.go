@@ -38,6 +38,7 @@ const (
 	ToolUpdateEnvironmentGroupTags         = "updateEnvironmentGroupTags"
 	ToolDockerProxy                        = "dockerProxy"
 	ToolKubernetesProxy                    = "kubernetesProxy"
+	ToolKubernetesProxyStripped            = "getKubernetesResourceStripped"
 )
 
 // Access levels for users and teams

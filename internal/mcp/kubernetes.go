@@ -8,13 +8,73 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/portainer/portainer-mcp/internal/k8sutil"
 	"github.com/portainer/portainer-mcp/pkg/portainer/models"
 	"github.com/portainer/portainer-mcp/pkg/toolgen"
 )
 
 func (s *PortainerMCPServer) AddKubernetesProxyFeatures() {
+	s.addToolIfExists(ToolKubernetesProxyStripped, s.HandleKubernetesProxyStripped())
+
 	if !s.readOnly {
 		s.addToolIfExists(ToolKubernetesProxy, s.HandleKubernetesProxy())
+	}
+}
+
+func (s *PortainerMCPServer) HandleKubernetesProxyStripped() server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		parser := toolgen.NewParameterParser(request)
+
+		environmentId, err := parser.GetInt("environmentId", true)
+		if err != nil {
+			return mcp.NewToolResultErrorFromErr("invalid environmentId parameter", err), nil
+		}
+
+		kubernetesAPIPath, err := parser.GetString("kubernetesAPIPath", true)
+		if err != nil {
+			return mcp.NewToolResultErrorFromErr("invalid kubernetesAPIPath parameter", err), nil
+		}
+		if !strings.HasPrefix(kubernetesAPIPath, "/") {
+			return mcp.NewToolResultError("kubernetesAPIPath must start with a leading slash"), nil
+		}
+
+		queryParams, err := parser.GetArrayOfObjects("queryParams", false)
+		if err != nil {
+			return mcp.NewToolResultErrorFromErr("invalid queryParams parameter", err), nil
+		}
+		queryParamsMap, err := parseKeyValueMap(queryParams)
+		if err != nil {
+			return mcp.NewToolResultErrorFromErr("invalid query params", err), nil
+		}
+
+		headers, err := parser.GetArrayOfObjects("headers", false)
+		if err != nil {
+			return mcp.NewToolResultErrorFromErr("invalid headers parameter", err), nil
+		}
+		headersMap, err := parseKeyValueMap(headers)
+		if err != nil {
+			return mcp.NewToolResultErrorFromErr("invalid headers", err), nil
+		}
+
+		opts := models.KubernetesProxyRequestOptions{
+			EnvironmentID: environmentId,
+			Path:          kubernetesAPIPath,
+			Method:        "GET",
+			QueryParams:   queryParamsMap,
+			Headers:       headersMap,
+		}
+
+		response, err := s.cli.ProxyKubernetesRequest(opts)
+		if err != nil {
+			return mcp.NewToolResultErrorFromErr("failed to send Kubernetes API request", err), nil
+		}
+
+		responseBody, err := k8sutil.ProcessRawKubernetesAPIResponse(response)
+		if err != nil {
+			return mcp.NewToolResultErrorFromErr("failed to process Kubernetes API response", err), nil
+		}
+
+		return mcp.NewToolResultText(string(responseBody)), nil
 	}
 }
 
