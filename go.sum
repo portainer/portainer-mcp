@@ -141,6 +141,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/portainer/client-api-go/v2 v2.30.0 h1:3nLhqiw08o7ucEmd3JQ362knc2PxB+BsUfD675gaZAw=
 github.com/portainer/client-api-go/v2 v2.30.0/go.mod h1:L0VSNt2JOgUpbFGmGH8IkbjgVaCZiRC75+COX424ulw=
+github.com/portainer/client-api-go/v2 v2.31.2 h1:VjcXBIJMUOXvCFdbjyIYOVrUxAzRKlOtH5Mo8A9wA3o=
+github.com/portainer/client-api-go/v2 v2.31.2/go.mod h1:L0VSNt2JOgUpbFGmGH8IkbjgVaCZiRC75+COX424ulw=
 github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c h1:ncq/mPwQF4JjgDlrVEn3C11VoGHZN7m8qihwgMEtzYw=
 github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c/go.mod h1:OmDBASR4679mdNQnz2pUhc2G8CO2JrUAVFDRBDP/hJE=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
