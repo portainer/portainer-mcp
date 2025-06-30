@@ -289,10 +289,10 @@ func TestConvertToolDefinition(t *testing.T) {
 			wantErr: false,
 			want: &mcp.ToolAnnotation{
 				Title:           "Valid Title",
-				ReadOnlyHint:    true,
-				DestructiveHint: false,
-				IdempotentHint:  true,
-				OpenWorldHint:   false,
+				ReadOnlyHint:    &validAnnotations.ReadOnlyHint,
+				DestructiveHint: &validAnnotations.DestructiveHint,
+				IdempotentHint:  &validAnnotations.IdempotentHint,
+				OpenWorldHint:   &validAnnotations.OpenWorldHint,
 			},
 		},
 		{
@@ -343,10 +343,10 @@ func TestConvertToolDefinition(t *testing.T) {
 			wantErr: false,
 			want: &mcp.ToolAnnotation{
 				Title:           "Valid Title",
-				ReadOnlyHint:    true,
-				DestructiveHint: false,
-				IdempotentHint:  true,
-				OpenWorldHint:   false,
+				ReadOnlyHint:    &validAnnotations.ReadOnlyHint,
+				DestructiveHint: &validAnnotations.DestructiveHint,
+				IdempotentHint:  &validAnnotations.IdempotentHint,
+				OpenWorldHint:   &validAnnotations.OpenWorldHint,
 			},
 		},
 	}
@@ -594,10 +594,10 @@ func TestConvertAnnotation(t *testing.T) {
 	}
 	want := mcp.ToolAnnotation{
 		Title:           "Test Title",
-		ReadOnlyHint:    true,
-		DestructiveHint: true,
-		IdempotentHint:  false,
-		OpenWorldHint:   false,
+		ReadOnlyHint:    &input.ReadOnlyHint,
+		DestructiveHint: &input.DestructiveHint,
+		IdempotentHint:  &input.IdempotentHint,
+		OpenWorldHint:   &input.OpenWorldHint,
 	}
 
 	dummyTool := &mcp.Tool{}

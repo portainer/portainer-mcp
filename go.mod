@@ -7,7 +7,7 @@ require (
 	github.com/docker/go-connections v0.5.0
 	github.com/go-openapi/runtime v0.28.0
 	github.com/go-openapi/strfmt v0.23.0
-	github.com/mark3labs/mcp-go v0.24.1
+	github.com/mark3labs/mcp-go v0.32.0
 	github.com/portainer/client-api-go/v2 v2.30.0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0

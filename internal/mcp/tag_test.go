@@ -129,7 +129,9 @@ func TestHandleCreateEnvironmentTag(t *testing.T) {
 			// Create request with parameters
 			request := CreateMCPRequest(map[string]any{})
 			if tt.inputName != "" {
-				request.Params.Arguments["name"] = tt.inputName
+				request.Params.Arguments = map[string]any{
+					"name": tt.inputName,
+				}
 			}
 
 			// Call handler

@@ -92,7 +92,9 @@ func TestHandleGetStackFile(t *testing.T) {
 			mockError:   nil,
 			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 			},
 		},
 		{
@@ -102,7 +104,9 @@ func TestHandleGetStackFile(t *testing.T) {
 			mockError:   fmt.Errorf("api error"),
 			expectError: true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
+				request.Params.Arguments = map[string]any{
+					"id": float64(1),
+				}
 			},
 		},
 		{
@@ -179,9 +183,11 @@ func TestHandleCreateStack(t *testing.T) {
 			mockError:        nil,
 			expectError:      false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "test-stack"
-				request.Params.Arguments["file"] = "version: '3'\nservices:\n  web:\n    image: nginx"
-				request.Params.Arguments["environmentGroupIds"] = []any{float64(1), float64(2)}
+				request.Params.Arguments = map[string]any{
+					"name":                "test-stack",
+					"file":                "version: '3'\nservices:\n  web:\n    image: nginx",
+					"environmentGroupIds": []any{float64(1), float64(2)},
+				}
 			},
 		},
 		{
@@ -193,9 +199,11 @@ func TestHandleCreateStack(t *testing.T) {
 			mockError:        fmt.Errorf("api error"),
 			expectError:      true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "test-stack"
-				request.Params.Arguments["file"] = "version: '3'\nservices:\n  web:\n    image: nginx"
-				request.Params.Arguments["environmentGroupIds"] = []any{float64(1), float64(2)}
+				request.Params.Arguments = map[string]any{
+					"name":                "test-stack",
+					"file":                "version: '3'\nservices:\n  web:\n    image: nginx",
+					"environmentGroupIds": []any{float64(1), float64(2)},
+				}
 			},
 		},
 		{
@@ -207,8 +215,10 @@ func TestHandleCreateStack(t *testing.T) {
 			mockError:        nil,
 			expectError:      true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["file"] = "version: '3'\nservices:\n  web:\n    image: nginx"
-				request.Params.Arguments["environmentGroupIds"] = []any{float64(1), float64(2)}
+				request.Params.Arguments = map[string]any{
+					"file":                "version: '3'\nservices:\n  web:\n    image: nginx",
+					"environmentGroupIds": []any{float64(1), float64(2)},
+				}
 			},
 		},
 		{
@@ -220,8 +230,10 @@ func TestHandleCreateStack(t *testing.T) {
 			mockError:        nil,
 			expectError:      true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "test-stack"
-				request.Params.Arguments["environmentGroupIds"] = []any{float64(1), float64(2)}
+				request.Params.Arguments = map[string]any{
+					"name":                "test-stack",
+					"environmentGroupIds": []any{float64(1), float64(2)},
+				}
 			},
 		},
 		{
@@ -233,8 +245,10 @@ func TestHandleCreateStack(t *testing.T) {
 			mockError:        nil,
 			expectError:      true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["name"] = "test-stack"
-				request.Params.Arguments["file"] = "version: '3'\nservices:\n  web:\n    image: nginx"
+				request.Params.Arguments = map[string]any{
+					"name": "test-stack",
+					"file": "version: '3'\nservices:\n  web:\n    image: nginx",
+				}
 			},
 		},
 	}
@@ -299,9 +313,11 @@ func TestHandleUpdateStack(t *testing.T) {
 			mockError:        nil,
 			expectError:      false,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["file"] = "version: '3'\nservices:\n  web:\n    image: nginx"
-				request.Params.Arguments["environmentGroupIds"] = []any{float64(1), float64(2)}
+				request.Params.Arguments = map[string]any{
+					"id":                  float64(1),
+					"file":                "version: '3'\nservices:\n  web:\n    image: nginx",
+					"environmentGroupIds": []any{float64(1), float64(2)},
+				}
 			},
 		},
 		{
@@ -312,9 +328,11 @@ func TestHandleUpdateStack(t *testing.T) {
 			mockError:        fmt.Errorf("api error"),
 			expectError:      true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["file"] = "version: '3'\nservices:\n  web:\n    image: nginx"
-				request.Params.Arguments["environmentGroupIds"] = []any{float64(1), float64(2)}
+				request.Params.Arguments = map[string]any{
+					"id":                  float64(1),
+					"file":                "version: '3'\nservices:\n  web:\n    image: nginx",
+					"environmentGroupIds": []any{float64(1), float64(2)},
+				}
 			},
 		},
 		{
@@ -325,8 +343,10 @@ func TestHandleUpdateStack(t *testing.T) {
 			mockError:        nil,
 			expectError:      true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["file"] = "version: '3'\nservices:\n  web:\n    image: nginx"
-				request.Params.Arguments["environmentGroupIds"] = []any{float64(1), float64(2)}
+				request.Params.Arguments = map[string]any{
+					"file":                "version: '3'\nservices:\n  web:\n    image: nginx",
+					"environmentGroupIds": []any{float64(1), float64(2)},
+				}
 			},
 		},
 		{
@@ -337,8 +357,10 @@ func TestHandleUpdateStack(t *testing.T) {
 			mockError:        nil,
 			expectError:      true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["environmentGroupIds"] = []any{float64(1), float64(2)}
+				request.Params.Arguments = map[string]any{
+					"id":                  float64(1),
+					"environmentGroupIds": []any{float64(1), float64(2)},
+				}
 			},
 		},
 		{
@@ -349,8 +371,10 @@ func TestHandleUpdateStack(t *testing.T) {
 			mockError:        nil,
 			expectError:      true,
 			setupParams: func(request *mcp.CallToolRequest) {
-				request.Params.Arguments["id"] = float64(1)
-				request.Params.Arguments["file"] = "version: '3'\nservices:\n  web:\n    image: nginx"
+				request.Params.Arguments = map[string]any{
+					"id":   float64(1),
+					"file": "version: '3'\nservices:\n  web:\n    image: nginx",
+				}
 			},
 		},
 	}
