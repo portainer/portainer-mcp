@@ -90,8 +90,9 @@ type ServerOption func(*serverOptions)
 
 // serverOptions contains all configurable options for the server
 type serverOptions struct {
-	client   PortainerClient
-	readOnly bool
+	client              PortainerClient
+	readOnly            bool
+	disableVersionCheck bool
 }
 
 // WithClient sets a custom client for the server.
@@ -107,6 +108,14 @@ func WithClient(client PortainerClient) ServerOption {
 func WithReadOnly(readOnly bool) ServerOption {
 	return func(opts *serverOptions) {
 		opts.readOnly = readOnly
+	}
+}
+
+// WithDisableVersionCheck disables the Portainer server version check.
+// This allows connecting to unsupported Portainer versions.
+func WithDisableVersionCheck(disable bool) ServerOption {
+	return func(opts *serverOptions) {
+		opts.disableVersionCheck = disable
 	}
 }
 
@@ -148,13 +157,15 @@ func NewPortainerMCPServer(serverURL, token, toolsPath string, options ...Server
 		portainerClient = client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(true))
 	}
 
-	version, err := portainerClient.GetVersion()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get Portainer server version: %w", err)
-	}
+	if !opts.disableVersionCheck {
+		version, err := portainerClient.GetVersion()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get Portainer server version: %w", err)
+		}
 
-	if version != SupportedPortainerVersion {
-		return nil, fmt.Errorf("unsupported Portainer server version: %s, only version %s is supported", version, SupportedPortainerVersion)
+		if version != SupportedPortainerVersion {
+			return nil, fmt.Errorf("unsupported Portainer server version: %s, only version %s is supported", version, SupportedPortainerVersion)
+		}
 	}
 
 	return &PortainerMCPServer{

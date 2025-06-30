@@ -16,7 +16,10 @@ MCP (Model Context Protocol) is an open protocol that standardizes how applicati
 
 This implementation focuses on exposing Portainer environment data through the MCP protocol, allowing AI assistants and other tools to interact with your containerized infrastructure in a secure and standardized way.
 
-See the [Portainer Version Support](#portainer-version-support) and [Supported Capabilities](#supported-capabilities) sections for more details on compatibility and available features.
+> [!NOTE]
+> This tool is designed to work with specific Portainer versions. If your Portainer version doesn't match the supported version, you can use the `--disable-version-check` flag to attempt connection anyway. See [Portainer Version Support](#portainer-version-support) for compatible versions and [Disable Version Check](#disable-version-check) for bypass instructions.
+
+See the [Supported Capabilities](#supported-capabilities) sections for more details on compatibility and available features.
 
 *Note: This project is currently under development.*
 
@@ -89,6 +92,42 @@ Replace `[IP]`, `[PORT]` and `[TOKEN]` with the IP, port and API access token as
 > [!NOTE]
 > By default, the tool looks for "tools.yaml" in the same directory as the binary. If the file does not exist, it will be created there with the default tool definitions. You may need to modify this path as described above, particularly when using AI assistants like Claude that have restricted write permissions to the working directory.
 
+## Disable Version Check
+
+By default, the application validates that your Portainer server version matches the supported version and will fail to start if there's a mismatch. If you have a Portainer server version that doesn't have a corresponding Portainer MCP version available, you can disable this version check to attempt connection anyway.
+
+To disable the version check, add the `-disable-version-check` flag to your command arguments:
+
+```
+{
+    "mcpServers": {
+        "portainer": {
+            "command": "/path/to/portainer-mcp",
+            "args": [
+                "-server",
+                "[IP]:[PORT]",
+                "-token",
+                "[TOKEN]",
+                "-disable-version-check"
+            ]
+        }
+    }
+}
+```
+
+> [!WARNING]
+> Disabling the version check may result in unexpected behavior or API incompatibilities if your Portainer server version differs significantly from the supported version. The tool may work partially or not at all with unsupported versions.
+
+When using this flag:
+- The application will skip Portainer server version validation at startup
+- Some features may not work correctly due to API differences between versions
+- Newer Portainer versions may have API changes that cause errors
+- Older Portainer versions may be missing APIs that the tool expects
+
+This flag is useful when:
+- You're running a newer Portainer version that doesn't have MCP support yet
+- You're running an older Portainer version and want to try the tool anyway
+
 ## Tool Customization
 
 By default, the tool definitions are embedded in the binary. The application will create a tools file at the default location if one doesn't already exist.
@@ -159,6 +198,9 @@ This tool is pinned to support a specific version of Portainer. The application 
 | 0.4.0 | 2.29.2 |
 | 0.4.1 | 2.29.2 |
 | 0.5.0 | 2.30.0 |
+
+> [!NOTE]
+> If you need to connect to an unsupported Portainer version, you can use the `-disable-version-check` flag to bypass version validation. See the [Disable Version Check](#disable-version-check) section for more details and important warnings about using this feature.
 
 # Supported Capabilities
 

@@ -27,6 +27,8 @@ func main() {
 	tokenFlag := flag.String("token", "", "The authentication token for the Portainer server")
 	toolsFlag := flag.String("tools", "", "The path to the tools YAML file")
 	readOnlyFlag := flag.Bool("read-only", false, "Run in read-only mode")
+	disableVersionCheckFlag := flag.Bool("disable-version-check", false, "Disable Portainer server version check")
+
 	flag.Parse()
 
 	if *serverFlag == "" || *tokenFlag == "" {
@@ -55,9 +57,10 @@ func main() {
 		Str("portainer-host", *serverFlag).
 		Str("tools-path", toolsPath).
 		Bool("read-only", *readOnlyFlag).
+		Bool("disable-version-check", *disableVersionCheckFlag).
 		Msg("starting MCP server")
 
-	server, err := mcp.NewPortainerMCPServer(*serverFlag, *tokenFlag, toolsPath, mcp.WithReadOnly(*readOnlyFlag))
+	server, err := mcp.NewPortainerMCPServer(*serverFlag, *tokenFlag, toolsPath, mcp.WithReadOnly(*readOnlyFlag), mcp.WithDisableVersionCheck(*disableVersionCheckFlag))
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create server")
 	}
