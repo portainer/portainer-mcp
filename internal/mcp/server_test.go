@@ -75,6 +75,16 @@ func TestNewPortainerMCPServer(t *testing.T) {
 			expectError:   true,
 			errorContains: "unsupported Portainer server version",
 		},
+		{
+			name:      "unsupported version with disabled version check",
+			serverURL: "https://portainer.example.com",
+			token:     "valid-token",
+			toolsPath: validToolsPath,
+			mockSetup: func(m *MockPortainerClient) {
+				// No GetVersion call expected when version check is disabled
+			},
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -84,11 +94,19 @@ func TestNewPortainerMCPServer(t *testing.T) {
 			tt.mockSetup(mockClient)
 
 			// Create server with mock client using the WithClient option
+			var options []ServerOption
+			options = append(options, WithClient(mockClient))
+
+			// Add WithDisableVersionCheck for the specific test case
+			if tt.name == "unsupported version with disabled version check" {
+				options = append(options, WithDisableVersionCheck(true))
+			}
+
 			server, err := NewPortainerMCPServer(
 				tt.serverURL,
 				tt.token,
 				tt.toolsPath,
-				WithClient(mockClient),
+				options...,
 			)
 
 			if tt.expectError {
