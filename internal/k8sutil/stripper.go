@@ -84,8 +84,6 @@ func ProcessRawKubernetesAPIResponse(httpResp *http.Response) ([]byte, error) {
 
 		for i := range list.Items {
 			if err := removeManagedFieldsFromUnstructuredObject(&list.Items[i]); err != nil {
-				// Potentially log this error but continue processing other items
-				// For now, we'll return on first error to be safe.
 				return nil, fmt.Errorf("failed to remove managedFields from item %d in list: %w", i, err)
 			}
 		}
