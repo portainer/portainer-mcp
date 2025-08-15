@@ -2,6 +2,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/portainer/portainer-mcp)](https://goreportcard.com/report/github.com/portainer/portainer-mcp)
 ![coverage](https://raw.githubusercontent.com/portainer/portainer-mcp/badges/.badges/main/coverage.svg)
 
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/portainer/portainer-mcp)](https://archestra.ai/mcp-catalog/portainer__portainer-mcp)
+
 Ever wished you could just ask Portainer what's going on?
 
 Now you can! Portainer MCP connects your AI assistant directly to your Portainer environments. Manage Portainer resources such as users and environments, or dive deeper by executing any Docker or Kubernetes command directly through the AI.
