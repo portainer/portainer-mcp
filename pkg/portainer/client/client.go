@@ -43,7 +43,10 @@ type PortainerAPIClient interface {
 // PortainerClient is a wrapper around the Portainer SDK client
 // that provides simplified access to Portainer API functionality.
 type PortainerClient struct {
-	cli PortainerAPIClient
+	cli           PortainerAPIClient
+	serverURL     string
+	token         string
+	skipTLSVerify bool
 }
 
 // ClientOption defines a function that configures a PortainerClient.
@@ -82,6 +85,9 @@ func NewPortainerClient(serverURL string, token string, opts ...ClientOption) *P
 	}
 
 	return &PortainerClient{
-		cli: client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(options.skipTLSVerify)),
+		cli:           client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(options.skipTLSVerify)),
+		serverURL:     serverURL,
+		token:         token,
+		skipTLSVerify: options.skipTLSVerify,
 	}
 }
