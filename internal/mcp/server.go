@@ -187,6 +187,18 @@ func (s *PortainerMCPServer) Start() error {
 	return server.ServeStdio(s.srv)
 }
 
+// StartHTTP begins listening for MCP protocol messages over HTTP with SSE transport.
+// This is a blocking call that will run until the server is stopped.
+//
+// Parameters:
+//   - addr: The address to listen on (e.g., ":3000" or "0.0.0.0:3000")
+//
+// Returns:
+//   - An error if the server fails to start
+func (s *PortainerMCPServer) StartHTTP(addr string) error {
+	return server.ServeHTTPSSE(s.srv, addr)
+}
+
 // addToolIfExists adds a tool to the server if it exists in the tools map
 func (s *PortainerMCPServer) addToolIfExists(toolName string, handler server.ToolHandlerFunc) {
 	if tool, exists := s.tools[toolName]; exists {

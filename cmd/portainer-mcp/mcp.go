@@ -28,6 +28,8 @@ func main() {
 	toolsFlag := flag.String("tools", "", "The path to the tools YAML file")
 	readOnlyFlag := flag.Bool("read-only", false, "Run in read-only mode")
 	disableVersionCheckFlag := flag.Bool("disable-version-check", false, "Disable Portainer server version check")
+	httpFlag := flag.Bool("http", false, "Enable HTTP/SSE transport instead of stdio")
+	addrFlag := flag.String("addr", ":3000", "Address to listen on when using HTTP transport (e.g., ':3000' or '0.0.0.0:3000')")
 
 	flag.Parse()
 
@@ -53,11 +55,18 @@ func main() {
 		log.Info().Msg("created tools.yaml file")
 	}
 
+	transport := "stdio"
+	if *httpFlag {
+		transport = "http"
+	}
+
 	log.Info().
 		Str("portainer-host", *serverFlag).
 		Str("tools-path", toolsPath).
 		Bool("read-only", *readOnlyFlag).
 		Bool("disable-version-check", *disableVersionCheckFlag).
+		Str("transport", transport).
+		Str("addr", *addrFlag).
 		Msg("starting MCP server")
 
 	server, err := mcp.NewPortainerMCPServer(*serverFlag, *tokenFlag, toolsPath, mcp.WithReadOnly(*readOnlyFlag), mcp.WithDisableVersionCheck(*disableVersionCheckFlag))
@@ -76,7 +85,14 @@ func main() {
 	server.AddDockerProxyFeatures()
 	server.AddKubernetesProxyFeatures()
 
-	err = server.Start()
+	if *httpFlag {
+		log.Info().Str("addr", *addrFlag).Msg("starting HTTP/SSE server")
+		err = server.StartHTTP(*addrFlag)
+	} else {
+		log.Info().Msg("starting stdio server")
+		err = server.Start()
+	}
+
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to start server")
 	}
