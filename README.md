@@ -90,7 +90,33 @@ With Claude Desktop, configure it like so:
 Replace `[IP]`, `[PORT]` and `[TOKEN]` with the IP, port and API access token associated with your Portainer instance.
 
 > [!NOTE]
-> By default, the tool looks for "tools.yaml" in the same directory as the binary. If the file does not exist, it will be created there with the default tool definitions. You may need to modify this path as described above, particularly when using AI assistants like Claude that have restricted write permissions to the working directory.
+> By default, the tool looks for `tools.yaml` in the same directory as the executable. If the file does not exist, it will be created there with the default tool definitions. You may need to modify this path as described below, particularly when using AI assistants like Claude that have restricted write permissions to the working directory.
+
+### Windows Configuration
+
+Use escaped backslashes for JSON strings and point `command` to the executable file:
+
+```
+{
+  "mcpServers": {
+    "portainer": {
+      "command": "C\\\\:\\\\projetos\\\\portainer-mcp\\\\portainer-mcp.exe",
+      "args": [
+        "-server",
+        "[IP]:[PORT]",
+        "-token",
+        "[TOKEN]",
+        "-tools",
+        "%TEMP%\\\\tools.yaml"
+      ]
+    }
+  }
+}
+```
+
+- `command` must reference the executable, not a directory.
+- `%TEMP%` expands to your Windows temp directory; you can also specify an absolute path like `C\\\\Temp\\\\tools.yaml`.
+- When using `-disable-version-check` or `-read-only`, add them to `args` as separate entries.
 
 ## Disable Version Check
 
