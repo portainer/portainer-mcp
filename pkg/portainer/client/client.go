@@ -94,9 +94,14 @@ func NewPortainerClient(serverURL string, token string, opts ...ClientOption) *P
 		}
 	}
 
+	normalizedURL := strings.TrimRight(serverURL, "/")
+	if !strings.HasPrefix(normalizedURL, "http://") && !strings.HasPrefix(normalizedURL, "https://") {
+		normalizedURL = "https://" + normalizedURL
+	}
+
 	return &PortainerClient{
 		cli:       client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(options.skipTLSVerify)),
-		serverURL: strings.TrimRight(serverURL, "/"),
+		serverURL: normalizedURL,
 		token:     token,
 		httpCli:   httpCli,
 	}
