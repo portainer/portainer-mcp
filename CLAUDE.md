@@ -45,6 +45,13 @@
    - Handles data transformation between Raw and Local Models
    - Used by MCP server handlers
 
+3. **Raw HTTP Client** (for local stacks, `pkg/portainer/client/local_stack.go`)
+   - Direct HTTP requests via `apiRequest()` helper (not through the SDK)
+   - Used because the SDK (`client-api-go`) has no regular/standalone stack API methods
+   - Authenticates with `X-API-Key` header, talks to `/api/stacks/*` endpoints
+   - Models defined locally in `pkg/portainer/models/stack.go` (LocalStack, RawLocalStack)
+   - Tests use `httptest.NewServer` instead of mocking the SDK interface
+
 ### Model Structure
 1. **Raw Models** (`portainer/client-api-go/v2/pkg/models`)
    - Direct mapping to Portainer API data structures

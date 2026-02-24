@@ -13,6 +13,7 @@ This document provides a summary of key design decisions for the Portainer MCP p
 | [202504-2](design/202504-2-tools-yaml-versioning.md) | Strict versioning for tools.yaml file | 08/04/2025 | Implements versioning for tools.yaml to prevent compatibility issues |
 | [202504-3](design/202504-3-portainer-version-compatibility.md) | Pinning compatibility to a specific Portainer version | 08/04/2025 | Binds each release to a specific Portainer version for guaranteed compatibility |
 | [202504-4](design/202504-4-read-only-mode.md) | Read-only mode for enhanced security | 09/04/2025 | Provides a read-only mode to restrict modification capabilities for security |
+| [202602-1](design/202602-1-local-stack-support.md) | Local stack support via raw HTTP client | 24/02/2026 | Adds standalone Docker Compose stack management using direct HTTP requests to the Portainer REST API |
 
 ## How to Add a New Design Decision
 
