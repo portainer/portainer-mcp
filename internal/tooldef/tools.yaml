@@ -450,6 +450,192 @@ tools:
       destructiveHint: false
       idempotentHint: true
       openWorldHint: false
+  ## Local Stacks (regular Docker Compose stacks, non-Edge)
+  ## ------------------------------------------------------------
+  - name: listLocalStacks
+    description: >-
+      List all local (non-edge) stacks deployed on Portainer environments.
+      Returns stack ID, name, status, type, environment ID, creation date,
+      and environment variables for each stack.
+    annotations:
+      title: List Local Stacks
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
+  - name: getLocalStackFile
+    description: >-
+      Get the docker-compose file content for a specific local stack by its ID.
+      Returns the raw compose file as text.
+    parameters:
+      - name: id
+        description: The ID of the local stack to get the compose file for
+        type: number
+        required: true
+    annotations:
+      title: Get Local Stack File
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
+  - name: createLocalStack
+    description: >-
+      Create a new local standalone Docker Compose stack on a specific environment.
+      Requires the environment ID, a stack name, and the compose file content.
+      Optionally accepts environment variables.
+    parameters:
+      - name: environmentId
+        description: The ID of the environment to deploy the stack to
+        type: number
+        required: true
+      - name: name
+        description: >-
+          Name of the stack. Stack name must only consist of lowercase alpha
+          characters, numbers, hyphens, or underscores as well as start with a
+          lowercase character or number
+        type: string
+        required: true
+      - name: file
+        description: >-
+          Content of the stack file. The file must be a valid docker-compose.yml
+          file. example: services:
+           web:
+             image:nginx
+        type: string
+        required: true
+      - name: env
+        description: >-
+          Optional environment variables for the stack. Each variable must have
+          a 'name' and 'value' field.
+          Example: [{"name": "DB_HOST", "value": "localhost"}]
+        type: array
+        required: false
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              description: The name of the environment variable
+            value:
+              type: string
+              description: The value of the environment variable
+    annotations:
+      title: Create Local Stack
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
+  - name: updateLocalStack
+    description: >-
+      Update an existing local stack with new compose file content and/or
+      environment variables. Requires the stack ID and environment ID.
+    parameters:
+      - name: id
+        description: The ID of the local stack to update
+        type: number
+        required: true
+      - name: environmentId
+        description: The ID of the environment where the stack is deployed
+        type: number
+        required: true
+      - name: file
+        description: >-
+          Content of the stack file. The file must be a valid docker-compose.yml
+          file. example: services:
+           web:
+             image:nginx
+        type: string
+        required: true
+      - name: env
+        description: >-
+          Optional environment variables for the stack. Each variable must have
+          a 'name' and 'value' field.
+          Example: [{"name": "DB_HOST", "value": "localhost"}]
+        type: array
+        required: false
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              description: The name of the environment variable
+            value:
+              type: string
+              description: The value of the environment variable
+      - name: prune
+        description: >-
+          If true, services that are no longer in the compose file will be removed.
+          Default: false
+        type: boolean
+        required: false
+      - name: pullImage
+        description: >-
+          If true, images will be pulled before deploying. Default: false
+        type: boolean
+        required: false
+    annotations:
+      title: Update Local Stack
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
+  - name: startLocalStack
+    description: >-
+      Start a stopped local stack. Brings up all containers defined in the
+      stack's compose file.
+    parameters:
+      - name: id
+        description: The ID of the local stack to start
+        type: number
+        required: true
+      - name: environmentId
+        description: The ID of the environment where the stack is deployed
+        type: number
+        required: true
+    annotations:
+      title: Start Local Stack
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
+  - name: stopLocalStack
+    description: >-
+      Stop a running local stack. Stops all containers defined in the
+      stack's compose file.
+    parameters:
+      - name: id
+        description: The ID of the local stack to stop
+        type: number
+        required: true
+      - name: environmentId
+        description: The ID of the environment where the stack is deployed
+        type: number
+        required: true
+    annotations:
+      title: Stop Local Stack
+      readOnlyHint: false
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
+  - name: deleteLocalStack
+    description: >-
+      Delete a local stack permanently. This removes the stack and all its
+      associated containers from the environment.
+    parameters:
+      - name: id
+        description: The ID of the local stack to delete
+        type: number
+        required: true
+      - name: environmentId
+        description: The ID of the environment where the stack is deployed
+        type: number
+        required: true
+    annotations:
+      title: Delete Local Stack
+      readOnlyHint: false
+      destructiveHint: true
+      idempotentHint: false
+      openWorldHint: false
   ## Tags
   ## ------------------------------------------------------------
   - name: createEnvironmentTag

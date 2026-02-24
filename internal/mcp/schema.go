@@ -39,6 +39,13 @@ const (
 	ToolDockerProxy                        = "dockerProxy"
 	ToolKubernetesProxy                    = "kubernetesProxy"
 	ToolKubernetesProxyStripped            = "getKubernetesResourceStripped"
+	ToolListLocalStacks                    = "listLocalStacks"
+	ToolGetLocalStackFile                  = "getLocalStackFile"
+	ToolCreateLocalStack                   = "createLocalStack"
+	ToolUpdateLocalStack                   = "updateLocalStack"
+	ToolStartLocalStack                    = "startLocalStack"
+	ToolStopLocalStack                     = "stopLocalStack"
+	ToolDeleteLocalStack                   = "deleteLocalStack"
 )
 
 // Access levels for users and teams

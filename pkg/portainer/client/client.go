@@ -1,7 +1,9 @@
 package client
 
 import (
+	"crypto/tls"
 	"net/http"
+	"strings"
 
 	"github.com/portainer/client-api-go/v2/client"
 	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
@@ -42,8 +44,12 @@ type PortainerAPIClient interface {
 
 // PortainerClient is a wrapper around the Portainer SDK client
 // that provides simplified access to Portainer API functionality.
+// It also provides a raw HTTP client for API endpoints not covered by the SDK.
 type PortainerClient struct {
-	cli PortainerAPIClient
+	cli       PortainerAPIClient
+	serverURL string
+	token     string
+	httpCli   *http.Client
 }
 
 // ClientOption defines a function that configures a PortainerClient.
@@ -81,7 +87,17 @@ func NewPortainerClient(serverURL string, token string, opts ...ClientOption) *P
 		opt(&options)
 	}
 
+	httpCli := &http.Client{}
+	if options.skipTLSVerify {
+		httpCli.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	}
+
 	return &PortainerClient{
-		cli: client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(options.skipTLSVerify)),
+		cli:       client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(options.skipTLSVerify)),
+		serverURL: strings.TrimRight(serverURL, "/"),
+		token:     token,
+		httpCli:   httpCli,
 	}
 }
