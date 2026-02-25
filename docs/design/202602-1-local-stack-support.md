@@ -27,7 +27,7 @@ Add 7 new MCP tools for managing local (standalone) Docker Compose stacks using 
 
 1. **SDK limitation**: The `client-api-go` SDK has no regular stack methods. Waiting for upstream SDK changes would block functionality indefinitely.
 
-2. **Raw HTTP approach**: Adding an `apiRequest()` helper method to the existing `PortainerClient` struct allows direct HTTP communication with the Portainer REST API (`/api/stacks/*`) while maintaining the same client abstraction.
+2. **Raw HTTP approach**: A dedicated `rawHTTPClient` struct with an `apiRequest()` helper method allows direct HTTP communication with the Portainer REST API (`/api/stacks/*`). This struct is composed into `PortainerClient`, keeping the SDK wrapper clean while maintaining the same client abstraction.
 
 3. **Coexistence with Edge Stacks**: The new local stack tools use distinct tool names (prefixed with "Local") and separate handler functions, avoiding any conflict with existing Edge Stack tools.
 
@@ -77,4 +77,3 @@ Portainer REST API (/api/stacks/*)
 **Challenges:**
 - Raw HTTP client is a separate code path from the SDK-based client, requiring its own testing approach (`httptest.NewServer` vs SDK mocks)
 - If the Portainer REST API changes the `/api/stacks/` endpoints, the raw HTTP methods must be updated manually (no SDK versioning protection)
-- The `PortainerClient` struct now serves dual roles: SDK wrapper and raw HTTP client
