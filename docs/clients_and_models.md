@@ -37,7 +37,7 @@ Understanding the distinction and interaction between these layers is crucial.
 *   **Why:** The official `portainer/client-api-go` SDK only contains Edge Stack methods (`edge_stack.go`). Regular stack endpoints (`/api/stacks/*`) are not available in the SDK, so direct HTTP requests are necessary.
 *   **Implementation:**
     *   Uses `apiRequest()` helper method on `PortainerClient` that constructs HTTP requests with the `X-API-Key` authentication header.
-    *   The `PortainerClient` struct stores `serverURL`, `token`, and `httpCli` fields for this purpose.
+    *   The `rawHTTPClient` struct (embedded in `PortainerClient` as `rawCli`) stores `serverURL`, `token`, and `httpCli` fields for this purpose.
     *   URL scheme normalization ensures `https://` is used by default when no scheme is provided.
 *   **Models Used:** Defines its own `RawLocalStack` / `LocalStack` types in `pkg/portainer/models/stack.go` with a `ConvertRawLocalStackToLocalStack()` conversion function.
 *   **Testing:** Uses `httptest.NewServer` to mock the Portainer REST API at the HTTP level, rather than mocking the SDK interface.

@@ -15,9 +15,11 @@ import (
 func newTestClient(t *testing.T, serverURL string) *PortainerClient {
 	t.Helper()
 	return &PortainerClient{
-		serverURL: serverURL,
-		token:     "test-token",
-		httpCli:   &http.Client{},
+		rawCli: &rawHTTPClient{
+			serverURL: serverURL,
+			token:     "test-token",
+			httpCli:   &http.Client{},
+		},
 	}
 }
 
@@ -473,7 +475,7 @@ func TestAPIRequestSetsHeaders(t *testing.T) {
 	defer server.Close()
 
 	client := newTestClient(t, server.URL)
-	resp, err := client.apiRequest(http.MethodPost, "/api/test", map[string]string{"key": "value"})
+	resp, err := client.rawCli.apiRequest(http.MethodPost, "/api/test", map[string]string{"key": "value"})
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	resp.Body.Close()
@@ -488,7 +490,7 @@ func TestAPIRequestWithoutBody(t *testing.T) {
 	defer server.Close()
 
 	client := newTestClient(t, server.URL)
-	resp, err := client.apiRequest(http.MethodGet, "/api/test", nil)
+	resp, err := client.rawCli.apiRequest(http.MethodGet, "/api/test", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	resp.Body.Close()
@@ -530,7 +532,7 @@ func TestURLSchemeNormalization(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewPortainerClient(tt.serverURL, "test-token", WithSkipTLSVerify(true))
-			assert.Equal(t, tt.wantScheme, c.serverURL)
+			assert.Equal(t, tt.wantScheme, c.rawCli.serverURL)
 		})
 	}
 }

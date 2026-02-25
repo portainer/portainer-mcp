@@ -11,7 +11,7 @@ import (
 )
 
 // apiRequest performs a raw HTTP request against the Portainer API.
-func (c *PortainerClient) apiRequest(method, path string, body interface{}) (*http.Response, error) {
+func (c *rawHTTPClient) apiRequest(method, path string, body interface{}) (*http.Response, error) {
 	url := c.serverURL + path
 
 	var bodyReader io.Reader
@@ -42,7 +42,7 @@ func (c *PortainerClient) apiRequest(method, path string, body interface{}) (*ht
 //   - A slice of LocalStack objects
 //   - An error if the operation fails
 func (c *PortainerClient) GetLocalStacks() ([]models.LocalStack, error) {
-	resp, err := c.apiRequest(http.MethodGet, "/api/stacks", nil)
+	resp, err := c.rawCli.apiRequest(http.MethodGet, "/api/stacks", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list local stacks: %w", err)
 	}
@@ -75,7 +75,7 @@ func (c *PortainerClient) GetLocalStacks() ([]models.LocalStack, error) {
 //   - The compose file content as a string
 //   - An error if the operation fails
 func (c *PortainerClient) GetLocalStackFile(id int) (string, error) {
-	resp, err := c.apiRequest(http.MethodGet, fmt.Sprintf("/api/stacks/%d/file", id), nil)
+	resp, err := c.rawCli.apiRequest(http.MethodGet, fmt.Sprintf("/api/stacks/%d/file", id), nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to get local stack file: %w", err)
 	}
@@ -122,7 +122,7 @@ func (c *PortainerClient) UpdateLocalStack(id, endpointId int, file string, env 
 		PullImage:        pullImage,
 	}
 
-	resp, err := c.apiRequest(http.MethodPut, fmt.Sprintf("/api/stacks/%d?endpointId=%d", id, endpointId), body)
+	resp, err := c.rawCli.apiRequest(http.MethodPut, fmt.Sprintf("/api/stacks/%d?endpointId=%d", id, endpointId), body)
 	if err != nil {
 		return fmt.Errorf("failed to update local stack: %w", err)
 	}
@@ -161,7 +161,7 @@ func (c *PortainerClient) CreateLocalStack(endpointId int, name, file string, en
 		Env:              env,
 	}
 
-	resp, err := c.apiRequest(http.MethodPost, fmt.Sprintf("/api/stacks/create/standalone/string?endpointId=%d", endpointId), body)
+	resp, err := c.rawCli.apiRequest(http.MethodPost, fmt.Sprintf("/api/stacks/create/standalone/string?endpointId=%d", endpointId), body)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create local stack: %w", err)
 	}
@@ -189,7 +189,7 @@ func (c *PortainerClient) CreateLocalStack(endpointId int, name, file string, en
 // Returns:
 //   - An error if the operation fails
 func (c *PortainerClient) StartLocalStack(id, endpointId int) error {
-	resp, err := c.apiRequest(http.MethodPost, fmt.Sprintf("/api/stacks/%d/start?endpointId=%d", id, endpointId), nil)
+	resp, err := c.rawCli.apiRequest(http.MethodPost, fmt.Sprintf("/api/stacks/%d/start?endpointId=%d", id, endpointId), nil)
 	if err != nil {
 		return fmt.Errorf("failed to start local stack: %w", err)
 	}
@@ -212,7 +212,7 @@ func (c *PortainerClient) StartLocalStack(id, endpointId int) error {
 // Returns:
 //   - An error if the operation fails
 func (c *PortainerClient) StopLocalStack(id, endpointId int) error {
-	resp, err := c.apiRequest(http.MethodPost, fmt.Sprintf("/api/stacks/%d/stop?endpointId=%d", id, endpointId), nil)
+	resp, err := c.rawCli.apiRequest(http.MethodPost, fmt.Sprintf("/api/stacks/%d/stop?endpointId=%d", id, endpointId), nil)
 	if err != nil {
 		return fmt.Errorf("failed to stop local stack: %w", err)
 	}
@@ -235,7 +235,7 @@ func (c *PortainerClient) StopLocalStack(id, endpointId int) error {
 // Returns:
 //   - An error if the operation fails
 func (c *PortainerClient) DeleteLocalStack(id, endpointId int) error {
-	resp, err := c.apiRequest(http.MethodDelete, fmt.Sprintf("/api/stacks/%d?endpointId=%d", id, endpointId), nil)
+	resp, err := c.rawCli.apiRequest(http.MethodDelete, fmt.Sprintf("/api/stacks/%d?endpointId=%d", id, endpointId), nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete local stack: %w", err)
 	}

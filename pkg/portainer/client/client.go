@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/portainer/client-api-go/v2/client"
 	apimodels "github.com/portainer/client-api-go/v2/pkg/models"
@@ -42,14 +43,20 @@ type PortainerAPIClient interface {
 	ProxyKubernetesRequest(environmentId int, opts client.ProxyRequestOptions) (*http.Response, error)
 }
 
-// PortainerClient is a wrapper around the Portainer SDK client
-// that provides simplified access to Portainer API functionality.
-// It also provides a raw HTTP client for API endpoints not covered by the SDK.
-type PortainerClient struct {
-	cli       PortainerAPIClient
+// rawHTTPClient provides direct HTTP access to Portainer API endpoints
+// not covered by the SDK (e.g., regular stack management).
+type rawHTTPClient struct {
 	serverURL string
 	token     string
 	httpCli   *http.Client
+}
+
+// PortainerClient is a wrapper around the Portainer SDK client
+// that provides simplified access to Portainer API functionality.
+// It also embeds a rawHTTPClient for API endpoints not covered by the SDK.
+type PortainerClient struct {
+	cli    PortainerAPIClient
+	rawCli *rawHTTPClient
 }
 
 // ClientOption defines a function that configures a PortainerClient.
@@ -87,7 +94,9 @@ func NewPortainerClient(serverURL string, token string, opts ...ClientOption) *P
 		opt(&options)
 	}
 
-	httpCli := &http.Client{}
+	httpCli := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 	if options.skipTLSVerify {
 		httpCli.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -100,9 +109,11 @@ func NewPortainerClient(serverURL string, token string, opts ...ClientOption) *P
 	}
 
 	return &PortainerClient{
-		cli:       client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(options.skipTLSVerify)),
-		serverURL: normalizedURL,
-		token:     token,
-		httpCli:   httpCli,
+		cli: client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(options.skipTLSVerify)),
+		rawCli: &rawHTTPClient{
+			serverURL: normalizedURL,
+			token:     token,
+			httpCli:   httpCli,
+		},
 	}
 }
