@@ -497,8 +497,10 @@ tools:
         required: true
       - name: file
         description: >-
-          Content of the stack file. The file must be a valid docker-compose.yml
-          file. example: services:\n web:\n   image: nginx
+          Content of the stack file. The file must be a valid
+          docker-compose.yml file. example: services:
+           web:
+             image: nginx
         type: string
         required: true
       - name: env
@@ -538,8 +540,10 @@ tools:
         required: true
       - name: file
         description: >-
-          Content of the stack file. The file must be a valid docker-compose.yml
-          file. example: services:\n web:\n   image: nginx
+          Content of the stack file. The file must be a valid
+          docker-compose.yml file. example: services:
+           web:
+             image: nginx
         type: string
         required: true
       - name: env
