@@ -154,6 +154,9 @@ Environment, EnvironmentGroup, Tag, Stack, LocalStack, Settings, User, Team, Acc
 - Compare MCP handler results with direct API calls (ground-truth comparison)
 - Validate correct error handling and parameter validation
 - CI pipeline: `make build` → `make test-coverage` → `make test-integration`
+- Reference integration tests for structure/imports: `tests/integration/team_test.go`, `user_test.go`, `environment_test.go`
+- Use `env.RawClient` with specific getters (`GetEdgeStackByName`, `GetUser`, etc.) for ground-truth — don't list-and-iterate
+- If a handler signature changes, update its unit test file too
 
 ## Version Compatibility
 
