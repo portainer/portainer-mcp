@@ -152,6 +152,74 @@ func TestHandleDockerProxy_ParameterValidation(t *testing.T) {
 	}
 }
 
+func TestHandleDockerProxy_ReadOnlyMode(t *testing.T) {
+	tests := []struct {
+		name        string
+		method      string
+		expectError bool
+	}{
+		{
+			name:        "GET allowed in read-only mode",
+			method:      "GET",
+			expectError: false,
+		},
+		{
+			name:        "POST blocked in read-only mode",
+			method:      "POST",
+			expectError: true,
+		},
+		{
+			name:        "PUT blocked in read-only mode",
+			method:      "PUT",
+			expectError: true,
+		},
+		{
+			name:        "DELETE blocked in read-only mode",
+			method:      "DELETE",
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := new(MockPortainerClient)
+
+			if !tt.expectError {
+				mockClient.On("ProxyDockerRequest", mock.AnythingOfType("models.DockerProxyRequestOptions")).
+					Return(createMockHttpResponse(http.StatusOK, `{}`), nil)
+			}
+
+			server := &PortainerMCPServer{
+				cli:      mockClient,
+				readOnly: true,
+			}
+
+			request := CreateMCPRequest(map[string]any{
+				"environmentId": float64(1),
+				"dockerAPIPath": "/containers/json",
+				"method":        tt.method,
+			})
+
+			handler := server.HandleDockerProxy()
+			result, err := handler(context.Background(), request)
+
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+
+			if tt.expectError {
+				assert.True(t, result.IsError)
+				textContent, ok := result.Content[0].(mcp.TextContent)
+				assert.True(t, ok)
+				assert.Contains(t, textContent.Text, "only GET requests are allowed in read-only mode")
+			} else {
+				assert.False(t, result.IsError)
+			}
+
+			mockClient.AssertExpectations(t)
+		})
+	}
+}
+
 func TestHandleDockerProxy_ClientInteraction(t *testing.T) {
 	type testCase struct {
 		name  string

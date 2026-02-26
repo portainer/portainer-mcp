@@ -16,9 +16,7 @@ import (
 func (s *PortainerMCPServer) AddKubernetesProxyFeatures() {
 	s.addToolIfExists(ToolKubernetesProxyStripped, s.HandleKubernetesProxyStripped())
 
-	if !s.readOnly {
-		s.addToolIfExists(ToolKubernetesProxy, s.HandleKubernetesProxy())
-	}
+	s.addToolIfExists(ToolKubernetesProxy, s.HandleKubernetesProxy())
 }
 
 func (s *PortainerMCPServer) HandleKubernetesProxyStripped() server.ToolHandlerFunc {
@@ -93,6 +91,10 @@ func (s *PortainerMCPServer) HandleKubernetesProxy() server.ToolHandlerFunc {
 		}
 		if !isValidHTTPMethod(method) {
 			return mcp.NewToolResultError(fmt.Sprintf("invalid method: %s", method)), nil
+		}
+
+		if s.readOnly && method != "GET" {
+			return mcp.NewToolResultError("only GET requests are allowed in read-only mode"), nil
 		}
 
 		kubernetesAPIPath, err := parser.GetString("kubernetesAPIPath", true)

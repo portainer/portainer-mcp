@@ -13,9 +13,7 @@ import (
 )
 
 func (s *PortainerMCPServer) AddDockerProxyFeatures() {
-	if !s.readOnly {
-		s.addToolIfExists(ToolDockerProxy, s.HandleDockerProxy())
-	}
+	s.addToolIfExists(ToolDockerProxy, s.HandleDockerProxy())
 }
 
 func (s *PortainerMCPServer) HandleDockerProxy() server.ToolHandlerFunc {
@@ -33,6 +31,10 @@ func (s *PortainerMCPServer) HandleDockerProxy() server.ToolHandlerFunc {
 		}
 		if !isValidHTTPMethod(method) {
 			return mcp.NewToolResultError(fmt.Sprintf("invalid method: %s", method)), nil
+		}
+
+		if s.readOnly && method != "GET" {
+			return mcp.NewToolResultError("only GET requests are allowed in read-only mode"), nil
 		}
 
 		dockerAPIPath, err := parser.GetString("dockerAPIPath", true)

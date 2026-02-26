@@ -183,8 +183,7 @@ To enable read-only mode, add the `-read-only` flag to your command arguments:
 When using read-only mode:
 - Only read tools (list, get) will be available to the AI model
 - All write tools (create, update, delete) are not loaded
-- The Docker proxy requests tool is not loaded
-- The Kubernetes proxy requests tool is not loaded
+- The Docker and Kubernetes proxy tools are available but restricted to GET requests only
 
 # Portainer Version Support
 
@@ -249,7 +248,7 @@ The following table lists the currently (latest version) supported operations th
 | | UpdateUser | Update an existing user | 0.1.0 |
 | | GetSettings | Get the settings of the Portainer instance | 0.1.0 |
 | **Docker** | | | |
-| | DockerProxy | Proxy ANY Docker API requests | 0.2.0 |
+| | DockerProxy | Proxy ANY Docker API requests (GET only in read-only mode) | 0.2.0 |
 | **Local Stacks (Standalone Docker Compose)** | | | |
 | | ListLocalStacks | List all local (non-edge) stacks deployed on environments | fork |
 | | GetLocalStackFile | Get the docker-compose file content for a local stack | fork |
@@ -259,7 +258,7 @@ The following table lists the currently (latest version) supported operations th
 | | StopLocalStack | Stop a running local stack | fork |
 | | DeleteLocalStack | Delete a local stack permanently | fork |
 | **Kubernetes** | | | |
-| | KubernetesProxy | Proxy ANY Kubernetes API requests | 0.3.0 |
+| | KubernetesProxy | Proxy ANY Kubernetes API requests (GET only in read-only mode) | 0.3.0 |
 | | getKubernetesResourceStripped | Proxy GET Kubernetes API requests and automatically strip verbose metadata fields | 0.6.0 |
 
 # Development
