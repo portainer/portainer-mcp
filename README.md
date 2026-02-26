@@ -198,6 +198,7 @@ This tool is pinned to support a specific version of Portainer. The application 
 | 0.4.1 | 2.29.2 |
 | 0.5.0 | 2.30.0 |
 | 0.6.0 | 2.31.2 |
+| 0.7.0 | 2.31.2 |
 
 > [!NOTE]
 > If you need to connect to an unsupported Portainer version, you can use the `-disable-version-check` flag to bypass version validation. See the [Disable Version Check](#disable-version-check) section for more details and important warnings about using this feature.
