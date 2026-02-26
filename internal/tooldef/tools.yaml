@@ -759,6 +759,7 @@ tools:
   - name: dockerProxy
     description: Proxy Docker requests to a specific Portainer environment.
       This tool can be used with any Docker API operation as documented in the Docker Engine API specification (https://docs.docker.com/reference/api/engine/version/v1.48/).
+      In read-only mode, only GET requests are allowed.
     parameters:
       - name: environmentId
         description: The ID of the environment to proxy Docker requests to
@@ -823,6 +824,7 @@ tools:
   - name: kubernetesProxy
     description: Proxy Kubernetes requests to a specific Portainer environment.
       This tool can be used with any Kubernetes API operation as documented in the Kubernetes API specification (https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/).
+      In read-only mode, only GET requests are allowed.
     parameters:
       - name: environmentId
         description: The ID of the environment to proxy Kubernetes requests to
