@@ -13,7 +13,7 @@ func TestCreateToolsFileIfNotExists(t *testing.T) {
 	// Create a temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "tooldef-test")
 	require.NoError(t, err, "Failed to create temporary directory")
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	t.Run("File Does Not Exist", func(t *testing.T) {
 		// Define a path for a non-existent file

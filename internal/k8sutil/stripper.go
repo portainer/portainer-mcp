@@ -56,7 +56,7 @@ func ProcessRawKubernetesAPIResponse(httpResp *http.Response) ([]byte, error) {
 		}
 		return []byte{}, nil // Return empty bytes if no body and appropriate status
 	}
-	defer httpResp.Body.Close()
+	defer func() { _ = httpResp.Body.Close() }()
 
 	bodyBytes, err := io.ReadAll(httpResp.Body)
 	if err != nil {

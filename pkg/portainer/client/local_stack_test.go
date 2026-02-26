@@ -69,7 +69,7 @@ func TestGetLocalStacks(t *testing.T) {
 				assert.Equal(t, http.MethodGet, r.Method)
 				assert.Equal(t, "test-token", r.Header.Get("X-API-Key"))
 				w.WriteHeader(tt.statusCode)
-				w.Write([]byte(tt.body))
+				_, _ = w.Write([]byte(tt.body))
 			}))
 			defer server.Close()
 
@@ -124,7 +124,7 @@ func TestGetLocalStackFile(t *testing.T) {
 				assert.Contains(t, r.URL.Path, "/api/stacks/")
 				assert.Contains(t, r.URL.Path, "/file")
 				w.WriteHeader(tt.statusCode)
-				w.Write([]byte(tt.body))
+				_, _ = w.Write([]byte(tt.body))
 			}))
 			defer server.Close()
 
@@ -197,12 +197,12 @@ func TestCreateLocalStack(t *testing.T) {
 
 				bodyBytes, _ := io.ReadAll(r.Body)
 				var reqBody map[string]interface{}
-				json.Unmarshal(bodyBytes, &reqBody)
+				_ = json.Unmarshal(bodyBytes, &reqBody)
 				assert.Equal(t, tt.stackName, reqBody["name"])
 				assert.Equal(t, tt.file, reqBody["stackFileContent"])
 
 				w.WriteHeader(tt.statusCode)
-				w.Write([]byte(tt.body))
+				_, _ = w.Write([]byte(tt.body))
 			}))
 			defer server.Close()
 
@@ -279,13 +279,13 @@ func TestUpdateLocalStack(t *testing.T) {
 
 				bodyBytes, _ := io.ReadAll(r.Body)
 				var reqBody map[string]interface{}
-				json.Unmarshal(bodyBytes, &reqBody)
+				_ = json.Unmarshal(bodyBytes, &reqBody)
 				assert.Equal(t, tt.file, reqBody["stackFileContent"])
 				assert.Equal(t, tt.prune, reqBody["prune"])
 				assert.Equal(t, tt.pullImage, reqBody["pullImage"])
 
 				w.WriteHeader(tt.statusCode)
-				w.Write([]byte(tt.body))
+				_, _ = w.Write([]byte(tt.body))
 			}))
 			defer server.Close()
 
@@ -335,7 +335,7 @@ func TestStartLocalStack(t *testing.T) {
 				assert.Contains(t, r.URL.Path, "/api/stacks/")
 				assert.Contains(t, r.URL.Path, "/start")
 				w.WriteHeader(tt.statusCode)
-				w.Write([]byte(tt.body))
+				_, _ = w.Write([]byte(tt.body))
 			}))
 			defer server.Close()
 
@@ -385,7 +385,7 @@ func TestStopLocalStack(t *testing.T) {
 				assert.Contains(t, r.URL.Path, "/api/stacks/")
 				assert.Contains(t, r.URL.Path, "/stop")
 				w.WriteHeader(tt.statusCode)
-				w.Write([]byte(tt.body))
+				_, _ = w.Write([]byte(tt.body))
 			}))
 			defer server.Close()
 
@@ -450,7 +450,7 @@ func TestDeleteLocalStack(t *testing.T) {
 				assert.Equal(t, http.MethodDelete, r.Method)
 				assert.Contains(t, r.URL.Path, "/api/stacks/")
 				w.WriteHeader(tt.statusCode)
-				w.Write([]byte(tt.body))
+				_, _ = w.Write([]byte(tt.body))
 			}))
 			defer server.Close()
 
@@ -478,7 +478,7 @@ func TestAPIRequestSetsHeaders(t *testing.T) {
 	resp, err := client.rawCli.apiRequest(http.MethodPost, "/api/test", map[string]string{"key": "value"})
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 }
 
 func TestAPIRequestWithoutBody(t *testing.T) {
@@ -493,7 +493,7 @@ func TestAPIRequestWithoutBody(t *testing.T) {
 	resp, err := client.rawCli.apiRequest(http.MethodGet, "/api/test", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 }
 
 func TestURLSchemeNormalization(t *testing.T) {

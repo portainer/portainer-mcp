@@ -118,13 +118,13 @@ func NewPortainerContainer(ctx context.Context, opts ...PortainerContainerOption
 	// Get the host and port mapping
 	host, err := cntr.Host(ctx)
 	if err != nil {
-		cntr.Terminate(ctx) // Clean up if we fail post-start
+		_ = cntr.Terminate(ctx) // Clean up if we fail post-start
 		return nil, fmt.Errorf("failed to get container host: %w", err)
 	}
 
 	mappedPort, err := cntr.MappedPort(ctx, nat.Port(defaultAPIPortTCP))
 	if err != nil {
-		cntr.Terminate(ctx) // Clean up if we fail post-start
+		_ = cntr.Terminate(ctx) // Clean up if we fail post-start
 		return nil, fmt.Errorf("failed to get mapped port: %w", err)
 	}
 
@@ -137,7 +137,7 @@ func NewPortainerContainer(ctx context.Context, opts ...PortainerContainerOption
 	// Register API token after successful container start and port mapping
 	if err := pc.registerAPIToken(); err != nil {
 		// Attempt to clean up the container if token registration fails
-		cntr.Terminate(ctx)
+		_ = cntr.Terminate(ctx)
 		return nil, fmt.Errorf("failed to register API token: %w", err)
 	}
 

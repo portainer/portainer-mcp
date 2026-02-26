@@ -46,7 +46,7 @@ func (c *PortainerClient) GetLocalStacks() ([]models.LocalStack, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list local stacks: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -79,7 +79,7 @@ func (c *PortainerClient) GetLocalStackFile(id int) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get local stack file: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -126,7 +126,7 @@ func (c *PortainerClient) UpdateLocalStack(id, endpointId int, file string, env 
 	if err != nil {
 		return fmt.Errorf("failed to update local stack: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -165,7 +165,7 @@ func (c *PortainerClient) CreateLocalStack(endpointId int, name, file string, en
 	if err != nil {
 		return 0, fmt.Errorf("failed to create local stack: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -193,7 +193,7 @@ func (c *PortainerClient) StartLocalStack(id, endpointId int) error {
 	if err != nil {
 		return fmt.Errorf("failed to start local stack: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -216,7 +216,7 @@ func (c *PortainerClient) StopLocalStack(id, endpointId int) error {
 	if err != nil {
 		return fmt.Errorf("failed to stop local stack: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -239,7 +239,7 @@ func (c *PortainerClient) DeleteLocalStack(id, endpointId int) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete local stack: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)

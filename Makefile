@@ -8,7 +8,7 @@ BUILD_DATE ?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 
 LDFLAGS_STRING = -s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.BuildDate=${BUILD_DATE}
 
-.PHONY: clean pre build run test test-integration test-all
+.PHONY: clean pre build run test test-integration test-all lint
 
 clean:
 	rm -rf dist
@@ -35,6 +35,9 @@ test-integration:
 	go test -v ./tests/...
 
 test-all: test test-integration
+
+lint:
+	golangci-lint run ./...
 
 # Include custom make targets
 -include $(wildcard .dev/*.make)
