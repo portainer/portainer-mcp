@@ -69,6 +69,7 @@ func main() {
 	server.AddEnvironmentGroupFeatures()
 	server.AddTagFeatures()
 	server.AddStackFeatures()
+	server.AddLocalStackFeatures()
 	server.AddSettingsFeatures()
 	server.AddUserFeatures()
 	server.AddTeamFeatures()

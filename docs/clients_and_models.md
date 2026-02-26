@@ -8,6 +8,7 @@ The project interacts with the Portainer API using two main client layers and in
 
 1.  **Raw Client & Models:** Provided by the `portainer/client-api-go` library.
 2.  **Wrapper Client & Local Models:** Defined within `portainer-mcp/pkg/portainer/`.
+3.  **Raw HTTP Client (Local Stacks):** Direct HTTP requests for APIs not covered by the SDK.
 
 Understanding the distinction and interaction between these layers is crucial.
 
@@ -29,6 +30,17 @@ Understanding the distinction and interaction between these layers is crucial.
     *   To encapsulate common logic or error handling related to Portainer API interactions.
 *   **Usage:** This is the client used by the **MCP server handlers** (`internal/mcp/server.go` instantiates it and passes it to handlers).
 *   **Models Used:** Takes Raw Models as input from the Raw Client but typically **returns Local Models** (`portainer-mcp/pkg/portainer/models`) after performing conversions.
+
+### 3. Raw HTTP Client (Local Stacks) (`portainer-mcp/pkg/portainer/client/local_stack.go`)
+
+*   **Role:** Provides direct HTTP access to Portainer REST API endpoints that are **not exposed by the SDK** (`client-api-go`). Currently used for regular/standalone Docker Compose stacks (as opposed to Edge Stacks).
+*   **Why:** The official `portainer/client-api-go` SDK only contains Edge Stack methods (`edge_stack.go`). Regular stack endpoints (`/api/stacks/*`) are not available in the SDK, so direct HTTP requests are necessary.
+*   **Implementation:**
+    *   Uses `apiRequest()` helper method on `PortainerClient` that constructs HTTP requests with the `X-API-Key` authentication header.
+    *   The `rawHTTPClient` struct (embedded in `PortainerClient` as `rawCli`) stores `serverURL`, `token`, and `httpCli` fields for this purpose.
+    *   URL scheme normalization ensures `https://` is used by default when no scheme is provided.
+*   **Models Used:** Defines its own `RawLocalStack` / `LocalStack` types in `pkg/portainer/models/stack.go` with a `ConvertRawLocalStackToLocalStack()` conversion function.
+*   **Testing:** Uses `httptest.NewServer` to mock the Portainer REST API at the HTTP level, rather than mocking the SDK interface.
 
 ## Models
 
@@ -68,6 +80,18 @@ Understanding the distinction and interaction between these layers is crucial.
 8.  Wrapper Client returns the Local Model to the MCP Handler.
 9.  MCP Handler marshals the **Local Model** (`models.PortainerSettings`) into JSON and returns it as the tool result.
 
+## Typical Workflow Example (Local Stacks — `GetLocalStacks`)
+
+Unlike the SDK-based workflow above, local stack operations use direct HTTP requests:
+
+1.  **MCP Handler (`internal/mcp/local_stack.go`)**: Receives a tool call for `listLocalStacks`.
+2.  Calls `s.cli.GetLocalStacks()`. Here, `s.cli` is the **Wrapper Client** (`PortainerClient`).
+3.  **Wrapper Client (`pkg/portainer/client/local_stack.go`)**: Its `GetLocalStacks` method uses `apiRequest()` to make a direct `GET /api/stacks` HTTP request.
+4.  The Portainer REST API returns a JSON array of raw stack objects.
+5.  The method decodes the JSON into `[]models.RawLocalStack` and calls `models.ConvertRawLocalStackToLocalStack()` for each entry.
+6.  Returns `[]models.LocalStack` (Local Models) to the MCP Handler.
+7.  MCP Handler marshals the Local Models into JSON and returns them as the tool result.
+
 ## Import Conventions
 
 To improve clarity, especially in files where both model types might appear (like tests), consider using consistent import aliases. Leaving the local `portainer-mcp/pkg/portainer/models` package as the default `models` and aliasing the external library is recommended:
@@ -84,6 +108,7 @@ This approach keeps code cleaner for the more frequently used local models while
 ## Testing Implications
 
 *   **Unit Tests** (like `pkg/portainer/client/settings_test.go`): Should mock the Raw Client interface and verify that the Wrapper Client correctly calls the Raw Client and performs the necessary conversions, returning the expected Local Model.
+*   **Unit Tests for Local Stacks** (like `pkg/portainer/client/local_stack_test.go`): Use `httptest.NewServer` to mock the Portainer REST API at the HTTP level, since these methods bypass the SDK. Create a test client with `serverURL` pointing to the test server.
 *   **Integration Tests** (like `tests/integration/settings_test.go`): 
     *   Call the MCP handler, which uses the Wrapper Client internally and returns JSON representing a Local Model.
     *   Often need to *also* call the Raw Client directly to get the ground-truth state from the live Portainer instance (variables holding this state should follow the `raw` prefix convention, e.g., `rawEndpoint`).

@@ -47,11 +47,20 @@ type PortainerClient interface {
 	AddEnvironmentToAccessGroup(id int, environmentId int) error
 	RemoveEnvironmentFromAccessGroup(id int, environmentId int) error
 
-	// Stack methods
+	// Stack methods (Edge Stacks)
 	GetStacks() ([]models.Stack, error)
 	GetStackFile(id int) (string, error)
 	CreateStack(name string, file string, environmentGroupIds []int) (int, error)
 	UpdateStack(id int, file string, environmentGroupIds []int) error
+
+	// Local Stack methods (regular Docker Compose stacks)
+	GetLocalStacks() ([]models.LocalStack, error)
+	GetLocalStackFile(id int) (string, error)
+	CreateLocalStack(endpointId int, name, file string, env []models.LocalStackEnvVar) (int, error)
+	UpdateLocalStack(id, endpointId int, file string, env []models.LocalStackEnvVar, prune, pullImage bool) error
+	StartLocalStack(id, endpointId int) error
+	StopLocalStack(id, endpointId int) error
+	DeleteLocalStack(id, endpointId int) error
 
 	// Team methods
 	CreateTeam(name string) (int, error)

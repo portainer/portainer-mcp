@@ -254,3 +254,43 @@ func (m *MockPortainerClient) ProxyKubernetesRequest(opts models.KubernetesProxy
 	}
 	return args.Get(0).(*http.Response), args.Error(1)
 }
+
+// Local Stack methods
+
+func (m *MockPortainerClient) GetLocalStacks() ([]models.LocalStack, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.LocalStack), args.Error(1)
+}
+
+func (m *MockPortainerClient) GetLocalStackFile(id int) (string, error) {
+	args := m.Called(id)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockPortainerClient) CreateLocalStack(endpointId int, name, file string, env []models.LocalStackEnvVar) (int, error) {
+	args := m.Called(endpointId, name, file, env)
+	return args.Int(0), args.Error(1)
+}
+
+func (m *MockPortainerClient) UpdateLocalStack(id, endpointId int, file string, env []models.LocalStackEnvVar, prune, pullImage bool) error {
+	args := m.Called(id, endpointId, file, env, prune, pullImage)
+	return args.Error(0)
+}
+
+func (m *MockPortainerClient) StartLocalStack(id, endpointId int) error {
+	args := m.Called(id, endpointId)
+	return args.Error(0)
+}
+
+func (m *MockPortainerClient) StopLocalStack(id, endpointId int) error {
+	args := m.Called(id, endpointId)
+	return args.Error(0)
+}
+
+func (m *MockPortainerClient) DeleteLocalStack(id, endpointId int) error {
+	args := m.Called(id, endpointId)
+	return args.Error(0)
+}
