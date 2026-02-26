@@ -250,17 +250,17 @@ The following table lists the currently (latest version) supported operations th
 | | GetSettings | Get the settings of the Portainer instance | 0.1.0 |
 | **Docker** | | | |
 | | DockerProxy | Proxy ANY Docker API requests (GET only in read-only mode) | 0.2.0 |
-| **Local Stacks (Standalone Docker Compose)** | | | |
-| | ListLocalStacks | List all local (non-edge) stacks deployed on environments | fork |
-| | GetLocalStackFile | Get the docker-compose file content for a local stack | fork |
-| | CreateLocalStack | Create a new local standalone Docker Compose stack | fork |
-| | UpdateLocalStack | Update an existing local stack with new compose file | fork |
-| | StartLocalStack | Start a stopped local stack | fork |
-| | StopLocalStack | Stop a running local stack | fork |
-| | DeleteLocalStack | Delete a local stack permanently | fork |
 | **Kubernetes** | | | |
 | | KubernetesProxy | Proxy ANY Kubernetes API requests (GET only in read-only mode) | 0.3.0 |
 | | getKubernetesResourceStripped | Proxy GET Kubernetes API requests and automatically strip verbose metadata fields | 0.6.0 |
+| **Local Stacks (Standalone Docker Compose)** | | | |
+| | ListLocalStacks | List all local (non-edge) stacks deployed on environments | 0.7.0 |
+| | GetLocalStackFile | Get the docker-compose file content for a local stack | 0.7.0 |
+| | CreateLocalStack | Create a new local standalone Docker Compose stack | 0.7.0 |
+| | UpdateLocalStack | Update an existing local stack with new compose file | 0.7.0 |
+| | StartLocalStack | Start a stopped local stack | 0.7.0 |
+| | StopLocalStack | Stop a running local stack | 0.7.0 |
+| | DeleteLocalStack | Delete a local stack permanently | 0.7.0 |
 
 # Development
 
