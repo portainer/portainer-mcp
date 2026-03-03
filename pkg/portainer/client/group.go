@@ -16,6 +16,11 @@ import (
 func (c *PortainerClient) GetEnvironmentGroups() ([]models.Group, error) {
 	edgeGroups, err := c.cli.ListEdgeGroups()
 	if err != nil {
+		// Edge Compute features may be disabled, returning a 503.
+		// Return an empty list instead of failing the entire request.
+		if isEdgeComputeDisabledError(err) {
+			return []models.Group{}, nil
+		}
 		return nil, fmt.Errorf("failed to list edge groups: %w", err)
 	}
 

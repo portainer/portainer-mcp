@@ -32,6 +32,15 @@ func (s *PortainerMCPServer) HandleGetLocalStacks() server.ToolHandlerFunc {
 			return mcp.NewToolResultErrorFromErr("failed to get local stacks", err), nil
 		}
 
+		// Redact environment variable values to prevent secret leakage.
+		// Values like API tokens, passwords, and private keys should not
+		// be exposed through the list operation.
+		for i := range stacks {
+			for j := range stacks[i].Env {
+				stacks[i].Env[j].Value = "********"
+			}
+		}
+
 		data, err := json.Marshal(stacks)
 		if err != nil {
 			return mcp.NewToolResultErrorFromErr("failed to marshal local stacks", err), nil

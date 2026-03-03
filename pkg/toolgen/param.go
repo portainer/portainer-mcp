@@ -1,10 +1,45 @@
 package toolgen
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/mark3labs/mcp-go/mcp"
 )
+
+// toFloat64 converts various numeric types to float64.
+// MCP transports may deliver numbers as float64, int, or json.Number.
+// LLMs sometimes send numeric strings (e.g. "90" instead of 90) so
+// string values that parse as numbers are also accepted.
+func toFloat64(value any, name string) (float64, error) {
+	switch v := value.(type) {
+	case float64:
+		return v, nil
+	case float32:
+		return float64(v), nil
+	case int:
+		return float64(v), nil
+	case int64:
+		return float64(v), nil
+	case int32:
+		return float64(v), nil
+	case json.Number:
+		f, err := v.Float64()
+		if err != nil {
+			return 0, fmt.Errorf("%s is not a valid number: %w", name, err)
+		}
+		return f, nil
+	case string:
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return 0, fmt.Errorf("%s must be a number, got string %q", name, v)
+		}
+		return f, nil
+	default:
+		return 0, fmt.Errorf("%s must be a number", name)
+	}
+}
 
 // ParameterParser provides methods to safely extract parameters from request arguments
 type ParameterParser struct {
@@ -36,7 +71,9 @@ func (p *ParameterParser) GetString(name string, required bool) (string, error) 
 	return strValue, nil
 }
 
-// GetNumber extracts a number parameter from the request
+// GetNumber extracts a number parameter from the request.
+// It handles float64 (standard JSON unmarshalling), int (some MCP transports),
+// and json.Number types.
 func (p *ParameterParser) GetNumber(name string, required bool) (float64, error) {
 	value, ok := p.args[name]
 	if !ok || value == nil {
@@ -46,12 +83,7 @@ func (p *ParameterParser) GetNumber(name string, required bool) (float64, error)
 		return 0, nil
 	}
 
-	numValue, ok := value.(float64)
-	if !ok {
-		return 0, fmt.Errorf("%s must be a number", name)
-	}
-
-	return numValue, nil
+	return toFloat64(value, name)
 }
 
 // GetInt extracts an integer parameter from the request
@@ -59,6 +91,9 @@ func (p *ParameterParser) GetInt(name string, required bool) (int, error) {
 	num, err := p.GetNumber(name, required)
 	if err != nil {
 		return 0, err
+	}
+	if num != float64(int(num)) {
+		return 0, fmt.Errorf("%s must be a whole number, got %v", name, num)
 	}
 	return int(num), nil
 }
@@ -128,9 +163,12 @@ func parseArrayOfIntegers(array []any) ([]int, error) {
 	result := make([]int, 0, len(array))
 
 	for _, item := range array {
-		idFloat, ok := item.(float64)
-		if !ok {
+		idFloat, err := toFloat64(item, "array element")
+		if err != nil {
 			return nil, fmt.Errorf("failed to parse '%v' as integer", item)
+		}
+		if idFloat != float64(int(idFloat)) {
+			return nil, fmt.Errorf("value '%v' is not a whole number", idFloat)
 		}
 		result = append(result, int(idFloat))
 	}

@@ -139,10 +139,12 @@ func TestHandleCreateAccessGroup(t *testing.T) {
 			},
 		},
 		{
-			name:        "invalid environmentIds - array with non-numbers",
+			name:        "numeric string environmentIds coerced",
 			inputName:   "group1",
+			inputEnvIDs: []int{1, 2, 3},
+			mockID:      1,
 			mockError:   nil,
-			expectError: true,
+			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
 				request.Params.Arguments = map[string]any{
 					"name":           "group1",
@@ -151,10 +153,12 @@ func TestHandleCreateAccessGroup(t *testing.T) {
 			},
 		},
 		{
-			name:        "invalid environmentIds - array with mixed types",
+			name:        "mixed numeric types environmentIds coerced",
 			inputName:   "group1",
+			inputEnvIDs: []int{1, 2, 3},
+			mockID:      1,
 			mockError:   nil,
-			expectError: true,
+			expectError: false,
 			setupParams: func(request *mcp.CallToolRequest) {
 				request.Params.Arguments = map[string]any{
 					"name":           "group1",

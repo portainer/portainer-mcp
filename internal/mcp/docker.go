@@ -13,6 +13,9 @@ import (
 )
 
 func (s *PortainerMCPServer) AddDockerProxyFeatures() {
+	// The Docker proxy tool is registered in both read-only and read-write modes
+	// because it supports GET requests which are useful in read-only mode.
+	// Write operations (non-GET methods) are enforced at runtime inside HandleDockerProxy.
 	s.addToolIfExists(ToolDockerProxy, s.HandleDockerProxy())
 }
 
@@ -68,6 +71,15 @@ func (s *PortainerMCPServer) HandleDockerProxy() server.ToolHandlerFunc {
 			return mcp.NewToolResultErrorFromErr("invalid body parameter", err), nil
 		}
 
+		applyDockerDefaultFilters(dockerAPIPath, queryParamsMap)
+
+		if isDangerousDockerPath(dockerAPIPath) {
+			return mcp.NewToolResultError("access to this Docker API endpoint is not permitted"), nil
+		}
+		if isPrivilegedDockerContainerCreate(dockerAPIPath, body) {
+			return mcp.NewToolResultError("creating privileged containers or containers with sensitive host mounts is not permitted"), nil
+		}
+
 		opts := models.DockerProxyRequestOptions{
 			EnvironmentID: environmentId,
 			Path:          dockerAPIPath,
@@ -84,12 +96,22 @@ func (s *PortainerMCPServer) HandleDockerProxy() server.ToolHandlerFunc {
 		if err != nil {
 			return mcp.NewToolResultErrorFromErr("failed to send Docker API request", err), nil
 		}
+		defer response.Body.Close()
 
-		responseBody, err := io.ReadAll(response.Body)
+		responseBody, err := io.ReadAll(io.LimitReader(response.Body, maxProxyResponseBytes))
 		if err != nil {
 			return mcp.NewToolResultErrorFromErr("failed to read Docker API response", err), nil
 		}
+		if int64(len(responseBody)) >= maxProxyResponseBytes {
+			return mcp.NewToolResultError("Docker API response exceeded the maximum allowed size and was truncated; try a more specific request"), nil
+		}
 
-		return mcp.NewToolResultText(string(responseBody)), nil
+		// Compact responses from endpoints known to return very verbose JSON.
+		// This strips fields that are rarely useful in an LLM context (network
+		// settings details, mount propagation, host config internals) to keep
+		// the response within a size that can be reasoned about.
+		compacted := compactDockerResponse(dockerAPIPath, responseBody)
+
+		return mcp.NewToolResultText(string(compacted)), nil
 	}
 }

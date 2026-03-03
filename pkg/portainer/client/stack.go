@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/portainer/portainer-mcp/pkg/portainer/models"
 	"github.com/portainer/portainer-mcp/pkg/portainer/utils"
@@ -16,6 +17,11 @@ import (
 func (c *PortainerClient) GetStacks() ([]models.Stack, error) {
 	edgeStacks, err := c.cli.ListEdgeStacks()
 	if err != nil {
+		// Edge Compute features may be disabled, returning a 503.
+		// Return an empty list instead of failing the entire request.
+		if isEdgeComputeDisabledError(err) {
+			return []models.Stack{}, nil
+		}
 		return nil, fmt.Errorf("failed to list edge stacks: %w", err)
 	}
 
@@ -25,6 +31,16 @@ func (c *PortainerClient) GetStacks() ([]models.Stack, error) {
 	}
 
 	return stacks, nil
+}
+
+// isEdgeComputeDisabledError checks if an error is caused by Edge Compute
+// features being disabled in Portainer (typically a 503 Service Unavailable).
+func isEdgeComputeDisabledError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := err.Error()
+	return strings.Contains(errStr, "503") || strings.Contains(errStr, "Edge Compute features are disabled")
 }
 
 // GetStackFile retrieves the file content of a stack from the Portainer server.
@@ -39,6 +55,9 @@ func (c *PortainerClient) GetStacks() ([]models.Stack, error) {
 func (c *PortainerClient) GetStackFile(id int) (string, error) {
 	file, err := c.cli.GetEdgeStackFile(int64(id))
 	if err != nil {
+		if isEdgeComputeDisabledError(err) {
+			return "", fmt.Errorf("edge stacks are not available (Edge Compute is disabled); use getLocalStackFile for local stacks")
+		}
 		return "", fmt.Errorf("failed to get edge stack file: %w", err)
 	}
 

@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,8 +11,9 @@ import (
 	"github.com/portainer/portainer-mcp/pkg/portainer/models"
 )
 
-// apiRequest performs a raw HTTP request against the Portainer API.
-func (c *rawHTTPClient) apiRequest(method, path string, body interface{}) (*http.Response, error) {
+// apiRequestWithContext performs a raw HTTP request against the Portainer API,
+// honouring the provided context for cancellation and deadline propagation.
+func (c *rawHTTPClient) apiRequestWithContext(ctx context.Context, method, path string, body interface{}) (*http.Response, error) {
 	url := c.serverURL + path
 
 	var bodyReader io.Reader
@@ -23,7 +25,7 @@ func (c *rawHTTPClient) apiRequest(method, path string, body interface{}) (*http
 		bodyReader = bytes.NewReader(data)
 	}
 
-	req, err := http.NewRequest(method, url, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -34,6 +36,12 @@ func (c *rawHTTPClient) apiRequest(method, path string, body interface{}) (*http
 	}
 
 	return c.httpCli.Do(req)
+}
+
+// apiRequest performs a raw HTTP request against the Portainer API.
+// Deprecated: prefer apiRequestWithContext to propagate caller context.
+func (c *rawHTTPClient) apiRequest(method, path string, body interface{}) (*http.Response, error) {
+	return c.apiRequestWithContext(context.Background(), method, path, body)
 }
 
 // GetLocalStacks retrieves all regular (non-edge) stacks from the Portainer server.

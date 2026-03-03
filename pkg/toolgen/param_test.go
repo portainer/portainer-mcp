@@ -1,6 +1,7 @@
 package toolgen
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -116,16 +117,56 @@ func TestGetNumber(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name:     "wrong type",
+			name:     "numeric string coerced",
 			args:     map[string]any{"num": "123"},
+			param:    "num",
+			required: true,
+			want:     123,
+			wantErr:  false,
+		},
+		{
+			name:     "nil value",
+			args:     map[string]any{"num": nil},
 			param:    "num",
 			required: true,
 			want:     0,
 			wantErr:  true,
 		},
 		{
-			name:     "nil value",
-			args:     map[string]any{"num": nil},
+			name:     "int type",
+			args:     map[string]any{"num": int(42)},
+			param:    "num",
+			required: true,
+			want:     42,
+			wantErr:  false,
+		},
+		{
+			name:     "int64 type",
+			args:     map[string]any{"num": int64(99)},
+			param:    "num",
+			required: true,
+			want:     99,
+			wantErr:  false,
+		},
+		{
+			name:     "json.Number type",
+			args:     map[string]any{"num": json.Number("7")},
+			param:    "num",
+			required: true,
+			want:     7,
+			wantErr:  false,
+		},
+		{
+			name:     "numeric string accepted",
+			args:     map[string]any{"num": "90"},
+			param:    "num",
+			required: true,
+			want:     90,
+			wantErr:  false,
+		},
+		{
+			name:     "non-numeric string rejected",
+			args:     map[string]any{"num": "abc"},
 			param:    "num",
 			required: true,
 			want:     0,
@@ -349,6 +390,30 @@ func TestParseArrayOfIntegers(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name:    "fractional float rejected",
+			input:   []any{float64(1), float64(2.5), float64(3)},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "all fractional floats rejected",
+			input:   []any{float64(1.1), float64(2.9)},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "int type values accepted",
+			input:   []any{int(1), int(2), int(3)},
+			want:    []int{1, 2, 3},
+			wantErr: false,
+		},
+		{
+			name:    "mixed int and float64 accepted",
+			input:   []any{int(1), float64(2), int64(3)},
+			want:    []int{1, 2, 3},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -424,12 +489,12 @@ func TestGetInt(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name:     "wrong type string",
+			name:     "numeric string coerced",
 			args:     map[string]any{"num": "123"},
 			param:    "num",
 			required: true,
-			want:     0,
-			wantErr:  true,
+			want:     123,
+			wantErr:  false,
 		},
 		{
 			name:     "wrong type boolean",
@@ -442,6 +507,62 @@ func TestGetInt(t *testing.T) {
 		{
 			name:     "nil value",
 			args:     map[string]any{"num": nil},
+			param:    "num",
+			required: true,
+			want:     0,
+			wantErr:  true,
+		},
+		{
+			name:     "fractional float rejected",
+			args:     map[string]any{"num": float64(3.14)},
+			param:    "num",
+			required: true,
+			want:     0,
+			wantErr:  true,
+		},
+		{
+			name:     "fractional float 1.5 rejected",
+			args:     map[string]any{"num": float64(1.5)},
+			param:    "num",
+			required: true,
+			want:     0,
+			wantErr:  true,
+		},
+		{
+			name:     "int type accepted",
+			args:     map[string]any{"num": int(5)},
+			param:    "num",
+			required: true,
+			want:     5,
+			wantErr:  false,
+		},
+		{
+			name:     "int64 type accepted",
+			args:     map[string]any{"num": int64(100)},
+			param:    "num",
+			required: true,
+			want:     100,
+			wantErr:  false,
+		},
+		{
+			name:     "json.Number integer accepted",
+			args:     map[string]any{"num": json.Number("42")},
+			param:    "num",
+			required: true,
+			want:     42,
+			wantErr:  false,
+		},
+		{
+			name:     "numeric string accepted",
+			args:     map[string]any{"num": "90"},
+			param:    "num",
+			required: true,
+			want:     90,
+			wantErr:  false,
+		},
+		{
+			name:     "non-numeric string rejected",
+			args:     map[string]any{"num": "abc"},
 			param:    "num",
 			required: true,
 			want:     0,
@@ -518,14 +639,14 @@ func TestGetArrayOfIntegers(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name: "invalid array with string",
+			name: "numeric string in array coerced",
 			args: map[string]any{"nums": []any{
 				float64(1), "2", float64(3),
 			}},
 			param:    "nums",
 			required: true,
-			want:     nil,
-			wantErr:  true,
+			want:     []int{1, 2, 3},
+			wantErr:  false,
 		},
 		{
 			name: "invalid array with boolean",
