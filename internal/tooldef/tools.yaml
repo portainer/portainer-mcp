@@ -614,7 +614,7 @@ tools:
     annotations:
       title: Stop Local Stack
       readOnlyHint: false
-      destructiveHint: false
+      destructiveHint: true
       idempotentHint: true
       openWorldHint: false
   - name: deleteLocalStack
@@ -750,7 +750,7 @@ tools:
     annotations:
       title: Update User Role
       readOnlyHint: false
-      destructiveHint: false
+      destructiveHint: true
       idempotentHint: true
       openWorldHint: false
 
@@ -814,9 +814,9 @@ tools:
         required: false
     annotations:
       title: Docker Proxy
-      readOnlyHint: true
+      readOnlyHint: false
       destructiveHint: true
-      idempotentHint: true
+      idempotentHint: false
       openWorldHint: false
 
   ## Kubernetes Proxy
@@ -879,9 +879,9 @@ tools:
         required: false
     annotations:
       title: Kubernetes Proxy
-      readOnlyHint: true
+      readOnlyHint: false
       destructiveHint: true
-      idempotentHint: true
+      idempotentHint: false
       openWorldHint: false
   - name: getKubernetesResourceStripped
     description: >-

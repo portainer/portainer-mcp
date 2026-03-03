@@ -14,9 +14,11 @@ import (
 
 const (
 	// MinimumToolsVersion is the minimum supported version of the tools.yaml file
-	MinimumToolsVersion = "1.0"
+	MinimumToolsVersion = "v1.0"
 	// SupportedPortainerVersion is the version of Portainer that is supported by this tool
 	SupportedPortainerVersion = "2.31.2"
+	// maxProxyResponseBytes caps proxy response reads to prevent unbounded memory consumption (10 MB)
+	maxProxyResponseBytes = 10 * 1024 * 1024
 )
 
 // PortainerClient defines the interface for the wrapper client used by the MCP server
@@ -102,6 +104,7 @@ type serverOptions struct {
 	client              PortainerClient
 	readOnly            bool
 	disableVersionCheck bool
+	skipTLSVerify       bool
 }
 
 // WithClient sets a custom client for the server.
@@ -125,6 +128,14 @@ func WithReadOnly(readOnly bool) ServerOption {
 func WithDisableVersionCheck(disable bool) ServerOption {
 	return func(opts *serverOptions) {
 		opts.disableVersionCheck = disable
+	}
+}
+
+// WithSkipTLSVerify controls whether TLS certificate verification is skipped.
+// Setting this to true is not recommended for production environments.
+func WithSkipTLSVerify(skip bool) ServerOption {
+	return func(opts *serverOptions) {
+		opts.skipTLSVerify = skip
 	}
 }
 
@@ -163,7 +174,10 @@ func NewPortainerMCPServer(serverURL, token, toolsPath string, options ...Server
 	if opts.client != nil {
 		portainerClient = opts.client
 	} else {
-		portainerClient = client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(true))
+		if opts.skipTLSVerify {
+			log.Println("WARNING: TLS certificate verification is disabled - this is not recommended for production")
+		}
+		portainerClient = client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(opts.skipTLSVerify))
 	}
 
 	if !opts.disableVersionCheck {

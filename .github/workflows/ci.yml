@@ -14,9 +14,9 @@ jobs:
       contents: write
     steps:
       - name: "checkout the current branch"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: "set up golang"
-        uses: actions/setup-go@v5.0.0
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491  # v5.0.0
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
@@ -27,13 +27,13 @@ jobs:
       - name: "Run integration tests"
         run: make test-integration
       - name: "check test coverage"
-        uses: vladopajic/go-test-coverage@v2
+        uses: vladopajic/go-test-coverage@679e6807f68f2440a4c43d386442a1d0041838a9  # v2
         with:
           profile: coverage.out
           git-token: ${{ github.ref_name == 'main' && secrets.GITHUB_TOKEN || '' }}
           git-branch: badges
       - name: "Archive code coverage results"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: code-coverage
           path: coverage.out
@@ -49,7 +49,7 @@ jobs:
       pull-requests: write
     steps:
       - name: "checkout the current branch"
-        uses: actions/checkout@v4
-      - uses: fgrosse/go-coverage-report@v1.2.0
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: fgrosse/go-coverage-report@8c1d1a09864211d258937b1b1a5b849f7e4f2682  # v1.2.0
         with:
           coverage-file-name: "coverage.out"

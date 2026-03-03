@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"os"
+	"strings"
 
 	"github.com/portainer/portainer-mcp/internal/mcp"
 	"github.com/portainer/portainer-mcp/internal/tooldef"
@@ -25,14 +27,31 @@ func main() {
 
 	serverFlag := flag.String("server", "", "The Portainer server URL")
 	tokenFlag := flag.String("token", "", "The authentication token for the Portainer server")
+	tokenFileFlag := flag.String("token-file", "", "Path to a file containing the authentication token")
 	toolsFlag := flag.String("tools", "", "The path to the tools YAML file")
 	readOnlyFlag := flag.Bool("read-only", false, "Run in read-only mode")
 	disableVersionCheckFlag := flag.Bool("disable-version-check", false, "Disable Portainer server version check")
+	skipTLSFlag := flag.Bool("skip-tls-verify", false, "Skip TLS certificate verification when connecting to Portainer (not recommended for production)")
 
 	flag.Parse()
 
-	if *serverFlag == "" || *tokenFlag == "" {
-		log.Fatal().Msg("Both -server and -token flags are required")
+	if *serverFlag == "" {
+		log.Fatal().Msg("-server flag is required")
+	}
+
+	token := *tokenFlag
+	if token == "" && *tokenFileFlag != "" {
+		data, err := os.ReadFile(*tokenFileFlag)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to read token file")
+		}
+		token = strings.TrimSpace(string(data))
+	}
+	if token == "" {
+		token = os.Getenv("PORTAINER_TOKEN")
+	}
+	if token == "" {
+		log.Fatal().Msg("Token is required: use -token flag, -token-file flag, or PORTAINER_TOKEN environment variable")
 	}
 
 	toolsPath := *toolsFlag
@@ -58,9 +77,10 @@ func main() {
 		Str("tools-path", toolsPath).
 		Bool("read-only", *readOnlyFlag).
 		Bool("disable-version-check", *disableVersionCheckFlag).
+		Bool("skip-tls-verify", *skipTLSFlag).
 		Msg("starting MCP server")
 
-	server, err := mcp.NewPortainerMCPServer(*serverFlag, *tokenFlag, toolsPath, mcp.WithReadOnly(*readOnlyFlag), mcp.WithDisableVersionCheck(*disableVersionCheckFlag))
+	server, err := mcp.NewPortainerMCPServer(*serverFlag, token, toolsPath, mcp.WithReadOnly(*readOnlyFlag), mcp.WithDisableVersionCheck(*disableVersionCheckFlag), mcp.WithSkipTLSVerify(*skipTLSFlag))
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create server")
 	}

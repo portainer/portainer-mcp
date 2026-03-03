@@ -9,6 +9,9 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+// maxResponseBytes caps proxy response reads to prevent unbounded memory consumption (10 MB)
+const maxResponseBytes = 10 * 1024 * 1024
+
 // removeManagedFieldsFromUnstructuredObject is a helper function that modifies an Unstructured object in place
 // by removing the managedFields attribute from its metadata.
 func removeManagedFieldsFromUnstructuredObject(obj *unstructured.Unstructured) error {
@@ -58,9 +61,12 @@ func ProcessRawKubernetesAPIResponse(httpResp *http.Response) ([]byte, error) {
 	}
 	defer func() { _ = httpResp.Body.Close() }()
 
-	bodyBytes, err := io.ReadAll(httpResp.Body)
+	bodyBytes, err := io.ReadAll(io.LimitReader(httpResp.Body, maxResponseBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	if int64(len(bodyBytes)) >= maxResponseBytes {
+		return nil, fmt.Errorf("Kubernetes API response exceeded the maximum allowed size; try a more specific request")
 	}
 
 	if len(bodyBytes) == 0 {

@@ -14,8 +14,12 @@ import (
 )
 
 func (s *PortainerMCPServer) AddKubernetesProxyFeatures() {
+	// ToolKubernetesProxyStripped is GET-only and safe to register in all modes.
 	s.addToolIfExists(ToolKubernetesProxyStripped, s.HandleKubernetesProxyStripped())
 
+	// The full Kubernetes proxy tool is registered in both read-only and read-write modes
+	// because it supports GET requests which are useful in read-only mode.
+	// Write operations (non-GET methods) are enforced at runtime inside HandleKubernetesProxy.
 	s.addToolIfExists(ToolKubernetesProxy, s.HandleKubernetesProxy())
 }
 
@@ -128,6 +132,13 @@ func (s *PortainerMCPServer) HandleKubernetesProxy() server.ToolHandlerFunc {
 			return mcp.NewToolResultErrorFromErr("invalid body parameter", err), nil
 		}
 
+		if isDangerousKubernetesPath(kubernetesAPIPath, method) {
+			return mcp.NewToolResultError("access to this Kubernetes API endpoint with this method is not permitted"), nil
+		}
+		if hasWatchQueryParam(queryParamsMap) {
+			return mcp.NewToolResultError("watch query parameter is not permitted as it causes unbounded streaming"), nil
+		}
+
 		opts := models.KubernetesProxyRequestOptions{
 			EnvironmentID: environmentId,
 			Path:          kubernetesAPIPath,
@@ -144,10 +155,14 @@ func (s *PortainerMCPServer) HandleKubernetesProxy() server.ToolHandlerFunc {
 		if err != nil {
 			return mcp.NewToolResultErrorFromErr("failed to send Kubernetes API request", err), nil
 		}
+		defer response.Body.Close()
 
-		responseBody, err := io.ReadAll(response.Body)
+		responseBody, err := io.ReadAll(io.LimitReader(response.Body, maxProxyResponseBytes))
 		if err != nil {
 			return mcp.NewToolResultErrorFromErr("failed to read Kubernetes API response", err), nil
+		}
+		if int64(len(responseBody)) >= maxProxyResponseBytes {
+			return mcp.NewToolResultError("Kubernetes API response exceeded the maximum allowed size and was truncated; try a more specific request"), nil
 		}
 
 		return mcp.NewToolResultText(string(responseBody)), nil

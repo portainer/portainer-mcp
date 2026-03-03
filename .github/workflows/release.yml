@@ -19,12 +19,12 @@ jobs:
           - goarch: "amd64"
             goos: darwin
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
     - id: get_version
-      uses: battila7/get-version-action@v2
+      uses: battila7/get-version-action@d97fbc34ceb64d1f5d95f4dfd6dce33521ccccf5  # v2.3.0
     - name: Set build time
       run: echo BUILD_TIME=$(date) >> ${GITHUB_ENV}
-    - uses: wangyoucao577/go-release-action@v1
+    - uses: wangyoucao577/go-release-action@279495102627de7960cbc33434ab01a12bae144b  # v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
