@@ -43,7 +43,7 @@ The following table shows which agents independently identified each major findi
 ### C1. TLS Certificate Verification Hardcoded to Disabled
 
 **Agents**: All 4/4 agreed
-**File**: `/home/ross/Documents/general/portainer-mcp/internal/mcp/server.go:166`
+**File**: `internal/mcp/server.go:166`
 
 ```go
 portainerClient = client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(true))
@@ -63,8 +63,8 @@ The client library defaults to `skipTLSVerify: false` (line 90 of `client.go`) a
 
 **Agents**: 3/4 agreed (Sentinel, Architect, MCP Developer)
 **Files**:
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/docker.go:19-95`
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/kubernetes.go:79-155`
+- `internal/mcp/docker.go:19-95`
+- `internal/mcp/kubernetes.go:79-155`
 
 The proxy tools accept arbitrary HTTP methods, arbitrary API paths, arbitrary headers, arbitrary query parameters, and arbitrary request bodies. The only validation is:
 - Path must start with `/` (docker.go:44, kubernetes.go:104)
@@ -96,8 +96,8 @@ Result: Arbitrary code execution on any Docker container
 
 **Agents**: 3/4 agreed (Sentinel, Architect, Skeptic)
 **Files**:
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/docker.go:88-93`
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/kubernetes.go:148-153`
+- `internal/mcp/docker.go:88-93`
+- `internal/mcp/kubernetes.go:148-153`
 
 ```go
 response, err := s.cli.ProxyDockerRequest(opts)
@@ -124,7 +124,7 @@ Note: The `HandleKubernetesProxyStripped` handler correctly delegates to `k8suti
 ### H1. API Token Exposed in Process Arguments
 
 **Agents**: 3/4 agreed (Sentinel, MCP Developer, Skeptic)
-**File**: `/home/ross/Documents/general/portainer-mcp/cmd/portainer-mcp/mcp.go:27`
+**File**: `cmd/portainer-mcp/mcp.go:27`
 
 ```go
 tokenFlag := flag.String("token", "", "The authentication token for the Portainer server")
@@ -142,9 +142,9 @@ The API token is passed as a CLI flag. On Linux/macOS, any user on the system ca
 
 **Agents**: 3/4 agreed (Architect, MCP Developer, Skeptic)
 **Files**:
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/docker.go:88`
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/kubernetes.go:148`
-- `/home/ross/Documents/general/portainer-mcp/internal/k8sutil/stripper.go:61`
+- `internal/mcp/docker.go:88`
+- `internal/mcp/kubernetes.go:148`
+- `internal/k8sutil/stripper.go:61`
 
 ```go
 responseBody, err := io.ReadAll(response.Body)
@@ -162,8 +162,8 @@ No size limit is applied. A Docker API call returning gigabytes of container log
 
 **Agents**: 3/4 agreed (Sentinel, Architect, MCP Developer)
 **Files**:
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/stack.go:57-83`
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/local_stack.go:93-124`
+- `internal/mcp/stack.go:57-83`
+- `internal/mcp/local_stack.go:93-124`
 
 The `file` parameter (raw docker-compose YAML) is accepted verbatim from the LLM and forwarded to Portainer without any inspection. A malicious or prompt-injected LLM can supply:
 
@@ -187,7 +187,7 @@ services:
 ### H4. Privilege Escalation via `updateUserRole`
 
 **Agents**: 3/4 agreed (Sentinel, Architect, MCP Developer)
-**File**: `/home/ross/Documents/general/portainer-mcp/internal/mcp/user.go:37-62`
+**File**: `internal/mcp/user.go:37-62`
 
 The tool accepts any user ID and promotes them to `admin` with a single call. Combined with `listUsers` (which returns all user IDs and roles), this is a two-call privilege escalation path:
 1. `listUsers` -> enumerate all users
@@ -204,7 +204,7 @@ There is no confirmation step, no self-modification prevention, and no audit log
 ### H5. Raw Portainer API Error Bodies Returned to LLM
 
 **Agents**: 3/4 agreed (Sentinel, Architect, Skeptic)
-**File**: `/home/ross/Documents/general/portainer-mcp/pkg/portainer/client/local_stack.go` (lines 53, 86, 133, 172, 200, 222, 246)
+**File**: `pkg/portainer/client/local_stack.go` (lines 53, 86, 133, 172, 200, 222, 246)
 
 ```go
 bodyBytes, _ := io.ReadAll(resp.Body)
@@ -223,8 +223,8 @@ Raw Portainer API error bodies (potentially containing stack traces, internal pa
 
 **Agents**: 2/4 agreed (Sentinel, Skeptic)
 **Files**:
-- `/home/ross/Documents/general/portainer-mcp/.github/workflows/ci.yml:17-19`
-- `/home/ross/Documents/general/portainer-mcp/.github/workflows/release.yml:22-27`
+- `.github/workflows/ci.yml:17-19`
+- `.github/workflows/release.yml:22-27`
 
 All GitHub Actions use tag references (`@v4`, `@v2`, `@v1`) instead of SHA-pinned references. Third-party actions from personal accounts (`battila7/get-version-action`, `wangyoucao577/go-release-action`) are particularly risky. Tags can be moved to point to malicious code (as seen in the tj-actions CVE-2025-30066 incident).
 
@@ -240,8 +240,8 @@ Additionally, the release workflow produces only MD5 checksums (a broken hash fu
 
 **Agents**: 2/4 agreed (Sentinel, MCP Developer)
 **Files**:
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/local_stack.go:28-41`
-- `/home/ross/Documents/general/portainer-mcp/pkg/portainer/models/stack.go:81,116-119`
+- `internal/mcp/local_stack.go:28-41`
+- `pkg/portainer/models/stack.go:81,116-119`
 
 The `listLocalStacks` tool returns ALL environment variables (names AND values) for every stack. Environment variables commonly contain database passwords, API keys, and connection strings. The `getLocalStackFile` and `getStackFile` tools return raw compose YAML which frequently embeds secrets.
 
@@ -259,8 +259,8 @@ In a prompt injection scenario, these secrets are exfiltrated to the attacker th
 
 **Agents**: 4/4 agreed
 **Files**:
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/docker.go:15-17`
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/kubernetes.go:16-20`
+- `internal/mcp/docker.go:15-17`
+- `internal/mcp/kubernetes.go:16-20`
 
 Unlike all other feature groups (which use `if !s.readOnly` guards), the Docker and Kubernetes proxy tools are always registered. Write requests are rejected at the handler level, but the tools remain visible to the LLM, which may attempt to use them and receive confusing errors.
 
@@ -271,7 +271,7 @@ Unlike all other feature groups (which use `if !s.readOnly` guards), the Docker 
 ### M2. Contradictory Proxy Tool Annotations
 
 **Agents**: 2/4 agreed (Architect, MCP Developer)
-**File**: `/home/ross/Documents/general/portainer-mcp/internal/tooldef/tools.yaml:815-820,880-885`
+**File**: `internal/tooldef/tools.yaml:815-820,880-885`
 
 ```yaml
 annotations:
@@ -291,7 +291,7 @@ Both `dockerProxy` and `kubernetesProxy` are marked `readOnlyHint: true` AND `de
 ### M3. Float64-to-Int Truncation Without Validation
 
 **Agents**: 2/4 agreed (MCP Developer, Skeptic)
-**File**: `/home/ross/Documents/general/portainer-mcp/pkg/toolgen/param.go:62-63`
+**File**: `pkg/toolgen/param.go:62-63`
 
 ```go
 func (p *ParameterParser) GetInt(name string, required bool) (int, error) {
@@ -312,7 +312,7 @@ JSON numbers arrive as `float64`. The conversion silently truncates fractional p
 ### M4. No Context/Timeout Propagation to API Calls
 
 **Agents**: 1/4 (Skeptic), but independently verified
-**File**: `/home/ross/Documents/general/portainer-mcp/pkg/portainer/client/local_stack.go:26`
+**File**: `pkg/portainer/client/local_stack.go:26`
 
 ```go
 req, err := http.NewRequest(method, url, bodyReader)  // No context
@@ -327,7 +327,7 @@ Every handler receives a `context.Context` but never passes it to the client. If
 ### M5. `tools.yaml` File Overridable from Filesystem with TOCTOU Race
 
 **Agents**: 2/4 agreed (Architect, Skeptic)
-**File**: `/home/ross/Documents/general/portainer-mcp/internal/tooldef/tooldef.go:13-22`
+**File**: `internal/tooldef/tooldef.go:13-22`
 
 ```go
 if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -344,8 +344,8 @@ The check-then-write pattern has a TOCTOU race. On shared systems, an attacker c
 
 **Agents**: 1/4 (Skeptic), independently verified
 **Files**:
-- `/home/ross/Documents/general/portainer-mcp/internal/mcp/server.go:17`: `MinimumToolsVersion = "1.0"` (no "v" prefix)
-- `/home/ross/Documents/general/portainer-mcp/pkg/toolgen/yaml.go:68`: `semver.Compare(config.Version, minimumVersion)`
+- `internal/mcp/server.go:17`: `MinimumToolsVersion = "1.0"` (no "v" prefix)
+- `pkg/toolgen/yaml.go:68`: `semver.Compare(config.Version, minimumVersion)`
 
 The `golang.org/x/mod/semver` package requires versions to start with "v". Since `MinimumToolsVersion = "1.0"` has no "v" prefix, `semver.Compare("v1.2", "1.0")` compares a valid version against an invalid one. Per the semver docs, `Compare` returns 0 when either argument is invalid -- so the minimum version check always passes. ANY valid semver version string passes the check.
 
@@ -356,7 +356,7 @@ The `golang.org/x/mod/semver` package requires versions to start with "v". Since
 ### M7. Missing Destructive Annotations on Sensitive Tools
 
 **Agents**: 1/4 (MCP Developer)
-**File**: `/home/ross/Documents/general/portainer-mcp/internal/tooldef/tools.yaml`
+**File**: `internal/tooldef/tools.yaml`
 
 Several tools that can cause significant state changes are marked `destructiveHint: false`:
 - `stopLocalStack` (line 617): Stopping a running stack disrupts service
@@ -371,7 +371,7 @@ Several tools that can cause significant state changes are marked `destructiveHi
 ### M8. No Rate Limiting or Operation Throttling
 
 **Agents**: 2/4 agreed (Sentinel, MCP Developer)
-**File**: Absent feature across `/home/ross/Documents/general/portainer-mcp/internal/mcp/server.go`
+**File**: Absent feature across `internal/mcp/server.go`
 
 No rate limiting, request throttling, or circuit breaker mechanisms exist. An LLM (or attacker via prompt injection) can issue unlimited rapid requests for destructive operations.
 
@@ -383,25 +383,25 @@ No rate limiting, request throttling, or circuit breaker mechanisms exist. An LL
 
 ### L1. Hardcoded Test Credentials
 
-**File**: `/home/ross/Documents/general/portainer-mcp/tests/integration/containers/portainer.go:27,178`
+**File**: `tests/integration/containers/portainer.go:27,178`
 
 Hardcoded `adminpassword123` with a bcrypt cost factor of 5 (should be at least 10). Test-only, but sets a poor security example.
 
 ### L2. Version Check Leaks Portainer Server Version
 
-**File**: `/home/ross/Documents/general/portainer-mcp/internal/mcp/server.go:175-176`
+**File**: `internal/mcp/server.go:175-176`
 
 The error message on version mismatch reveals the actual Portainer server version to the caller.
 
 ### L3. Name Constraints Exist Only in YAML Descriptions, Never Enforced
 
-**Files**: `/home/ross/Documents/general/portainer-mcp/internal/tooldef/tools.yaml` (createStack, createLocalStack)
+**Files**: `internal/tooldef/tools.yaml` (createStack, createLocalStack)
 
 The tools.yaml descriptions state naming constraints (lowercase alphanumeric + hyphens/underscores) but no code enforces them.
 
 ### L4. TODO in Security-Adjacent Code
 
-**File**: `/home/ross/Documents/general/portainer-mcp/internal/k8sutil/stripper.go:35`
+**File**: `internal/k8sutil/stripper.go:35`
 
 ```go
 // TODO: Consider also removing other verbose fields here, e.g., ownerReferences, if needed.
@@ -411,13 +411,13 @@ Unresolved TODO in the metadata stripping function. Should be resolved with a do
 
 ### L5. Mixed Logging Libraries
 
-**Files**: `/home/ross/Documents/general/portainer-mcp/internal/mcp/server.go:5` (standard `log`), `/home/ross/Documents/general/portainer-mcp/cmd/portainer-mcp/mcp.go:8` (zerolog)
+**Files**: `internal/mcp/server.go:5` (standard `log`), `cmd/portainer-mcp/mcp.go:8` (zerolog)
 
 The `addToolIfExists` function uses `log.Printf` from the standard library while all other logging uses zerolog, causing inconsistent log formatting.
 
 ### L6. CI Build Job Has Overly Broad `contents: write` Permission
 
-**File**: `/home/ross/Documents/general/portainer-mcp/.github/workflows/ci.yml:13-14`
+**File**: `.github/workflows/ci.yml:13-14`
 
 Needed for badge writing, but means any CI compromise could push arbitrary commits.
 

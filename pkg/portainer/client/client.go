@@ -108,7 +108,7 @@ func NewPortainerClient(serverURL string, token string, opts ...ClientOption) *P
 		normalizedURL = "https://" + normalizedURL
 	}
 
-	// The SDK expects a bare host:port (e.g., "tvsp01:9443") and applies
+	// The SDK expects a bare host:port (e.g., "myserver:9443") and applies
 	// its own scheme prefix. Strip any scheme from the URL to avoid double-prefixing.
 	sdkHost := normalizedURL
 	sdkHost = strings.TrimPrefix(sdkHost, "https://")
