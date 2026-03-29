@@ -8,6 +8,10 @@ Now you can! Portainer MCP connects your AI assistant directly to your Portainer
 
 ![portainer-mcp-demo](https://downloads.portainer.io/mcp-demo5.gif)
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/portainer-portainer-mcp).
+
 ## Overview
 
 Portainer MCP is a work in progress implementation of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) for Portainer environments. This project aims to provide a standardized way to connect Portainer's container management capabilities with AI models and other services.
