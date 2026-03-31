@@ -3,6 +3,7 @@ package client
 import (
 	"crypto/tls"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -108,8 +109,16 @@ func NewPortainerClient(serverURL string, token string, opts ...ClientOption) *P
 		normalizedURL = "https://" + normalizedURL
 	}
 
+	// Parse the server URL to extract scheme and host for the SDK client
+	scheme := "https"
+	host := serverURL
+	if parsed, err := url.Parse(normalizedURL); err == nil && parsed.Host != "" {
+		scheme = parsed.Scheme
+		host = parsed.Host
+	}
+
 	return &PortainerClient{
-		cli: client.NewPortainerClient(serverURL, token, client.WithSkipTLSVerify(options.skipTLSVerify)),
+		cli: client.NewPortainerClient(host, token, client.WithSkipTLSVerify(options.skipTLSVerify), client.WithScheme(scheme)),
 		rawCli: &rawHTTPClient{
 			serverURL: normalizedURL,
 			token:     token,
