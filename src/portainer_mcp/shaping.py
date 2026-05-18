@@ -6,11 +6,10 @@ Two cooperating layers, applied at server build time:
    `max_chars`, regardless of which tool produced it. The final safety
    valve, replaces the inline cap that used to live in `proxy.py`.
 
-2. `inject_select_arg()` — wraps every OpenAPI-generated tool with an
-   optional JMESPath `select` parameter, so the model can project noisy
-   Portainer responses server-side. Same affordance the hand-written
-   proxy tools already expose, applied uniformly across the auto-
-   generated surface.
+2. `SelectArgTransform` — wraps every tool with an optional JMESPath
+   `select` parameter, so the model can project noisy Portainer
+   responses server-side. Tools that already declare `select` (e.g.
+   the hand-written proxy tools) are passed through unchanged.
 
 The two layers cooperate: `select` narrows first (cheaper bodies), the
 cap catches whatever slips through (model omitted `select`, or the
@@ -21,12 +20,12 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Sequence
 from typing import Annotated, Any
 
 import jmespath
-from fastmcp import FastMCP
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
-from fastmcp.server.providers.openapi import OpenAPIProvider
+from fastmcp.server.transforms import Transform, VersionSpec
 from fastmcp.tools import Tool, forward
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
@@ -138,31 +137,34 @@ async def _select_wrapper(
     )
 
 
-def inject_select_arg(mcp: FastMCP) -> int:
-    """Wrap every OpenAPI-generated tool with an optional `select` argument.
+def _has_select(tool: Tool) -> bool:
+    props = (tool.parameters or {}).get("properties") or {}
+    return "select" in props
 
-    The wrapped version is registered on the local provider and the
-    original is removed from the OpenAPI provider, so `list_tools()`
-    returns exactly one entry per tool. Tools that already declare
-    `select` (e.g. our hand-written proxy tools) are skipped.
 
-    Returns the number of tools wrapped.
+class SelectArgTransform(Transform):
+    """Wrap every tool with an optional JMESPath `select` argument.
+
+    Registered on the server via `mcp.add_transform(...)`, so it applies
+    uniformly to OpenAPI-generated tools and any other provider that
+    might be added later. Tools that already declare `select` (the
+    hand-written proxy tools) are passed through unchanged.
     """
 
-    # OpenAPIProvider populates `_tools` synchronously during from_openapi,
-    # so we read (and pop) it directly. The async `list_tools()` API would
-    # need a running event loop, which we don't have here.
-    wrapped = 0
-    for provider in mcp.providers:
-        if not isinstance(provider, OpenAPIProvider):
-            continue
-        for tool in list(provider._tools.values()):
-            props = (tool.parameters or {}).get("properties") or {}
-            if "select" in props:
-                continue
-            new_tool = Tool.from_tool(tool, transform_fn=_select_wrapper)
-            mcp.add_tool(new_tool)
-            provider._tools.pop(tool.name, None)
-            wrapped += 1
-    logger.info("injected `select` arg on %d OpenAPI tools", wrapped)
-    return wrapped
+    async def list_tools(self, tools: Sequence[Tool]) -> Sequence[Tool]:
+        return [
+            t if _has_select(t) else Tool.from_tool(t, transform_fn=_select_wrapper)
+            for t in tools
+        ]
+
+    async def get_tool(
+        self,
+        name: str,
+        call_next: Any,
+        *,
+        version: VersionSpec | None = None,
+    ) -> Tool | None:
+        tool = await call_next(name, version=version)
+        if tool is None or _has_select(tool):
+            return tool
+        return Tool.from_tool(tool, transform_fn=_select_wrapper)

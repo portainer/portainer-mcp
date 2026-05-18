@@ -9,6 +9,7 @@ only GET operations as tools.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from pathlib import Path
@@ -92,7 +93,20 @@ def build_server() -> FastMCP:
         validate_output=False,
     )
     proxy.register(mcp, client, read_only=read_only)
-    shaping.inject_select_arg(mcp)
+    mcp.add_transform(shaping.SelectArgTransform())
+
+    # Fail fast if the Transform stopped reaching the tool list (FastMCP
+    # internals shifted, registration order regressed, etc.) — better to
+    # blow up at startup than to silently ship un-projected tools.
+    tools = asyncio.run(mcp.list_tools())
+    missing = [t.name for t in tools if not shaping._has_select(t)]
+    if missing:
+        raise RuntimeError(
+            f"SelectArgTransform did not reach {len(missing)} tool(s): "
+            f"{missing[:5]}{'...' if len(missing) > 5 else ''}"
+        )
+    logger.info("`select` arg present on all %d tools", len(tools))
+
     max_chars = int(
         os.environ.get("PORTAINER_MAX_RESPONSE_CHARS")
         or shaping.DEFAULT_MAX_RESPONSE_CHARS

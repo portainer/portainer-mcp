@@ -70,20 +70,19 @@ unblock for the replacement path.
 
 ALAPENNA: we'll definitely be exploring the PROFILE approach for this.
 
-## 4. FastMCP internals
+## 4. FastMCP internals — done
 
-`shaping.py:159, 165` reads and pops `provider._tools` — a private
-attribute. A FastMCP minor release can break `inject_select_arg()`
-silently.
+Resolved. `inject_select_arg()` is gone; `shaping.SelectArgTransform`
+(a `fastmcp.server.transforms.Transform` subclass) is registered via
+`mcp.add_transform(...)` and wraps each tool through the public
+`Tool.from_tool(transform_fn=...)` API. No private attributes accessed.
 
-Mitigations:
+`build_server()` runs an `await mcp.list_tools()` smoke check at
+startup and raises `RuntimeError` if any tool is missing `select` —
+breakage surfaces at boot, not first call.
 
-- Pin FastMCP narrowly in `pyproject.toml` (`fastmcp>=2.8,<2.X`).
-- Add an import-time smoke check: after `from_openapi`, assert
-  `inject_select_arg()` wrapped at least one tool. Catches the breakage
-  on startup rather than at first call.
-- File an upstream issue / PR for a public registry-walk API. Once
-  available, drop the private access.
+Pin tightened to `fastmcp>=3.3,<4` (the `OpenAPIProvider` import path
+this code uses only exists on 3.x; the prior `>=2.8` was wrong).
 
 ## 5. Versioning and distribution
 
