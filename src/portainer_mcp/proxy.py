@@ -1,8 +1,8 @@
 """Portainer Docker/Kubernetes proxy tools.
 
-Each proxied response is run through two optional shapers, in order:
-1. JMESPath projection via the caller-supplied `select` expression.
-2. Hard char-count cap, to bound model context spend.
+Each proxied response is run through an optional caller-supplied JMESPath
+`select` projection. The global response-size cap (see `shaping.py`) is
+applied by middleware after this returns, so it's not duplicated here.
 
 See `docs/proxy-tools.md` for design rationale and the planned evolution
 to resource-spillover if filtering alone proves insufficient.
@@ -15,19 +15,17 @@ import logging
 from typing import Annotated
 
 import httpx
-import jmespath
 from fastmcp import FastMCP
 from pydantic import Field
 
+from portainer_mcp.shaping import SELECT_DESCRIPTION, project
+
 logger = logging.getLogger("portainer_mcp")
 
-# Target ~25k tokens. Dense JSON (Docker/K8s payloads with IDs, hashes,
-# nested structure) packs at ~3 chars/token, so 75k chars is a deliberately
-# conservative cap. This is a safety valve, not a precise meter — exact
-# token counts vary with content. Override via PORTAINER_PROXY_MAX_CHARS.
-DEFAULT_MAX_RESPONSE_CHARS = 75_000
-
-_ALLOWED_METHODS = frozenset({"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"})
+# Headers the model is not allowed to set via the proxy tools. X-API-KEY
+# is the operator's Portainer credential; the others are common bypass /
+# auth-confusion vectors that have no realistic Docker/K8s use case.
+_BLOCKED_HEADERS = frozenset({"x-api-key", "authorization", "cookie", "host"})
 
 
 def _apply_select(text: str, select: str | None) -> str:
@@ -37,27 +35,26 @@ def _apply_select(text: str, select: str | None) -> str:
         data = json.loads(text)
     except json.JSONDecodeError:
         return text  # not JSON (plain text, binary, error page); pass through
-    try:
-        data = jmespath.search(select, data)
-    except jmespath.exceptions.JMESPathError as e:
-        return json.dumps(
-            {
-                "error": "invalid JMESPath expression",
-                "expression": select,
-                "detail": str(e),
-            }
+    return json.dumps(project(data, select))
+
+
+def _validate_path(path: str) -> None:
+    if not path.startswith("/"):
+        raise ValueError("path must start with a leading slash")
+    if any(c in path for c in "?#"):
+        raise ValueError(
+            "path must not contain '?' or '#'; use `query_params` for query strings"
         )
-    return json.dumps(data, indent=2)
+    if ".." in path.split("/"):
+        raise ValueError("path must not contain '..' segments")
 
 
-def _enforce_budget(text: str, max_chars: int) -> str:
-    if len(text) <= max_chars:
-        return text
-    return (
-        text[:max_chars]
-        + f"\n\n[truncated: response was {len(text)} chars, capped at {max_chars}. "
-        + "Narrow the `select` JMESPath expression or refine `path`/`query_params`.]"
-    )
+def _validate_headers(headers: dict[str, str] | None) -> None:
+    if not headers:
+        return
+    for key in headers:
+        if key.lower() in _BLOCKED_HEADERS:
+            raise ValueError(f"header {key!r} is not allowed")
 
 
 async def _call(
@@ -71,15 +68,11 @@ async def _call(
     headers: dict[str, str] | None,
     body: str | None,
 ) -> str:
-    if not path.startswith("/"):
-        raise ValueError("path must start with a leading slash")
-    method = method.upper()
-    if method not in _ALLOWED_METHODS:
-        raise ValueError(f"invalid HTTP method: {method}")
-
+    _validate_path(path)
+    _validate_headers(headers)
     url = f"/endpoints/{environment_id}/{kind}{path}"
     response = await client.request(
-        method,
+        method.upper(),
         url,
         params=query_params or None,
         headers=headers or None,
@@ -88,18 +81,12 @@ async def _call(
     return response.text
 
 
-def register(
-    mcp: FastMCP,
-    client: httpx.AsyncClient,
-    *,
-    read_only: bool,
-    max_response_chars: int = DEFAULT_MAX_RESPONSE_CHARS,
-) -> None:
+def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> None:
     """Register the proxy tools on `mcp`.
 
     In read-only mode, non-GET methods are rejected at tool-invocation time.
-    `max_response_chars` caps the post-filter body size; oversized responses
-    are truncated with a hint to narrow `select`.
+    The response-size cap is enforced by `ResponseCapMiddleware` (see
+    `shaping.py`), not here.
     """
 
     @mcp.tool(
@@ -132,10 +119,7 @@ def register(
             Field(description="Raw request body string (e.g. JSON for POST)"),
         ] = None,
         select: Annotated[
-            str | None,
-            Field(
-                description="JMESPath expression to project the response server-side"
-            ),
+            str | None, Field(description=SELECT_DESCRIPTION)
         ] = None,
     ) -> str:
         if read_only and method.upper() != "GET":
@@ -150,7 +134,7 @@ def register(
             headers=headers,
             body=body,
         )
-        return _enforce_budget(_apply_select(text, select), max_response_chars)
+        return _apply_select(text, select)
 
     @mcp.tool(
         name="kubernetes_proxy",
@@ -181,10 +165,7 @@ def register(
             Field(description="Raw request body string (e.g. JSON manifest for POST)"),
         ] = None,
         select: Annotated[
-            str | None,
-            Field(
-                description="JMESPath expression to project the response server-side"
-            ),
+            str | None, Field(description=SELECT_DESCRIPTION)
         ] = None,
     ) -> str:
         if read_only and method.upper() != "GET":
@@ -199,10 +180,6 @@ def register(
             headers=headers,
             body=body,
         )
-        return _enforce_budget(_apply_select(text, select), max_response_chars)
+        return _apply_select(text, select)
 
-    logger.info(
-        "proxy tools registered (read_only=%s, max_response_chars=%d)",
-        read_only,
-        max_response_chars,
-    )
+    logger.info("proxy tools registered (read_only=%s)", read_only)

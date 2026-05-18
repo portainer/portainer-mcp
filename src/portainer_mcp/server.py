@@ -18,7 +18,7 @@ import yaml
 from fastmcp import FastMCP
 from fastmcp.server.providers.openapi import MCPType, RouteMap
 
-from portainer_mcp import proxy
+from portainer_mcp import proxy, shaping
 
 _ROOT = Path(__file__).resolve().parents[2]
 SPEC_PATH = _ROOT / "spec" / "portainer-patched.yaml"
@@ -91,11 +91,14 @@ def build_server() -> FastMCP:
         route_maps=route_maps,
         validate_output=False,
     )
+    proxy.register(mcp, client, read_only=read_only)
+    shaping.inject_select_arg(mcp)
     max_chars = int(
-        os.environ.get("PORTAINER_PROXY_MAX_CHARS")
-        or proxy.DEFAULT_MAX_RESPONSE_CHARS
+        os.environ.get("PORTAINER_MAX_RESPONSE_CHARS")
+        or shaping.DEFAULT_MAX_RESPONSE_CHARS
     )
-    proxy.register(mcp, client, read_only=read_only, max_response_chars=max_chars)
+    mcp.add_middleware(shaping.ResponseCapMiddleware(max_chars))
+    logger.info("response cap: %d chars", max_chars)
     return mcp
 
 

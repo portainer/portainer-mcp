@@ -16,16 +16,24 @@ expression applied to the response **before** it reaches the model:
 | `docker_proxy` | any | yes |
 | `kubernetes_proxy` | any | yes |
 
-A hard char cap (default `75_000`) truncates oversized responses with a
-hint telling the model to narrow `select`. Override with
-`PORTAINER_PROXY_MAX_CHARS=<int>`. The cap is char-based by design: it's
-a safety valve, not a precision token meter. Dense JSON (Docker/K8s
-payloads full of IDs, hashes, nested structure) packs at ~3 chars/token
-rather than the prose-text ~4, so 75k chars targets ~25k tokens with
-margin. A proper tokenizer (tiktoken / Anthropic `count_tokens`) would
-narrow the variance from ~30-50% to ~15-25%, but at the cost of a
-dependency and per-call overhead that isn't worth it for a truncation
-guard.
+The same `select`-and-cap pattern is applied universally to every tool
+the server exposes (see `src/portainer_mcp/shaping.py`): the cap is a
+`ResponseCapMiddleware` that runs after every tool call, and a
+`Tool.from_tool` transformation injects `select` onto every OpenAPI-
+generated tool. The proxy tools predate the shaping layer but live
+inside the same envelope — their inline `select` matches the global
+schema, and the middleware caps their output too.
+
+The cap default is `75_000` chars (override with
+`PORTAINER_MAX_RESPONSE_CHARS=<int>`) and is a target, not an exact
+ceiling — truncated output adds a ~130-char hint past the cap, and the
+chars-to-tokens conversion varies with content. It's char-based by
+design: a safety valve, not a precision token meter. Dense Docker/K8s
+JSON packs at ~3 chars/token rather than the prose-text ~4, so 75k
+chars targets ~25k tokens with margin. A proper tokenizer (tiktoken /
+Anthropic `count_tokens`) would narrow the variance from ~30-50% to
+~15-25%, but at the cost of a dependency and per-call overhead that
+isn't worth it for a truncation guard.
 `PORTAINER_READ_ONLY=1` rejects non-GET calls at tool-invocation time.
 
 ### Why this design
