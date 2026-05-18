@@ -8,11 +8,13 @@ pipeline.
 
 ```bash
 uv sync
-uv run python spec/patch_spec.py
 PORTAINER_URL=https://portainer.example.com \
 PORTAINER_API_KEY=<key> \
   uv run portainer-mcp
 ```
+
+The patched spec (`spec/portainer-patched.yaml`) is committed — no
+patcher run needed. Currently tracks Portainer EE 2.41.1.
 
 ## What's here
 
@@ -20,7 +22,9 @@ PORTAINER_API_KEY=<key> \
   `portainer-go-sdk/docs/spec-upstream-fixes.md` (excluded operations,
   `/websocket/*` paths, malformed enums) plus the two YAML-syntax defects
   in [`docs/spec-upstream-fixes.md`](docs/spec-upstream-fixes.md) that the
-  Go SDK's toolchain doesn't hit. Writes `spec/portainer-patched.yaml`.
+  Go SDK's toolchain doesn't hit. Writes `spec/portainer-patched.yaml`,
+  which is committed; end users do not run the patcher (see
+  [Refreshing the spec](#refreshing-the-spec-maintainers)).
 - `src/portainer_mcp/server.py` — `FastMCP.from_openapi` wired to the
   patched spec, an `httpx.AsyncClient` carrying the Portainer API key, and
   a tag allowlist (`endpoints`, `stacks`, `auth`) that excludes the rest of
@@ -60,6 +64,22 @@ means the actual token count varies with content. See
 [`docs/proxy-tools.md`](docs/proxy-tools.md) for the proxy tools'
 specific design and the planned evolution if filtering alone proves
 insufficient.
+
+## Refreshing the spec (maintainers)
+
+The unpatched Portainer OpenAPI spec lives in a private repo, so spec
+bumps are maintainer-driven:
+
+```bash
+make specs VERSION=2.42.0
+```
+
+This clones (or fast-forwards) `portainer/portainer-api-docs` into
+`spec/upstream/` and runs the patcher against
+`versions/ee/$(VERSION).yaml`, overwriting `spec/portainer-patched.yaml`.
+Commit the regenerated file and bump the tested-against version above.
+
+EE spec only — CE is a subset and works on a best-effort basis.
 
 ## Troubleshooting
 

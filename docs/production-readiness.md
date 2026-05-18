@@ -33,26 +33,28 @@ Deliberate gaps:
 - `patch_spec.main()` tab normalisation — self-canarying; a tab leaking
   through breaks `yaml.safe_load` immediately when the patcher runs.
 
-## 2. Spec generation and patching
+## 2. Spec generation and patching — done
 
-`spec/patch_spec.py:37` defaults the input path to
-`/workspace/portainer-api-docs/versions/ee/2.41.1.yaml` — works only on
-the original author's machine, and README's `uv run python
-spec/patch_spec.py` fails for everyone else.
+`spec/portainer-patched.yaml` is now committed as a build artifact (EE
+2.41.1). End users skip the patcher entirely; contributors can iterate
+without access to the private spec repo.
 
-Options, in increasing order of effort:
+Spec bumps are maintainer-driven via `make specs VERSION=X.Y.Z`, which
+shallow-clones `portainer/portainer-api-docs` (SSH default,
+`UPSTREAM_REPO=` override) into `spec/upstream/` (gitignored) using
+`--depth=1 --filter=blob:none` + `sparse-checkout --no-cone` so only
+the requested YAML is downloaded (~1.7M working tree, not the full 66M
+repo). On subsequent runs it `fetch --depth=1` + `reset --hard
+FETCH_HEAD`, then re-applies the sparse pattern to support VERSION
+changes.
 
-1. Commit `spec/portainer-patched.yaml` as a build artifact so end users
-   skip the patcher entirely. Requires a maintainer step to refresh it
-   on spec bumps.
-2. Vendor the raw spec under `spec/` and point `DEFAULT_INPUT` there.
-3. Drop the default, require the positional arg, document it in README.
+`DEFAULT_INPUT` is removed from the patcher — the positional arg is now
+required, so accidental invocations without a path fail loudly instead
+of silently reading the original author's filesystem.
 
-Whatever the choice, the spec version (currently EE 2.41.1) needs an
-explicit upgrade story — what gets re-tested when Portainer ships a new
-spec, who runs the patcher, where the patched output lives.
-
-Anthony: I'm leaning towards committing the portainer-patched.yaml as a build artifact. Benefits: as the original spec (unpatched) is currently coming from a private repo this would allow easier contributions. Also, the version bumps would likely be done by someone at Portainer team so i'm expecting something like make specs VERSION=2.42.0 to be available that would clone/fetch from https://github.com/portainer/portainer-api-docs and generate the patched specs.
+EE-only — CE is a subset and treated as best-effort. No CI drift guard:
+the maintainer flow is the only sanctioned regeneration path, and a
+drift check only pays off once the upstream repo is fetchable from CI.
 
 ## 3. Tool surface
 

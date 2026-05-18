@@ -1,0 +1,22 @@
+UPSTREAM_REPO ?= git@github.com:portainer/portainer-api-docs.git
+UPSTREAM_DIR  := spec/upstream
+
+.PHONY: specs
+
+# Refresh spec/portainer-patched.yaml from upstream. Maintainer-only:
+# the upstream repo is private. Usage: make specs VERSION=2.41.1
+specs:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "VERSION is required, e.g. make specs VERSION=2.41.1" >&2; \
+		exit 1; \
+	fi
+	@if [ -d $(UPSTREAM_DIR)/.git ]; then \
+		git -C $(UPSTREAM_DIR) fetch --depth=1 origin HEAD && \
+		git -C $(UPSTREAM_DIR) reset --hard FETCH_HEAD; \
+	else \
+		git clone --depth=1 --filter=blob:none --no-checkout \
+			$(UPSTREAM_REPO) $(UPSTREAM_DIR); \
+	fi
+	git -C $(UPSTREAM_DIR) sparse-checkout set --no-cone /versions/ee/$(VERSION).yaml
+	git -C $(UPSTREAM_DIR) checkout
+	uv run python spec/patch_spec.py $(UPSTREAM_DIR)/versions/ee/$(VERSION).yaml

@@ -34,7 +34,6 @@ ENUM_STRIPS = (
     ("v1.Duration", "properties", "time.Duration"),
 )
 
-DEFAULT_INPUT = Path("/workspace/portainer-api-docs/versions/ee/2.41.1.yaml")
 DEFAULT_OUTPUT = Path(__file__).resolve().parent / "portainer-patched.yaml"
 
 # `portaineree.ConditionOperator` lists `=` as a bare enum value. YAML 1.1
@@ -67,7 +66,7 @@ def patch(spec: dict) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input", type=Path, nargs="?", default=DEFAULT_INPUT)
+    parser.add_argument("input", type=Path)
     parser.add_argument("output", type=Path, nargs="?", default=DEFAULT_OUTPUT)
     args = parser.parse_args(argv)
 
