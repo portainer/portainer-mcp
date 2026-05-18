@@ -1,0 +1,20 @@
+[project]
+name = "portainer-mcp-fastmcp"
+version = "0.0.1"
+description = "Experimental Portainer MCP server bootstrapped from the Portainer OpenAPI spec via FastMCP."
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=2.8",
+    "httpx>=0.27",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+portainer-mcp = "portainer_mcp.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/portainer_mcp"]
