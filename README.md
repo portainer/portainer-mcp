@@ -38,6 +38,20 @@ Note: HTTP method is used as the read/write classifier. A handful of
 Portainer endpoints use POST for read-shaped operations (e.g. snapshot
 listings); read-only mode hides those too.
 
+## Docker / Kubernetes proxy tools
+
+`docker_proxy` and `kubernetes_proxy` forward arbitrary requests to the
+Docker and Kubernetes APIs of a Portainer-managed environment. They each
+take an optional JMESPath `select` expression applied server-side before
+the response reaches the model — e.g.
+`[].{id:Id,name:Names[0],state:State}` against `/containers/json`.
+Responses are capped at `75_000` chars by default (deliberately
+conservative — dense Docker/K8s JSON packs at ~3 chars/token, targeting
+~25k tokens with margin); override with `PORTAINER_PROXY_MAX_CHARS=<int>`. See
+[`docs/proxy-tools.md`](docs/proxy-tools.md) for the design rationale,
+metrics to watch during testing, and the planned evolution if
+filtering alone proves insufficient.
+
 ## Troubleshooting
 
 The server logs every httpx request/response (method, URL, status, first

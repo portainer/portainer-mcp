@@ -18,6 +18,8 @@ import yaml
 from fastmcp import FastMCP
 from fastmcp.server.providers.openapi import MCPType, RouteMap
 
+from portainer_mcp import proxy
+
 _ROOT = Path(__file__).resolve().parents[2]
 SPEC_PATH = _ROOT / "spec" / "portainer-patched.yaml"
 LOG_PATH = _ROOT / "logs" / "portainer-mcp.log"
@@ -82,13 +84,19 @@ def build_server() -> FastMCP:
     ]
     route_maps.append(RouteMap(pattern=r".*", mcp_type=MCPType.EXCLUDE))
 
-    return FastMCP.from_openapi(
+    mcp = FastMCP.from_openapi(
         openapi_spec=spec,
         client=client,
         name="portainer",
         route_maps=route_maps,
         validate_output=False,
     )
+    max_chars = int(
+        os.environ.get("PORTAINER_PROXY_MAX_CHARS")
+        or proxy.DEFAULT_MAX_RESPONSE_CHARS
+    )
+    proxy.register(mcp, client, read_only=read_only, max_response_chars=max_chars)
+    return mcp
 
 
 def main() -> None:
