@@ -26,6 +26,18 @@ PORTAINER_API_KEY=<key> \
   a tag allowlist (`endpoints`, `stacks`, `auth`) that excludes the rest of
   the 380+ operation surface. Widen `ALLOWED_TAGS` to expose more.
 
+## Read-only mode
+
+Set `PORTAINER_READ_ONLY=1` to restrict the exposed tools to GET
+operations within the allowed tags. Non-GET routes are excluded from
+registration — the MCP client sees a smaller tool list rather than tools
+that fail at call time. Useful for monitoring/auditing workflows or when
+giving an AI agent access to a production Portainer instance.
+
+Note: HTTP method is used as the read/write classifier. A handful of
+Portainer endpoints use POST for read-shaped operations (e.g. snapshot
+listings); read-only mode hides those too.
+
 ## Troubleshooting
 
 The server logs every httpx request/response (method, URL, status, first

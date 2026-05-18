@@ -3,7 +3,8 @@
 Requires PORTAINER_URL and PORTAINER_API_KEY in the environment. Set
 PORTAINER_TLS_VERIFY=0 to skip TLS verification (self-signed certs). Set
 PORTAINER_MCP_LOG to override the log file path
-(default: ./logs/portainer-mcp.log).
+(default: ./logs/portainer-mcp.log). Set PORTAINER_READ_ONLY=1 to expose
+only GET operations as tools.
 """
 
 from __future__ import annotations
@@ -70,7 +71,15 @@ def build_server() -> FastMCP:
     with SPEC_PATH.open() as f:
         spec = yaml.safe_load(f)
 
-    route_maps = [RouteMap(tags={tag}, mcp_type=MCPType.TOOL) for tag in ALLOWED_TAGS]
+    read_only = os.environ.get("PORTAINER_READ_ONLY", "0") not in {"0", "false", "False"}
+    methods = ["GET"] if read_only else "*"
+    if read_only:
+        logger.info("read-only mode: exposing GET operations only")
+
+    route_maps = [
+        RouteMap(methods=methods, tags={tag}, mcp_type=MCPType.TOOL)
+        for tag in ALLOWED_TAGS
+    ]
     route_maps.append(RouteMap(pattern=r".*", mcp_type=MCPType.EXCLUDE))
 
     return FastMCP.from_openapi(
