@@ -19,8 +19,7 @@ distribution, register a new Pending Publisher under the new name.
 
 ## Cutting a release
 
-1. Decide the version per [`versioning.md`](versioning.md). Spec bump → minor;
-   MCP-only change → patch.
+1. Decide the version per [`versioning.md`](versioning.md).
 2. Bump `version` in [`../pyproject.toml`](../pyproject.toml).
 3. `uv lock` to refresh [`../uv.lock`](../uv.lock).
 4. Move the `[Unreleased]` block in [`../CHANGELOG.md`](../CHANGELOG.md) under
@@ -33,7 +32,7 @@ distribution, register a new Pending Publisher under the new name.
    git push origin X.Y.Z
    ```
 7. The workflow verifies the tag matches `pyproject.version`, runs tests,
-   builds, and publishes. Watch it under **Actions** on GitHub.
+   builds, and publishes.
 8. Once green, the new version is live at
    `https://pypi.org/project/mcp-portainer/X.Y.Z/`.
 
