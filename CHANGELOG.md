@@ -9,14 +9,15 @@ the MCP server.
 
 ## [Unreleased]
 
-Initial release. Targets Portainer 2.41.x (EE; CE best-effort).
+Initial release. Targets Portainer 2.41.x (EE; CE best-effort). Distributed
+on PyPI as `mcp-portainer`.
 
 ### Added
 
 - **Tool surface from the Portainer OpenAPI spec** via
-  `FastMCP.from_openapi`, fed by the committed
-  [`spec/portainer-patched.yaml`](spec/portainer-patched.yaml) (EE
-  2.41.1). End users do not run the patcher.
+  `FastMCP.from_openapi`. The patched spec (EE 2.41.1) ships inside the
+  wheel at `src/portainer_mcp/data/portainer-patched.yaml`, loaded via
+  `importlib.resources`. End users do not run the patcher.
 - **Profile-based tag allowlist** at
   [`src/portainer_mcp/profiles.py`](src/portainer_mcp/profiles.py): five
   named bundles (`BASE`, `DOCKER`, `KUBERNETES`, `EDGE`, `ADMIN`) plus an
@@ -30,8 +31,7 @@ Initial release. Targets Portainer 2.41.x (EE; CE best-effort).
   and hand-written proxies alike — accepts an optional JMESPath `select`
   argument applied server-side. Implemented via
   `shaping.SelectArgTransform` (a `fastmcp.server.transforms.Transform`
-  subclass) registered with `mcp.add_transform(...)`, using the public
-  `Tool.from_tool(transform_fn=...)` API. Startup canary
+  subclass) registered with `mcp.add_transform(...)`. Startup canary
   (`await mcp.list_tools()`) raises if any tool is missing `select`.
 - **Response truncation hint**: `ResponseCapMiddleware` caps responses
   at `PORTAINER_MAX_RESPONSE_CHARS` (default 50000, ~80% of Claude
@@ -42,6 +42,22 @@ Initial release. Targets Portainer 2.41.x (EE; CE best-effort).
   validators rejecting `..` / `?` / `#` in paths and a blocked-header
   list. JMESPath projection passes through non-JSON responses unchanged
   (logs, stats, exec).
+- **HTTP transport mode** via `PORTAINER_MCP_TRANSPORT=http` plus
+  `PORTAINER_MCP_HTTP_HOST` (default `127.0.0.1`) and
+  `PORTAINER_MCP_HTTP_PORT` (default `8000`). Powers `make dev` — a
+  long-running local server connected via
+  `claude mcp add … --transport http http://127.0.0.1:8000/mcp` — and
+  the eventual remote-container deployment.
+- **Logging routed to stderr** per the MCP spec (stdio servers' logging
+  surface). FastMCP banner and its version-check call to
+  `pypi.org/pypi/fastmcp/json` are suppressed so deployed-server stderr
+  stays ours.
+- **PyPI release pipeline** at
+  [`.github/workflows/release.yml`](.github/workflows/release.yml): tag
+  push (`X.Y.Z`) builds the wheel, verifies the tag matches
+  `pyproject.version`, runs tests, and publishes to PyPI via OIDC-based
+  Trusted Publishing. No API tokens or repo secrets. Process docs:
+  [`docs/release.md`](docs/release.md).
 - **Maintainer spec-refresh pipeline**: `make specs VERSION=X.Y.Z`
   shallow-clones `portainer/portainer-api-docs` (SSH default,
   `UPSTREAM_REPO=` override) into `spec/upstream/` and runs
@@ -49,24 +65,24 @@ Initial release. Targets Portainer 2.41.x (EE; CE best-effort).
   [`spec/patch_spec.py`](spec/patch_spec.py) applies workarounds for
   known upstream spec defects (excluded operations, `/websocket/*`
   paths, malformed enums, YAML tab/`=`-tag defects).
-- **Test suite + CI**: 31 tests under [`tests/`](tests/) covering the
+- **Test suite + CI**: 41 tests under [`tests/`](tests/) covering the
   pure-data surface (spec patcher, shaping, proxy validators). CI runs
-  `uv sync --frozen` + `uv run pytest` on push to `master` and every PR.
+  `uv sync --frozen` + `uv run pytest` on push to `main` / `fastmcp`
+  and every PR.
 - **Hygiene skill** at
   [`skills/portainer-mcp-hygiene/`](skills/portainer-mcp-hygiene/) —
   guidance for MCP clients on when to project with `select`, where the
   heavy fields live, and how to handle non-JSON proxy responses.
-- **FastMCP pin** tightened to `>=3.3,<4` (the `OpenAPIProvider` import
-  path used here only exists on 3.x).
+- **FastMCP pin** at `>=3.3,<4` (the `OpenAPIProvider` import path used
+  here only exists on 3.x).
 - **Versioning policy** at [`docs/versioning.md`](docs/versioning.md):
   major+minor pins to Portainer's API version; patch slot is the MCP
   server's own.
 
 ### Known gaps
 
-- **Distribution** is unfinished — no Dockerfile, no PyPI release, no
-  release workflow. Install path remains "clone + `uv sync`". Tracked
-  as the only open item in
-  [`docs/production-readiness.md`](docs/production-readiness.md) §5.
 - **CE coverage** is best-effort. The embedded spec is EE; CE is a
   subset and operations missing from CE surface as 404s at call time.
+- **Remote container deployment** (HTTP transport + auth) is not yet
+  shipped. The transport switch and `make dev` workflow lay the
+  groundwork; auth and a Dockerfile come after PyPI lands.
