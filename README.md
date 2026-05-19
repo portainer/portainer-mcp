@@ -21,64 +21,26 @@ Architecture overview: [`docs/architecture.md`](docs/architecture.md).
 ## Getting started
 
 The server is distributed on PyPI as `mcp-portainer`. MCP clients launch it as
-a subprocess via [`uvx`](https://docs.astral.sh/uv/) (the `uv` equivalent of
-`npx`), which downloads and runs the package in an ephemeral environment — no
-clone, no install step.
+a subprocess via [`uvx`](https://docs.astral.sh/uv/), so `uv` must be on
+`PATH` — see [the uv install docs](https://docs.astral.sh/uv/getting-started/installation/).
 
-Set `PORTAINER_URL` and `PORTAINER_API_KEY` (generate the key in Portainer
-under **My Account → Access tokens**). See [Configuration](#configuration) for
-the optional knobs.
-
-### Claude Desktop
-
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
-or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
-
-```json
-{
-  "mcpServers": {
-    "portainer": {
-      "command": "uvx",
-      "args": ["mcp-portainer@2.41.0"],
-      "env": {
-        "PORTAINER_URL": "https://portainer.example.com",
-        "PORTAINER_API_KEY": "ptr_xxxxxxxxxxxxxxxx"
-      }
-    }
-  }
-}
-```
-
-Restart Claude Desktop. Logs land in `~/Library/Logs/Claude/mcp*.log` (macOS)
-or `%APPDATA%\Claude\logs\` (Windows).
-
-### Claude Code
+Generate an API key in Portainer under **My Account → Access tokens**, then
+register the server with Claude Code:
 
 ```bash
 claude mcp add portainer \
   -e PORTAINER_URL=https://portainer.example.com \
   -e PORTAINER_API_KEY=ptr_xxxxxxxxxxxxxxxx \
-  -- uvx mcp-portainer@2.41.0
+  -- uvx --from "mcp-portainer~=2.41.0" mcp-portainer
 ```
 
-### Other MCP clients
+`~=2.41.0` picks up MCP-only patch fixes against the same Portainer minor —
+see [Version compatibility](#version-compatibility) for the policy.
 
-The JSON snippet above works for any MCP client that supports stdio servers
-(Cursor, Continue, Cline, etc.) — the `mcpServers` shape is the same. For
-clients with a different config format (TOML, YAML), use the same
-`command`/`args`/`env` semantics.
+For other clients, see [`docs/distribution/`](docs/distribution/). See
+[Configuration](#configuration) for optional knobs.
 
-### Pin policy
-
-The example pins exactly to `2.41.0`. To pick up MCP-only patch fixes against
-the same Portainer minor automatically, use `uv`'s `--from` form with a PEP
-508 specifier:
-
-```json
-"args": ["--from", "mcp-portainer~=2.41.0", "mcp-portainer"]
-```
-
-See [Version compatibility](#version-compatibility) for the policy.
+Contribution are welcome for other client instructions !
 
 ## Version compatibility
 
