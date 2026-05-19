@@ -1,0 +1,47 @@
+# Build and publish to PyPI on tag push (e.g. `git tag 2.41.0 && git push --tags`).
+# Auth is OIDC via PyPI Trusted Publishing — no API tokens or repo secrets needed.
+# The pending publisher must already be configured on pypi.org for repo
+# `portainer/portainer-mcp`, workflow `release.yml`.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Verify tag matches pyproject version
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          version=$(uv run python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if [ "$tag" != "$version" ]; then
+            echo "tag $tag does not match pyproject version $version" >&2
+            exit 1
+          fi
+      - run: uv run pytest
+      - run: uv build
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@6733eb7d741f0b11ec6a39b58540dab7590f9b7d # v1.14.0
