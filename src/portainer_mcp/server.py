@@ -71,18 +71,6 @@ def _setup_logging() -> None:
     logger.info("log file: %s (level=%s)", log_path, logging.getLevelName(level))
 
 
-async def _log_response(response: httpx.Response) -> None:
-    await response.aread()
-    body = response.text[:2000].replace("\n", " ")
-    logger.info(
-        "%s %s -> %d | %s",
-        response.request.method,
-        response.request.url,
-        response.status_code,
-        body,
-    )
-
-
 def build_server() -> FastMCP:
     _setup_logging()
 
@@ -93,7 +81,6 @@ def build_server() -> FastMCP:
         headers={"X-API-KEY": os.environ["PORTAINER_API_KEY"]},
         verify=verify,
         timeout=30,
-        event_hooks={"response": [_log_response]},
     )
     with SPEC_PATH.open() as f:
         spec = yaml.safe_load(f)
