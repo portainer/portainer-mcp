@@ -1,6 +1,6 @@
 # Profiles
 
-The Portainer API spec exposes 387 operations across 43 tags. Auto-converting
+The Portainer API spec exposes 350+ operations across 40+ tags. Auto-converting
 all of them produces a tool list too noisy for MCP clients to navigate, so the
 server runs with a tag allowlist. Profiles are named bundles of those tags.
 
@@ -13,7 +13,7 @@ server runs with a tag allowlist. Profiles are named bundles of those tags.
 | `PORTAINER_READ_ONLY` | `0` | `1` restricts to `GET`/`HEAD` operations only (strict — HTTP method is the read/write classifier). |
 | `PORTAINER_NO_PROXY` | `0` | `1` skips `docker_proxy` / `kubernetes_proxy` registration. |
 
-Unknown profile names fail loudly at startup. Unknown extras log a warning
+Unknown profile names fail loudly at startup. Unknown extras (tags) log a warning
 and pass through harmlessly — they just won't match any operation.
 
 ## Profiles
@@ -26,7 +26,7 @@ and pass through harmlessly — they just won't match any operation.
 | `EDGE` | `edge`, `edge_stacks`, `edge_jobs`, `edge_groups`, `edge_update_schedules`, `edge_configs` | Portainer Edge fleet management. |
 | `ADMIN` | `users`, `teams`, `team_memberships`, `roles`, `ldap`, `license`, `backup`, `registries`, `endpoint_groups`, `policies`, `resource_controls`, `tags` | Platform administration: identity, registries, backups, RBAC. |
 
-### `ALL` sentinel
+### `ALL` option
 
 `PORTAINER_PROFILES=ALL` bypasses the tag filter entirely — every operation
 in the spec is registered as a tool. It is **not** a bundle of tags; using it
@@ -38,7 +38,7 @@ see everything but mutate nothing.
 ## Default coverage
 
 `PORTAINER_PROFILES=BASE,DOCKER,KUBERNETES` (the default) covers 10 tags and
-~180 of the 387 spec operations. The five-profile union covers 28 tags and
+~180 spec operations. The five-profile union covers 28 tags and
 ~306 operations. `ALL` covers everything.
 
 ## Orphan tags

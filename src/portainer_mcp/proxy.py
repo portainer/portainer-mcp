@@ -3,8 +3,6 @@
 Each proxied response is run through an optional caller-supplied JMESPath
 `select` projection. The global response-size cap (see `shaping.py`) is
 applied by middleware after this returns, so it's not duplicated here.
-
-See `docs/proxy-tools.md` for design rationale.
 """
 
 from __future__ import annotations

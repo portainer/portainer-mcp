@@ -41,16 +41,14 @@ Initial release. Targets Portainer 2.41.x (EE; CE best-effort).
   express cleanly: `docker_proxy` and `kubernetes_proxy`, with
   validators rejecting `..` / `?` / `#` in paths and a blocked-header
   list. JMESPath projection passes through non-JSON responses unchanged
-  (logs, stats, exec). See [`docs/proxy-tools.md`](docs/proxy-tools.md).
+  (logs, stats, exec).
 - **Maintainer spec-refresh pipeline**: `make specs VERSION=X.Y.Z`
   shallow-clones `portainer/portainer-api-docs` (SSH default,
   `UPSTREAM_REPO=` override) into `spec/upstream/` and runs
   `spec/patch_spec.py` against the requested EE YAML.
-  [`spec/patch_spec.py`](spec/patch_spec.py) applies the spec-defect
-  mitigations catalogued in
-  [`docs/spec-upstream-fixes.md`](docs/spec-upstream-fixes.md)
-  (excluded operations, `/websocket/*` paths, malformed enums, YAML
-  tab/`=`-tag defects).
+  [`spec/patch_spec.py`](spec/patch_spec.py) applies workarounds for
+  known upstream spec defects (excluded operations, `/websocket/*`
+  paths, malformed enums, YAML tab/`=`-tag defects).
 - **Test suite + CI**: 31 tests under [`tests/`](tests/) covering the
   pure-data surface (spec patcher, shaping, proxy validators). CI runs
   `uv sync --frozen` + `uv run pytest` on push to `master` and every PR.

@@ -1,9 +1,8 @@
 """Apply spec-defect mitigations to a Portainer OpenAPI spec.
 
-Mirrors the workarounds catalogued in portainer-go-sdk's
-`docs/spec-upstream-fixes.md`: drops operations whose path/parameter shape
-is structurally broken, drops `/websocket/*` paths (protocol upgrades, not
-REST), and strips malformed `enum` blocks that defeat naive generators.
+Drops operations whose path/parameter shape is structurally broken,
+drops `/websocket/*` paths (protocol upgrades, not REST), and strips
+malformed `enum` blocks that defeat naive generators.
 
 Also normalises stray tab characters in scalar text (swaggo occasionally
 emits a literal `\t` inside a description string, which PyYAML rejects).
