@@ -56,19 +56,24 @@ EE-only — CE is a subset and treated as best-effort. No CI drift guard:
 the maintainer flow is the only sanctioned regeneration path, and a
 drift check only pays off once the upstream repo is fetchable from CI.
 
-## 3. Tool surface
+## 3. Tool surface — done
 
-`ALLOWED_TAGS = ("endpoints", "stacks", "auth")` at `server.py:32` is
-frozen in source. Anyone wanting `kubernetes`, `registries`, `users`,
-etc. has to fork.
+Five named profiles (`BASE`, `DOCKER`, `KUBERNETES`, `EDGE`, `ADMIN`) plus
+an `ALL` sentinel that bypasses the tag filter — selected via
+`PORTAINER_PROFILES`, union'd, with `PORTAINER_TAGS_EXTRA` as the escape
+hatch for orphan tags. `PORTAINER_READ_ONLY` and `PORTAINER_NO_PROXY` are
+orthogonal modifiers (env-only, no CLI flags for v1). Default
+`BASE,DOCKER,KUBERNETES` covers 10 tags and ~180 of the 387 spec
+operations; the five-profile union covers 28 tags and ~306 operations;
+`ALL` covers everything.
 
-`TODO.local.md` already sketches the right end state: cumulative
-profiles (BASE + READ_ONLY/ADMIN/EDGE/DOCKER/KUBERNETES/NO_PROXY/
-OPERATOR/TROUBLESHOOT). Until that lands, a `PORTAINER_TAGS` env var
-(comma-separated, falls back to the current tuple) is a one-line
-unblock for the replacement path.
+Unknown profile names fail loudly at startup. Unknown extras log a warning
+and pass through harmlessly. See [`profiles.md`](profiles.md) for the
+per-profile tag list, orphan tags (15 not in any profile), and examples.
 
-ALAPENNA: we'll definitely be exploring the PROFILE approach for this.
+`READ_ONLY` filters by HTTP method (strict: `GET`/`HEAD` only). A few
+read-shaped POSTs are hidden as a side effect — deliberate, since an
+operationId denylist would rot faster than the method rule.
 
 ## 4. FastMCP internals — done
 
@@ -101,3 +106,5 @@ To make this a viable replacement for whatever users currently
   is tested against, and the policy for spec drift.
 - Update README install snippets per client (Claude Desktop, Codex,
   ChatGPT desktop) — `TODO.local.md` already calls this out.
+
+NOTE: we will actually tackle versioning and distribution separately. Versioning first with a policy similar to the /workspace/portainer-go-sdk versioning policy.

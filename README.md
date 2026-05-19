@@ -27,20 +27,25 @@ patcher run needed. Currently tracks Portainer EE 2.41.1.
   [Refreshing the spec](#refreshing-the-spec-maintainers)).
 - `src/portainer_mcp/server.py` — `FastMCP.from_openapi` wired to the
   patched spec, an `httpx.AsyncClient` carrying the Portainer API key, and
-  a tag allowlist (`endpoints`, `stacks`, `auth`) that excludes the rest of
-  the 380+ operation surface. Widen `ALLOWED_TAGS` to expose more.
+  a profile-based tag allowlist (default: `BASE,DOCKER,KUBERNETES`) that
+  excludes the rest of the 380+ operation surface.
+- `src/portainer_mcp/profiles.py` — named tag bundles selected via
+  `PORTAINER_PROFILES`. See [`docs/profiles.md`](docs/profiles.md).
 
-## Read-only mode
+## Configuration
 
-Set `PORTAINER_READ_ONLY=1` to restrict the exposed tools to GET
-operations within the allowed tags. Non-GET routes are excluded from
-registration — the MCP client sees a smaller tool list rather than tools
-that fail at call time. Useful for monitoring/auditing workflows or when
-giving an AI agent access to a production Portainer instance.
+| Env var | Default | Effect |
+|---|---|---|
+| `PORTAINER_PROFILES` | `BASE,DOCKER,KUBERNETES` | Tag bundles to enable. `ALL` disables the filter. |
+| `PORTAINER_TAGS_EXTRA` | _empty_ | Extra tags appended to the union (escape hatch). |
+| `PORTAINER_READ_ONLY` | `0` | `1` restricts to `GET`/`HEAD` operations only. |
+| `PORTAINER_NO_PROXY` | `0` | `1` skips `docker_proxy` / `kubernetes_proxy` registration. |
+| `PORTAINER_TLS_VERIFY` | `1` | `0` skips TLS verification (self-signed certs). |
+| `PORTAINER_MCP_LOG` | `logs/portainer-mcp.log` | Override the log file path. |
+| `PORTAINER_MAX_RESPONSE_CHARS` | `75000` | Response truncation target (see below). |
 
-Note: HTTP method is used as the read/write classifier. A handful of
-Portainer endpoints use POST for read-shaped operations (e.g. snapshot
-listings); read-only mode hides those too.
+See [`docs/profiles.md`](docs/profiles.md) for per-profile tag lists, orphan
+tags not covered by any profile, and read-only semantics.
 
 ## Response shaping (universal)
 
