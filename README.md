@@ -37,6 +37,19 @@ claude mcp add portainer \
 `~=2.41.0` picks up MCP-only patch fixes against the same Portainer minor —
 see [Version compatibility](#version-compatibility) for the policy.
 
+**Recommended: install the hygiene skill.** This repo ships a Claude Code
+skill ([`portainer-mcp-hygiene`](skills/portainer-mcp-hygiene/SKILL.md))
+that helps the model query the MCP efficiently and keep responses within
+context. Install user-wide, pinned to the same tag as the server:
+
+```bash
+mkdir -p ~/.claude/skills/portainer-mcp-hygiene && \
+  curl -fsSL https://raw.githubusercontent.com/portainer/portainer-mcp/2.41.0/skills/portainer-mcp-hygiene/SKILL.md \
+  -o ~/.claude/skills/portainer-mcp-hygiene/SKILL.md
+```
+
+Re-run on each server upgrade so the skill stays in sync.
+
 For other clients, see [`docs/distribution/`](docs/distribution/). See
 [Configuration](#configuration) for optional knobs.
 
