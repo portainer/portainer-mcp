@@ -14,7 +14,22 @@ PORTAINER_API_KEY=<key> \
 ```
 
 The patched spec (`spec/portainer-patched.yaml`) is committed — no
-patcher run needed. Currently tracks Portainer EE 2.41.1.
+patcher run needed.
+
+## Compatibility
+
+The MCP server's major+minor tracks the Portainer API version the
+embedded spec was generated against; the patch slot is the server's own.
+
+| Server version | Portainer (CE / EE) |
+| -------------- | ------------------- |
+| `2.41.x`       | `2.41.x`            |
+
+EE-only spec; CE is a subset and works on a best-effort basis. Pin
+loosely with `portainer-mcp ~= 2.41.0` (PEP 440 compatible release) to
+pick up MCP patches automatically. Full policy in
+[`docs/versioning.md`](docs/versioning.md); the running changelog is
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ## What's here
 

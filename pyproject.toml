@@ -1,6 +1,6 @@
 [project]
 name = "portainer-mcp-fastmcp"
-version = "0.0.1"
+version = "2.41.0"
 description = "Experimental Portainer MCP server bootstrapped from the Portainer OpenAPI spec via FastMCP."
 requires-python = ">=3.11"
 dependencies = [

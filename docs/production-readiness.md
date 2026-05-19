@@ -89,11 +89,21 @@ breakage surfaces at boot, not first call.
 Pin tightened to `fastmcp>=3.3,<4` (the `OpenAPIProvider` import path
 this code uses only exists on 3.x; the prior `>=2.8` was wrong).
 
-## 5. Versioning and distribution
+## 5. Versioning — done
 
-`pyproject.toml` is at `0.0.1`, no Dockerfile, no release workflow, no
-PyPI publish. Install path is "clone + `uv sync` + run a patcher
-pointed at a spec you don't have."
+Policy mirrors `portainer-go-sdk/docs/versioning.md`: major+minor pins
+to the Portainer API version the embedded spec was generated against;
+the patch slot belongs to the MCP server. Current version: `2.41.0`
+(targets Portainer 2.41.x). See [`versioning.md`](versioning.md) for the
+full policy (edge cases, what does and does not bump the minor, consumer
+pinning) and [`../CHANGELOG.md`](../CHANGELOG.md) for the running log.
+
+README has a Compatibility table; `pyproject.toml` is at `2.41.0`.
+
+## 6. Distribution
+
+Tracked separately from versioning. No Dockerfile, no release workflow,
+no PyPI publish yet. Install path is still "clone + `uv sync`".
 
 To make this a viable replacement for whatever users currently
 `docker run`:
@@ -101,9 +111,8 @@ To make this a viable replacement for whatever users currently
 - Ship a Dockerfile (multi-stage: `uv` build → slim runtime, spec
   baked in per §2).
 - Tag releases, publish images (GHCR or Docker Hub), publish the
-  package to PyPI so `uvx portainer-mcp` works.
-- Document version compatibility: which Portainer versions this server
-  is tested against, and the policy for spec drift.
+  package to PyPI so `uvx portainer-mcp` works. Tag scheme follows §5
+  (e.g. `2.41.0`, image tags `2.41` / `2.41.0` / `latest`).
 - Update README install snippets per client (Claude Desktop, Codex,
   ChatGPT desktop) — `TODO.local.md` already calls this out.
 - Ship the in-repo `skills/` directory with the server via
@@ -116,5 +125,3 @@ To make this a viable replacement for whatever users currently
   demand but don't auto-install them into the client's skill discovery
   path. The repo-local `.claude/skills/portainer-mcp-hygiene` symlink
   stays for the dev loop (edit-and-reload without a sync step).
-
-NOTE: we will actually tackle versioning and distribution separately. Versioning first with a policy similar to the /workspace/portainer-go-sdk versioning policy.
