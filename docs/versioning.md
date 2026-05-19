@@ -5,7 +5,7 @@
 - Tag format: `<portainer-major>.<portainer-minor>.<mcp-patch>`.
 - Compatibility statement: **"MCP 2.41.x ↔ Portainer 2.41.x"** — minor
   granularity.
-- Spec cadence: regenerate `spec/portainer-patched.yaml` against the
+- Spec cadence: regenerate `src/portainer_mcp/data/portainer-patched.yaml` against the
   **latest patch** of the targeted Portainer minor (e.g. `make specs
   VERSION=2.41.3` when 2.41.3 is current).
 - MCP-internal iterations (shaping fixes, new profiles, transform changes,

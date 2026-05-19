@@ -8,7 +8,7 @@ layer applied uniformly to every tool.
 ## Pipeline
 
 ```
-spec/portainer-patched.yaml ──► FastMCP.from_openapi ──► tag filter ──┐
+data/portainer-patched.yaml ──► FastMCP.from_openapi ──► tag filter ──┐
                                                                       │
                             hand-written proxy tools ─────────────────┤
                                                                       ▼
@@ -25,8 +25,9 @@ spec/portainer-patched.yaml ──► FastMCP.from_openapi ──► tag filter 
 
 ### Spec & tool generation — `server.py`
 
-`build_server()` loads `spec/portainer-patched.yaml` (a locally-patched
-copy of Portainer's EE OpenAPI spec) and hands it to
+`build_server()` loads `src/portainer_mcp/data/portainer-patched.yaml` (a
+locally-patched copy of Portainer's EE OpenAPI spec, bundled into the
+wheel and read via `importlib.resources`) and hands it to
 `FastMCP.from_openapi` with a shared `httpx.AsyncClient` carrying the
 operator's `X-API-KEY`. Each operation becomes an MCP tool.
 

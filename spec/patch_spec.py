@@ -33,7 +33,13 @@ ENUM_STRIPS = (
     ("v1.Duration", "properties", "time.Duration"),
 )
 
-DEFAULT_OUTPUT = Path(__file__).resolve().parent / "portainer-patched.yaml"
+DEFAULT_OUTPUT = (
+    Path(__file__).resolve().parents[1]
+    / "src"
+    / "portainer_mcp"
+    / "data"
+    / "portainer-patched.yaml"
+)
 
 # `portaineree.ConditionOperator` lists `=` as a bare enum value. YAML 1.1
 # parses `=` as the special "value" tag; treat it as a plain string instead.

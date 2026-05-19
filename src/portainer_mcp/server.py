@@ -8,8 +8,11 @@ Requires PORTAINER_URL and PORTAINER_API_KEY. Tunables:
 - PORTAINER_READ_ONLY=1 — strict: registers GET/HEAD operations only.
 - PORTAINER_NO_PROXY=1 — skip `docker_proxy` / `kubernetes_proxy` registration.
 - PORTAINER_TLS_VERIFY=0 — skip TLS verification (self-signed certs).
-- PORTAINER_MCP_LOG — override the log file path.
 - PORTAINER_MCP_LOG_LEVEL — log level (default INFO; DEBUG, WARNING, ERROR, CRITICAL).
+- PORTAINER_MCP_TRANSPORT — stdio (default) or http. http binds an HTTP server
+  for the dev workflow and the eventual remote container.
+- PORTAINER_MCP_HTTP_HOST — bind host when transport=http (default 127.0.0.1).
+- PORTAINER_MCP_HTTP_PORT — bind port when transport=http (default 8000).
 """
 
 from __future__ import annotations
@@ -17,7 +20,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from pathlib import Path
+import sys
+from importlib.resources import files
 
 import httpx
 import yaml
@@ -26,9 +30,7 @@ from fastmcp.server.providers.openapi import MCPType, RouteMap
 
 from portainer_mcp import profiles, proxy, shaping
 
-_ROOT = Path(__file__).resolve().parents[2]
-SPEC_PATH = _ROOT / "spec" / "portainer-patched.yaml"
-LOG_PATH = _ROOT / "logs" / "portainer-mcp.log"
+SPEC_PATH = files("portainer_mcp") / "data" / "portainer-patched.yaml"
 
 logger = logging.getLogger("portainer_mcp")
 
@@ -57,9 +59,7 @@ def _resolve_log_level() -> int:
 
 
 def _setup_logging() -> None:
-    log_path = Path(os.environ.get("PORTAINER_MCP_LOG") or LOG_PATH)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    handler = logging.FileHandler(log_path, mode="a")
+    handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(
         logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
     )
@@ -68,7 +68,7 @@ def _setup_logging() -> None:
         log = logging.getLogger(name)
         log.setLevel(level)
         log.addHandler(handler)
-    logger.info("log file: %s (level=%s)", log_path, logging.getLevelName(level))
+    logger.info("logging to stderr (level=%s)", logging.getLevelName(level))
 
 
 def build_server() -> FastMCP:
@@ -140,7 +140,19 @@ def build_server() -> FastMCP:
 
 
 def main() -> None:
-    build_server().run()
+    server = build_server()
+    transport = (os.environ.get("PORTAINER_MCP_TRANSPORT") or "stdio").lower()
+    if transport == "stdio":
+        server.run(show_banner=False)
+        return
+    if transport in {"http", "streamable-http"}:
+        host = os.environ.get("PORTAINER_MCP_HTTP_HOST") or "127.0.0.1"
+        port = int(os.environ.get("PORTAINER_MCP_HTTP_PORT") or 8000)
+        server.run(transport="http", host=host, port=port, show_banner=False)
+        return
+    raise SystemExit(
+        f"PORTAINER_MCP_TRANSPORT must be 'stdio' or 'http' (got {transport!r})"
+    )
 
 
 if __name__ == "__main__":
