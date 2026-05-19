@@ -9,7 +9,9 @@ the MCP server.
 
 ## [Unreleased]
 
-Initial release. Targets Portainer 2.41.x (EE; CE best-effort). Distributed
+## [2.41.0] — 2026-05-19
+
+Initial release. Targets Portainer 2.41.x. Distributed
 on PyPI as `mcp-portainer`.
 
 ### Added
