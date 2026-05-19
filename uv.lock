@@ -733,7 +733,7 @@ wheels = [
 
 [[package]]
 name = "portainer-mcp-fastmcp"
-version = "0.0.1"
+version = "2.41.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
