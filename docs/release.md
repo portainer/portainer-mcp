@@ -7,15 +7,37 @@ OIDC via PyPI Trusted Publishing — no API tokens or repo secrets.
 
 ## One-time setup
 
-A Pending Publisher must exist on PyPI. Do once per distribution name:
+A Pending Publisher must exist on PyPI **and** TestPyPI. Do once per
+distribution name:
 
 - **pypi.org → Account → Publishing → Add pending publisher**
   - Repository: `portainer/portainer-mcp`
   - Workflow: `release.yml`
   - Environment: leave blank (any)
+- **test.pypi.org → Account → Publishing → Add pending publisher**
+  - Repository: `portainer/portainer-mcp`
+  - Workflow: `release-test.yml`
+  - Environment: leave blank (any)
 
 No GitHub secrets, no environments, no token rotation. If you ever rename the
-distribution, register a new Pending Publisher under the new name.
+distribution, register new Pending Publishers under the new name.
+
+## Dry run on TestPyPI
+
+Before tagging a real release, do a dry run against TestPyPI to confirm the
+build and OIDC publish path work end-to-end:
+
+1. Bump `version` in [`../pyproject.toml`](../pyproject.toml) and commit.
+2. **GitHub → Actions → Release (TestPyPI) → Run workflow** on the branch
+   carrying the bump.
+3. The workflow ([`release-test.yml`](../.github/workflows/release-test.yml))
+   runs tests, builds, and publishes to TestPyPI.
+4. Verify at `https://test.pypi.org/project/mcp-portainer/X.Y.Z/`.
+
+TestPyPI doesn't allow re-uploading the same version (separate from PyPI's
+copy of the rule). If the dry run finds a problem, fix it and bump to
+`X.Y.Z.post1` for the next TestPyPI attempt — PyPI itself stays free to
+receive plain `X.Y.Z`.
 
 ## Cutting a release
 
