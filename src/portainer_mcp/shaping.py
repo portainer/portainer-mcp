@@ -33,12 +33,15 @@ from pydantic import Field
 
 logger = logging.getLogger("portainer_mcp")
 
-# Target ~25k tokens. Dense JSON (Docker/K8s payloads with IDs, hashes,
-# nested structure) packs at ~3 chars/token, so 75k chars is deliberately
-# conservative. The actual returned text may slightly exceed this cap by
-# the length of the truncation hint — the value is a target, not an exact
-# ceiling. Override via PORTAINER_MAX_RESPONSE_CHARS.
-DEFAULT_MAX_RESPONSE_CHARS = 75_000
+# Must fire before Claude Code's MCP output cap (~25k tokens, ~62k chars
+# for dense Portainer JSON at ~2.5 chars/token) so our truncation hint —
+# which names `select` and shows an example — reaches the model instead
+# of Claude Code's generic "saved to file, use offset/limit/jq" message
+# (which steers the model toward jq against the spilled file rather than
+# retrying with a server-side projection). 50k chars leaves ~12k headroom
+# below that ceiling plus room for the hint itself. Override via
+# PORTAINER_MAX_RESPONSE_CHARS.
+DEFAULT_MAX_RESPONSE_CHARS = 50_000
 
 SELECT_DESCRIPTION = (
     "Optional JMESPath expression to project the response server-side. "
@@ -86,8 +89,11 @@ class ResponseCapMiddleware(Middleware):
                 item.text = (
                     text[: self.max_chars]
                     + f"\n\n[truncated: response was {len(text)} chars, "
-                    + f"capped at {self.max_chars}. Narrow the `select` "
-                    + "JMESPath expression or refine other parameters.]"
+                    + f"capped at {self.max_chars}. Retry with a JMESPath "
+                    + "`select` to project just the fields you need — e.g. "
+                    + '`select="[].{id:Id,name:Name}"` for a list response, '
+                    + 'or `select="{name:metadata.name,phase:status.phase}"` '
+                    + "for a single object.]"
                 )
                 truncated = True
         if truncated:

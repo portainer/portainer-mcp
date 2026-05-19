@@ -42,7 +42,7 @@ patcher run needed. Currently tracks Portainer EE 2.41.1.
 | `PORTAINER_NO_PROXY` | `0` | `1` skips `docker_proxy` / `kubernetes_proxy` registration. |
 | `PORTAINER_TLS_VERIFY` | `1` | `0` skips TLS verification (self-signed certs). |
 | `PORTAINER_MCP_LOG` | `logs/portainer-mcp.log` | Override the log file path. |
-| `PORTAINER_MAX_RESPONSE_CHARS` | `75000` | Response truncation target (see below). |
+| `PORTAINER_MAX_RESPONSE_CHARS` | `50000` | Response truncation target (see below). |
 
 See [`docs/profiles.md`](docs/profiles.md) for per-profile tag lists, orphan
 tags not covered by any profile, and read-only semantics.
@@ -59,14 +59,30 @@ EndpointList(select="[].{id:Id,name:Name,type:Type,status:Status}")
 docker_proxy(path="/containers/json", select="[].{id:Id,name:Names[0],state:State}")
 ```
 
-Responses are capped at approximately `75_000` chars by default
-(deliberately conservative — dense Docker/K8s JSON packs at ~3
-chars/token, targeting ~25k tokens with margin); override with
-`PORTAINER_MAX_RESPONSE_CHARS=<int>`. Truncated responses carry a hint
-asking the model to narrow `select`. The cap is a target, not an exact
-ceiling: the appended hint adds ~130 chars, and char-vs-token mismatch
-means the actual token count varies with content. See
-[`docs/proxy-tools.md`](docs/proxy-tools.md) for the proxy tools'
+Responses are capped at approximately `50_000` chars by default;
+override with `PORTAINER_MAX_RESPONSE_CHARS=<int>`. The cap is set to
+fire *before* Claude Code's own MCP output cap (~25k tokens, ~62k chars
+for dense Portainer JSON at ~2.5 chars/token) so the model sees our
+truncation hint — which names `select` and shows a concrete example —
+rather than Claude Code's generic "saved to file" message. The cap is a
+target, not an exact ceiling: the appended hint adds a few hundred
+chars, and char-vs-token mismatch means the actual token count varies
+with content.
+
+**Sizing for other clients or a raised upstream cap.** The 50K default
+is roughly 80% of Claude Code's default MCP ceiling (25k tokens × ~2.5
+chars/token ≈ 62K chars × 80% headroom ≈ 50K). The server doesn't read
+the client's cap — that would couple us to one client's env var
+(`MAX_MCP_OUTPUT_TOKENS` in Claude Code; other MCP clients use
+different names or have no override at all). If you raise your
+client's MCP output ceiling, or use a client with a different default,
+scale `PORTAINER_MAX_RESPONSE_CHARS` to ~80% of that ceiling's
+char-equivalent so our truncation hint keeps firing first. If our cap
+ends up *above* the client's, the client truncates with its own
+generic message and our `select`-teaching hint never reaches the
+model.
+
+See [`docs/proxy-tools.md`](docs/proxy-tools.md) for the proxy tools'
 specific design and the planned evolution if filtering alone proves
 insufficient.
 

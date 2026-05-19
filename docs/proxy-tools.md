@@ -24,16 +24,34 @@ generated tool. The proxy tools predate the shaping layer but live
 inside the same envelope — their inline `select` matches the global
 schema, and the middleware caps their output too.
 
-The cap default is `75_000` chars (override with
+The cap default is `50_000` chars (override with
 `PORTAINER_MAX_RESPONSE_CHARS=<int>`) and is a target, not an exact
-ceiling — truncated output adds a ~130-char hint past the cap, and the
-chars-to-tokens conversion varies with content. It's char-based by
-design: a safety valve, not a precision token meter. Dense Docker/K8s
-JSON packs at ~3 chars/token rather than the prose-text ~4, so 75k
-chars targets ~25k tokens with margin. A proper tokenizer (tiktoken /
-Anthropic `count_tokens`) would narrow the variance from ~30-50% to
-~15-25%, but at the cost of a dependency and per-call overhead that
-isn't worth it for a truncation guard.
+ceiling — truncated output adds a few hundred chars of hint past the
+cap, and the chars-to-tokens conversion varies with content. It's
+char-based by design: a safety valve, not a precision token meter. The
+number is chosen to fire *before* Claude Code's own MCP output cap
+(~25k tokens, ~62k chars for dense Portainer JSON at ~2.5 chars/token),
+so our truncation message — which names `select` and shows an inline
+example — reaches the model first. If Claude Code's cap won, the model
+would see its generic "saved to file, use offset/limit/jq" hint instead
+and pivot to filesystem tooling rather than retrying with a server-side
+projection. A proper tokenizer (tiktoken / Anthropic `count_tokens`)
+would narrow the variance from ~30-50% to ~15-25%, but at the cost of a
+dependency and per-call overhead that isn't worth it for a truncation
+guard.
+
+The 50K default is roughly 80% of the upstream ceiling (62K chars × 0.8
+≈ 50K). We deliberately don't read the client's MCP-output env var
+(`MAX_MCP_OUTPUT_TOKENS` for Claude Code, different or absent for other
+clients) — coupling the server to one client's env contract would buy
+adaptiveness at the cost of maintenance and surprise for users on other
+clients. Instead, if you raise your client's MCP output ceiling — or
+run against an MCP client with a different default — scale
+`PORTAINER_MAX_RESPONSE_CHARS` to ~80% of that ceiling's
+char-equivalent. If our cap ends up above the client's, the client
+truncates with its own generic message and our `select`-teaching hint
+never reaches the model — exactly the regression the cap was set up to
+prevent.
 `PORTAINER_READ_ONLY=1` rejects non-GET calls at tool-invocation time.
 
 ### Why this design
