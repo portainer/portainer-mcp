@@ -1,7 +1,4 @@
-# Build and publish to PyPI on tag push (e.g. `git tag 2.41.0 && git push --tags`).
-# Auth is OIDC via PyPI Trusted Publishing — no API tokens or repo secrets needed.
-# The pending publisher must already be configured on pypi.org for repo
-# `portainer/portainer-mcp`, workflow `release.yml`.
+# See docs/release.md for the release process and one-time setup.
 
 name: Release
 
