@@ -69,8 +69,7 @@ on PyPI as `mcp-portainer`.
   paths, malformed enums, YAML tab/`=`-tag defects).
 - **Test suite + CI**: 41 tests under [`tests/`](tests/) covering the
   pure-data surface (spec patcher, shaping, proxy validators). CI runs
-  `uv sync --frozen` + `uv run pytest` on push to `main` / `fastmcp`
-  and every PR.
+  `uv sync --frozen` + `uv run pytest` on push to `main` and every PR.
 - **Hygiene skill** at
   [`skills/portainer-mcp-hygiene/`](skills/portainer-mcp-hygiene/) —
   guidance for MCP clients on when to project with `select`, where the
