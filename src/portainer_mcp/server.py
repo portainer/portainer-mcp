@@ -9,6 +9,7 @@ Requires PORTAINER_URL and PORTAINER_API_KEY. Tunables:
 - PORTAINER_NO_PROXY=1 — skip `docker_proxy` / `kubernetes_proxy` registration.
 - PORTAINER_TLS_VERIFY=0 — skip TLS verification (self-signed certs).
 - PORTAINER_MCP_LOG — override the log file path.
+- PORTAINER_MCP_LOG_LEVEL — log level (default INFO; DEBUG, WARNING, ERROR, CRITICAL).
 """
 
 from __future__ import annotations
@@ -50,6 +51,11 @@ def _spec_tags(spec: dict) -> set[str]:
     }
 
 
+def _resolve_log_level() -> int:
+    raw = (os.environ.get("PORTAINER_MCP_LOG_LEVEL") or "INFO").upper()
+    return logging.getLevelNamesMapping()[raw]
+
+
 def _setup_logging() -> None:
     log_path = Path(os.environ.get("PORTAINER_MCP_LOG") or LOG_PATH)
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -57,11 +63,12 @@ def _setup_logging() -> None:
     handler.setFormatter(
         logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
     )
+    level = _resolve_log_level()
     for name in ("portainer_mcp", "fastmcp", "httpx"):
         log = logging.getLogger(name)
-        log.setLevel(logging.DEBUG)
+        log.setLevel(level)
         log.addHandler(handler)
-    logger.info("log file: %s", log_path)
+    logger.info("log file: %s (level=%s)", log_path, logging.getLevelName(level))
 
 
 async def _log_response(response: httpx.Response) -> None:

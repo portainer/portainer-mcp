@@ -57,6 +57,7 @@ pick up MCP patches automatically. Full policy in
 | `PORTAINER_NO_PROXY` | `0` | `1` skips `docker_proxy` / `kubernetes_proxy` registration. |
 | `PORTAINER_TLS_VERIFY` | `1` | `0` skips TLS verification (self-signed certs). |
 | `PORTAINER_MCP_LOG` | `logs/portainer-mcp.log` | Override the log file path. |
+| `PORTAINER_MCP_LOG_LEVEL` | `INFO` | Log verbosity. One of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. |
 | `PORTAINER_MAX_RESPONSE_CHARS` | `50000` | Response truncation target (see below). |
 
 See [`docs/profiles.md`](docs/profiles.md) for per-profile tag lists, orphan
@@ -120,8 +121,8 @@ EE spec only — CE is a subset and works on a best-effort basis.
 ## Troubleshooting
 
 The server logs every httpx request/response (method, URL, status, first
-2 KB of body) and FastMCP DEBUG output to `logs/portainer-mcp.log`. Tail it
-in a second terminal while exercising tools from an MCP client:
+2 KB of body) to `logs/portainer-mcp.log`. Tail it in a second terminal
+while exercising tools from an MCP client:
 
 ```bash
 tail -F logs/portainer-mcp.log
@@ -131,8 +132,10 @@ When a tool errors, the log shows the raw Portainer response immediately
 before the FastMCP validation error pointing at the offending field —
 enough to identify spec-vs-server mismatches without guessing.
 
-Override the path with `PORTAINER_MCP_LOG=/some/other/path` (passed as
-`-e PORTAINER_MCP_LOG=…` on `claude mcp add`). Stdio MCP servers are
-long-lived, so restart the server (`claude mcp remove portainer && claude
-mcp add portainer …`, or restart your MCP client) after editing
-`server.py`.
+Default level is `INFO`. Bump to `PORTAINER_MCP_LOG_LEVEL=DEBUG` for
+FastMCP and httpx internals when an INFO-level trace isn't enough.
+Override the file path with `PORTAINER_MCP_LOG=/some/other/path`
+(passed as `-e PORTAINER_MCP_LOG=…` on `claude mcp add`). Stdio MCP
+servers are long-lived, so restart the server (`claude mcp remove
+portainer && claude mcp add portainer …`, or restart your MCP client)
+after editing `server.py`.
