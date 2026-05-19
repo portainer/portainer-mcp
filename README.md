@@ -1,3 +1,5 @@
+**NOTE**: This implementation is archived, this branch is kept for historical purposes. Have a look at the most recent implementation in the main branch.
+
 # Portainer MCP
 [![Go Report Card](https://goreportcard.com/badge/github.com/portainer/portainer-mcp)](https://goreportcard.com/report/github.com/portainer/portainer-mcp)
 ![coverage](https://raw.githubusercontent.com/portainer/portainer-mcp/badges/.badges/main/coverage.svg)
@@ -9,8 +11,6 @@ Now you can! Portainer MCP connects your AI assistant directly to your Portainer
 ![portainer-mcp-demo](https://downloads.portainer.io/mcp-demo5.gif)
 
 ## Overview
-
-A re-work of the Portainer MCP is currently in progress in the [fastmcp](https://github.com/portainer/portainer-mcp/tree/fastmcp) branch. Head over there for the latest and greatest !
 
 Portainer MCP is a work in progress implementation of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) for Portainer environments. This project aims to provide a standardized way to connect Portainer's container management capabilities with AI models and other services.
 
