@@ -1,8 +1,8 @@
 """Unit tests for `src/portainer_mcp/proxy.py` validators.
 
 Covers the pure path/header guards. The HTTP-call path (`_call`,
-`docker_proxy`, `kubernetes_proxy`) needs a running httpx client and is
-deferred — those are thin shims over `_validate_*` + `client.request`.
+`docker_proxy`, `kubernetes_proxy`) needs a running httpx client and
+isn't covered here.
 """
 
 from __future__ import annotations

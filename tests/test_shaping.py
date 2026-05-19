@@ -1,8 +1,8 @@
 """Unit tests for `src/portainer_mcp/shaping.py`.
 
 Covers the pure-data layers: `project()` and `ResponseCapMiddleware`.
-`_select_wrapper` and `SelectArgTransform` need a live FastMCP runtime —
-the production-readiness doc covers the deferral.
+`_select_wrapper` and `SelectArgTransform` need a live FastMCP runtime
+and aren't covered here.
 """
 
 from __future__ import annotations

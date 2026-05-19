@@ -126,9 +126,7 @@ def build_server() -> FastMCP:
         proxy.register(mcp, client, read_only=read_only)
     mcp.add_transform(shaping.SelectArgTransform())
 
-    # Fail fast if the Transform stopped reaching the tool list (FastMCP
-    # internals shifted, registration order regressed, etc.) — better to
-    # blow up at startup than to silently ship un-projected tools.
+    # Fail fast at startup rather than silently shipping tools without `select`.
     tools = asyncio.run(mcp.list_tools())
     missing = [t.name for t in tools if not shaping._has_select(t)]
     if missing:

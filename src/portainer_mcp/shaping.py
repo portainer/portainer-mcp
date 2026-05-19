@@ -1,19 +1,18 @@
 """Universal response shaping for every tool the server exposes.
 
-Two cooperating layers, applied at server build time:
+Two cooperating layers:
 
 1. `ResponseCapMiddleware` — caps every tool result's text content at
-   `max_chars`, regardless of which tool produced it. The final safety
-   valve, replaces the inline cap that used to live in `proxy.py`.
+   `max_chars`. The final safety valve.
 
 2. `SelectArgTransform` — wraps every tool with an optional JMESPath
    `select` parameter, so the model can project noisy Portainer
-   responses server-side. Tools that already declare `select` (e.g.
-   the hand-written proxy tools) are passed through unchanged.
+   responses server-side. Tools that already declare `select` are passed
+   through unchanged.
 
-The two layers cooperate: `select` narrows first (cheaper bodies), the
-cap catches whatever slips through (model omitted `select`, or the
-post-projection body is still genuinely big).
+`select` narrows first (cheaper bodies); the cap catches whatever slips
+through (model omitted `select`, or the post-projection body is still
+genuinely big).
 """
 
 from __future__ import annotations
@@ -53,11 +52,7 @@ SELECT_DESCRIPTION = (
 
 
 def project(data: Any, select: str) -> Any:
-    """Apply a JMESPath expression to `data`, or raise `ValueError`.
-
-    Shared by the proxy tools' inline path and the universal wrapper so the
-    JMESPath core lives in one place with a single error convention.
-    """
+    """Apply a JMESPath expression to `data`, or raise `ValueError`."""
     try:
         return jmespath.search(select, data)
     except jmespath.exceptions.JMESPathError as exc:
@@ -151,10 +146,7 @@ def _has_select(tool: Tool) -> bool:
 class SelectArgTransform(Transform):
     """Wrap every tool with an optional JMESPath `select` argument.
 
-    Registered on the server via `mcp.add_transform(...)`, so it applies
-    uniformly to OpenAPI-generated tools and any other provider that
-    might be added later. Tools that already declare `select` (the
-    hand-written proxy tools) are passed through unchanged.
+    Tools that already declare `select` are passed through unchanged.
     """
 
     async def list_tools(self, tools: Sequence[Tool]) -> Sequence[Tool]:
