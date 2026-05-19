@@ -9,6 +9,12 @@ the MCP server.
 
 ## [Unreleased]
 
+### Changed
+
+- Bump `actions/checkout` to v6.0.2 and `astral-sh/setup-uv` to v8.1.0 in
+  the CI and release workflows. Clears the Node.js 20 deprecation warning
+  ahead of the forced Node.js 24 default on 2026-06-02.
+
 ## [2.41.0] — 2026-05-19
 
 Initial release. Targets Portainer 2.41.x. Distributed
