@@ -106,5 +106,15 @@ To make this a viable replacement for whatever users currently
   is tested against, and the policy for spec drift.
 - Update README install snippets per client (Claude Desktop, Codex,
   ChatGPT desktop) — `TODO.local.md` already calls this out.
+- Ship the in-repo `skills/` directory with the server via
+  `fastmcp.server.providers.skills.SkillsDirectoryProvider`, so the
+  hygiene skill travels with the distribution (PyPI / Docker image)
+  rather than requiring a repo clone. Pair with a small `install-skills`
+  entrypoint (Make target or CLI subcommand) that runs FastMCP's
+  `sync_skills` against the local server to materialize resources into
+  `~/.claude/skills/` — MCP clients fetch `skill://` resources on
+  demand but don't auto-install them into the client's skill discovery
+  path. The repo-local `.claude/skills/portainer-mcp-hygiene` symlink
+  stays for the dev loop (edit-and-reload without a sync step).
 
 NOTE: we will actually tackle versioning and distribution separately. Versioning first with a policy similar to the /workspace/portainer-go-sdk versioning policy.
