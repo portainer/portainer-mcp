@@ -1,4 +1,4 @@
-# portainer-mcp-fastmcp
+# Portainer MCP
 
 MCP server for Portainer, generated from the Portainer OpenAPI spec via
 [FastMCP](https://github.com/PrefectHQ/fastmcp).
