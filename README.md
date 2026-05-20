@@ -64,7 +64,6 @@ major+minor tracks the Portainer API version the embedded spec targets.
 | -------------- | ------------------- |
 | `2.41.x`       | `2.41.x`            |
 
-- EE spec only — CE is a subset and works on a best-effort basis.
 - Full policy: [`docs/versioning.md`](docs/versioning.md).
 
 ## Configuration
