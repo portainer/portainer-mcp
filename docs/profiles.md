@@ -48,13 +48,13 @@ when you need them, or switch to `ALL`:
 
 | Count | Tag | Notes |
 |---:|---|---|
-| 14 | `observability` | Container/pod logs, metrics, stats. Likely the first profile addition once the use case stabilises. |
-| 12 | `omni` | Portainer Cloud / Edge Compute Portal. |
+| 14 | `observability` | Container/pod logs, metrics, stats. |
+| 12 | `omni` | Talos Kubernetes cluster management. |
 | 10 | `custom_templates` | User-defined app templates. |
 | 8 | `cloud_credentials` | Cloud provider credentials. |
 | 6 | `gitops` | GitOps configuration surface. |
 | 6 | `intel` | Edge intel surface. |
-| 6 | `webhooks` | Inbound webhooks. |
+| 6 | `webhooks` | Webhook management. |
 | 4 | `kaas` | Kubernetes-as-a-Service provisioning. |
 | 4 | `useractivity` | Audit log. |
 | 3 | `support` | Support bundles / diagnostics. |
