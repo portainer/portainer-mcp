@@ -9,8 +9,17 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.42.0] — 2026-05-22
+
+Targets Portainer 2.42.x.
+
 ### Changed
 
+- **Embedded spec bumped to Portainer EE 2.42.0** (was 2.41.1). Default
+  `BASE,DOCKER,KUBERNETES` profile coverage grows from ~180 to ~197
+  operations; the five-profile union grows from ~306 to ~342. Upstream
+  removed the `intel` tag (6 operations); dropped from the orphan tag
+  list in [`docs/profiles.md`](docs/profiles.md).
 - Bump `actions/checkout` to v6.0.2 and `astral-sh/setup-uv` to v8.1.0 in
   the CI and release workflows. Clears the Node.js 20 deprecation warning
   ahead of the forced Node.js 24 default on 2026-06-02.
