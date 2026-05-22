@@ -2,6 +2,7 @@
 name = "mcp-portainer"
 version = "2.42.0"
 description = "Portainer MCP server — manage Docker, Kubernetes, stacks, and Helm via the Model Context Protocol."
+readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"

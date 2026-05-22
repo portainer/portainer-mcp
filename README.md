@@ -16,7 +16,7 @@ change between releases. Pin loosely (see
 [Version compatibility](#version-compatibility)) to pick up MCP-only
 fixes without surprise.
 
-Architecture overview: [`docs/architecture.md`](docs/architecture.md).
+Architecture overview: [`docs/architecture.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/architecture.md).
 
 ## Getting started
 
@@ -38,7 +38,7 @@ claude mcp add portainer \
 see [Version compatibility](#version-compatibility) for the policy.
 
 **Recommended: install the hygiene skill.** This repo ships a Claude Code
-skill ([`portainer-mcp-hygiene`](skills/portainer-mcp-hygiene/SKILL.md))
+skill ([`portainer-mcp-hygiene`](https://github.com/portainer/portainer-mcp/blob/main/skills/portainer-mcp-hygiene/SKILL.md))
 that helps the model query the MCP efficiently and keep responses within
 context. Install user-wide, pinned to the same tag as the server:
 
@@ -50,7 +50,7 @@ mkdir -p ~/.claude/skills/portainer-mcp-hygiene && \
 
 Re-run on each server upgrade so the skill stays in sync.
 
-For other clients, see [`docs/distribution/`](docs/distribution/). See
+For other clients, see [`docs/distribution/`](https://github.com/portainer/portainer-mcp/tree/main/docs/distribution). See
 [Configuration](#configuration) for optional knobs.
 
 Contribution are welcome for other client instructions !
@@ -65,7 +65,7 @@ major+minor tracks the Portainer API version the embedded spec targets.
 | `2.42.x`       | `2.42.x`            |
 | `2.41.x`       | `2.41.x`            |
 
-- Full policy: [`docs/versioning.md`](docs/versioning.md).
+- Full policy: [`docs/versioning.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/versioning.md).
 
 ## Configuration
 
@@ -88,4 +88,4 @@ All knobs are environment variables. Only `PORTAINER_URL` and
 | `PORTAINER_MCP_HTTP_PORT` | `8000` | Bind port when `PORTAINER_MCP_TRANSPORT=http`. |
 
 Advanced profile setup — per-profile tag lists, orphan tags, read-only
-semantics — see [`docs/profiles.md`](docs/profiles.md).
+semantics — see [`docs/profiles.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/profiles.md).
