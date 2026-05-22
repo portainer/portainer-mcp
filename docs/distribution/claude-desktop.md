@@ -8,7 +8,7 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
   "mcpServers": {
     "portainer": {
       "command": "uvx",
-      "args": ["--from", "mcp-portainer~=2.41.0", "mcp-portainer"],
+      "args": ["--from", "mcp-portainer~=2.42.0", "mcp-portainer"],
       "env": {
         "PORTAINER_URL": "https://portainer.example.com",
         "PORTAINER_API_KEY": "ptr_xxxxxxxxxxxxxxxx"
@@ -28,7 +28,7 @@ context. Install user-wide, pinned to the same tag as the server:
 
 ```bash
 mkdir -p ~/.claude/skills/portainer-mcp-hygiene && \
-  curl -fsSL https://raw.githubusercontent.com/portainer/portainer-mcp/2.41.0/skills/portainer-mcp-hygiene/SKILL.md \
+  curl -fsSL https://raw.githubusercontent.com/portainer/portainer-mcp/2.42.0/skills/portainer-mcp-hygiene/SKILL.md \
   -o ~/.claude/skills/portainer-mcp-hygiene/SKILL.md
 ```
 

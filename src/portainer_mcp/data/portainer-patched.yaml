@@ -2,46 +2,39 @@ openapi: 3.0.0
 info:
   contact:
     email: info@portainer.io
-  description: "Portainer API is an HTTP API served by Portainer. It is used by the\
-    \ Portainer UI and everything you can do with the UI can be done using the HTTP\
-    \ API.\nExamples are available at https://documentation.portainer.io/api/api-examples/\n\
-    You can find out more about Portainer at [http://portainer.io](http://portainer.io)\
+  description: "The Portainer API is an HTTP API served by Portainer. It is used by\
+    \ the Portainer UI, and anything you can do in the UI can also be done via the\
+    \ HTTP API.\n\nAPI examples are available in the [Portainer documentation](https://documentation.portainer.io/api/api-examples/)\n\
+    \nYou can find out more about Portainer [on our website](http://portainer.io)\
     \ and get some support on [Slack](http://portainer.io/slack/).\n\n# Authentication\n\
-    \nMost of the API environments(endpoints) require to be authenticated as well\
-    \ as some level of authorization to be used.\nPortainer API uses JSON Web Token\
-    \ to manage authentication and thus requires you to provide a token in the **Authorization**\
-    \ header of each request\nwith the **Bearer** authentication mechanism.\n\nExample:\n\
-    \n```\nBearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsInJvbGUiOjEsImV4cCI6MTQ5OTM3NjE1NH0.NJ6vE8FY1WG6jsRQzfMqeatJ4vh2TWAeeYfDhP71YEE\n\
-    ```\n\n# Security\n\nEach API environment(endpoint) has an associated access policy,\
-    \ it is documented in the description of each environment(endpoint).\n\nDifferent\
-    \ access policies are available:\n\n- Public access\n- Authenticated access\n\
-    - Restricted access\n- Administrator access\n\n### Public access\n\nNo authentication\
-    \ is required to access the environments(endpoints) with this access policy.\n\
-    \n### Authenticated access\n\nAuthentication is required to access the environments(endpoints)\
-    \ with this access policy.\n\n### Restricted access\n\nAuthentication is required\
-    \ to access the environments(endpoints) with this access policy.\nExtra-checks\
-    \ might be added to ensure access to the resource is granted. Returned data might\
-    \ also be filtered.\n\n### Administrator access\n\nAuthentication as well as an\
-    \ administrator role are required to access the environments(endpoints) with this\
-    \ access policy.\n\n# Execute Docker requests\n\nPortainer **DO NOT** expose specific\
-    \ environments(endpoints) to manage your Docker resources (create a container,\
-    \ remove a volume, etc...).\n\nInstead, it acts as a reverse-proxy to the Docker\
-    \ HTTP API. This means that you can execute Docker requests **via** the Portainer\
-    \ HTTP API.\n\nTo do so, you can use the `/endpoints/{id}/docker` Portainer API\
-    \ environment(endpoint) (which is not documented below due to Swagger limitations).\
-    \ This environment(endpoint) has a restricted access policy so you still need\
-    \ to be authenticated to be able to query this environment(endpoint). Any query\
-    \ on this environment(endpoint) will be proxied to the Docker API of the associated\
-    \ environment(endpoint) (requests and responses objects are the same as documented\
-    \ in the Docker API).\n\n# Private Registry\n\nUsing private registry, you will\
-    \ need to pass a based64 encoded JSON string \u2018{\"registryId\":\\<registryID\
-    \ value\\>}\u2019 inside the Request Header. The parameter name is \"X-Registry-Auth\"\
-    .\n\\<registryID value\\> - The registry ID where the repository was created.\n\
-    \nExample:\n\n```\neyJyZWdpc3RyeUlkIjoxfQ==\n```\n\n**NOTE**: You can find more\
-    \ information on how to query the Docker API in the [Docker official documentation](https://docs.docker.com/engine/api/v1.30/)\
-    \ as well as in [this Portainer example](https://documentation.portainer.io/api/api-examples/).\n"
+    \nMost of the API endpoints require authentication, as well as some level of authorization.\n\
+    Portainer uses JSON Web Tokens to manage authentication. You must provide a token\
+    \ in the **Authorization** header of each request using the **Bearer** scheme.\n\
+    \nExample:\n\n```\nBearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsInJvbGUiOjEsImV4cCI6MTQ5OTM3NjE1NH0.NJ6vE8FY1WG6jsRQzfMqeatJ4vh2TWAeeYfDhP71YEE\n\
+    ```\n\n# Security\n\nEach API endpoint has an associated access policy, documented\
+    \ in its description.\n\nThe following policies are available:\n\n- Public access\n\
+    - Authenticated access\n- Restricted access\n- Administrator access\n\n### Public\
+    \ access\n\nNo authentication is required.\n\n### Authenticated access\n\nAuthentication\
+    \ is required.\n\n### Restricted access\n\nAuthentication is required. Additional\
+    \ checks may apply to verify access to the resource, and returned data may be\
+    \ filtered.\n\n### Administrator access\n\nAuthentication and an administrator\
+    \ role are both required.\n\n# Execute Docker requests\n\nPortainer does not expose\
+    \ dedicated endpoints for managing Docker resources (create a container, remove\
+    \ a volume, etc).\n\nInstead, it acts as a reverse-proxy to the Docker HTTP API,\
+    \ allowing you to execute Docker requests via the Portainer HTTP API.\n\nTo do\
+    \ so, use the `/endpoints/{id}/docker` endpoint. Note that this endpoint is not\
+    \ documented below due to Swagger limitations. It has a restricted access policy,\
+    \ so authentication is still required. Any request made to this endpoint is proxied\
+    \ to the Docker API of the associated environment - request and response objects\
+    \ are identical to those in the [Docker official documentation](https://docs.docker.com/engine/api).\n\
+    \n# Private Registry\n\nWhen using a private registry, include a Base64-encoded\
+    \ JSON string in the request header. The header parameter name is `X-Registry-Auth`\
+    \ and the value should encode the following structure: \u2018{\"registryId\":\\\
+    <registryId\\>}\u2019 where `<registryId>` is the ID of the registry where the\
+    \ repository was created.\n \nExample encoded value:\n\n```\neyJyZWdpc3RyeUlkIjoxfQ==\n\
+    ```\n"
   title: PortainerEE API
-  version: 2.41.1
+  version: 2.42.0
 paths:
   /auth:
     post:
@@ -161,6 +154,226 @@ paths:
       - jwt: []
       summary: Creates an archive with a system data snapshot that could be used to
         restore the system.
+      tags:
+      - backup
+  /backup/azure/execute:
+    post:
+      description: 'Creates a system snapshot archive and uploads it to the configured
+        Azure Blob container
+
+        **Access policy**: administrator'
+      operationId: BackupToAzureBlob
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/portaineree.AzureBlobBackupSettings'
+        description: Azure Blob backup settings
+        required: true
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Execute an ad-hoc backup to Azure Blob Storage
+      tags:
+      - backup
+  /backup/azure/restore:
+    post:
+      description: '**Access policy**: public'
+      operationId: RestoreFromAzureBlob
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/backup.restoreAzureSettings'
+        description: Azure Blob location and credentials
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+      summary: Restore system state from an Azure Blob Storage backup
+      tags:
+      - backup
+  /backup/azure/settings:
+    get:
+      description: '**Access policy**: administrator'
+      operationId: AzureBlobBackupSettingsFetch
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/portaineree.AzureBlobBackupSettings'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Fetch Azure Blob Storage backup settings
+      tags:
+      - backup
+    post:
+      description: '**Access policy**: administrator'
+      operationId: UpdateAzureBlobSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/portaineree.AzureBlobBackupSettings'
+        description: Azure Blob backup settings
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Update Azure Blob Storage backup settings and reschedule cron job
+      tags:
+      - backup
+  /backup/azure/status:
+    get:
+      description: '**Access policy**: public'
+      operationId: AzureBlobBackupStatusFetch
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/backup.azureBackupStatus'
+        '500':
+          description: Server error
+      summary: Fetch the status of the last scheduled Azure Blob backup run
+      tags:
+      - backup
+  /backup/azure/test:
+    post:
+      description: 'Verifies that the supplied credentials can reach and access the
+        target container
+
+        **Access policy**: administrator'
+      operationId: AzureBlobTestConnection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/portaineree.AzureBlobBackupSettings'
+        description: Azure Blob connection settings
+        required: true
+      responses:
+        '204':
+          description: Connection successful
+        '400':
+          description: Invalid request or Azure authentication failed
+        '404':
+          description: Container not found
+        '500':
+          description: Server error
+        '502':
+          description: Network error reaching Azure storage endpoint
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Test connectivity to an Azure Blob Storage container
+      tags:
+      - backup
+  /backup/local/run:
+    post:
+      description: '**Access policy**: administrator'
+      operationId: RunLocalBackupNow
+      responses:
+        '204':
+          description: Success
+        '409':
+          description: A backup is already in progress
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Trigger an immediate local backup outside of the cron schedule
+      tags:
+      - backup
+  /backup/local/settings:
+    get:
+      description: '**Access policy**: administrator'
+      operationId: LocalBackupSettingsFetch
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/portaineree.LocalBackupSettings'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Fetch local scheduled backup settings
+      tags:
+      - backup
+    post:
+      description: '**Access policy**: administrator'
+      operationId: UpdateLocalBackupSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/portaineree.LocalBackupSettings'
+        description: Local backup settings
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Updates local scheduled backup settings and restarts the cron job as
+        needed
+      tags:
+      - backup
+  /backup/local/status:
+    get:
+      description: '**Access policy**: administrator'
+      operationId: LocalBackupStatusFetch
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/backup.localBackupStatus'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Fetch the status of the last scheduled local backup run
       tags:
       - backup
   /backup/s3/execute:
@@ -3293,6 +3506,8 @@ paths:
           - LastCheckIn
           - EdgeID
           - PlatformType
+          - Health
+          - Id
       - description: Order sorted results by desc/asc
         in: query
         name: order
@@ -5124,6 +5339,130 @@ paths:
       - ApiKeyAuth: []
       - jwt: []
       summary: List the refs of a git repository
+      tags:
+      - gitops
+  /gitops/sources:
+    get:
+      description: 'Returns a deduplicated list of git repositories used across all
+        GitOps workflows.
+
+        **Access policy**: admin'
+      operationId: GitOpsSourcesList
+      parameters:
+      - description: Search term (matches URL)
+        in: query
+        name: search
+        schema:
+          type: string
+      - description: 'Sort field: name | status | type'
+        in: query
+        name: sort
+        schema:
+          type: string
+      - description: 'Sort order: asc or desc'
+        in: query
+        name: order
+        schema:
+          type: string
+      - description: Pagination start index
+        in: query
+        name: start
+        schema:
+          type: integer
+      - description: Pagination limit (0 = unlimited)
+        in: query
+        name: limit
+        schema:
+          type: integer
+      - description: 'Filter by status: healthy | syncing | error | paused | unknown'
+        in: query
+        name: status
+        schema:
+          type: string
+      - description: 'Filter by source type: git | oci | helm'
+        in: query
+        name: type
+        schema:
+          type: string
+          enum:
+          - git
+          - helm
+          - oci
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/sources.Source'
+                type: array
+        '400':
+          description: Invalid status parameter
+        '403':
+          description: Access denied
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: List all GitOps sources
+      tags:
+      - gitops
+  /gitops/sources/{id}:
+    get:
+      description: 'Returns a single GitOps source with its connection settings and
+        linked workflows.
+
+        **Access policy**: admin'
+      operationId: GitOpsSourceGet
+      parameters:
+      - description: Source ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sources.SourceDetail'
+        '403':
+          description: Access denied
+        '404':
+          description: Source not found
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Get a GitOps source by ID
+      tags:
+      - gitops
+  /gitops/sources/summary:
+    get:
+      description: 'Returns a count of sources per status.
+
+        **Access policy**: admin'
+      operationId: GitOpsSourcesSummary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workflows.StatusSummary'
+        '403':
+          description: Access denied
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Summarize GitOps source status counts
       tags:
       - gitops
   /gitops/workflows:
@@ -7645,6 +7984,208 @@ paths:
       summary: Get an Ingress by name
       tags:
       - kubernetes
+  /kubernetes/{id}/namespaces/{namespace}/persistent_volume_claims:
+    get:
+      description: 'Get a list of PersistentVolumeClaims in the specified namespace.
+
+        **Access policy**: Authenticated user.'
+      operationId: GetKubernetesPersistentVolumeClaimsInNamespace
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: Namespace name
+        in: path
+        name: namespace
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/models.K8sPersistentVolumeClaim'
+                type: array
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to retrieve persistent
+            volume claims.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get PersistentVolumeClaims in a namespace
+      tags:
+      - kubernetes
+  /kubernetes/{id}/namespaces/{namespace}/persistent_volume_claims/{name}:
+    get:
+      description: 'Get a PersistentVolumeClaim by name within a namespace.
+
+        **Access policy**: Authenticated user.'
+      operationId: GetKubernetesPersistentVolumeClaim
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: Namespace name
+        in: path
+        name: namespace
+        required: true
+        schema:
+          type: string
+      - description: PVC name
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.K8sPersistentVolumeClaim'
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '404':
+          description: PVC not found.
+        '500':
+          description: Server error occurred while attempting to retrieve the persistent
+            volume claim.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get a specific PersistentVolumeClaim
+      tags:
+      - kubernetes
+  /kubernetes/{id}/namespaces/{namespace}/pods/{name}:
+    delete:
+      description: 'Delete a single Kubernetes pod in the given namespace. The owning
+
+        controller (Deployment, StatefulSet, DaemonSet, ...) is responsible
+
+        for recreating the pod. For naked pods the pod is removed permanently.
+
+        **Access policy**: Authenticated user.'
+      operationId: DeleteKubernetesPod
+      parameters:
+      - description: Environment(Endpoint) identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: Namespace
+        in: path
+        name: namespace
+        required: true
+        schema:
+          type: string
+      - description: Pod name
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload, such as missing required fields or
+            fields not meeting validation criteria.
+        '401':
+          description: Unauthorized access - the user is not authenticated or does
+            not have the necessary permissions. Ensure that you have provided a valid
+            API key or JWT token, and that you have the required permissions.
+        '403':
+          description: Permission denied - the user is authenticated but does not
+            have the necessary permissions to access the requested resource or perform
+            the specified operation. Check your user roles and permissions.
+        '404':
+          description: Unable to find an environment with the specified identifier
+            or unable to find the specified pod.
+        '500':
+          description: Server error occurred while attempting to delete the pod.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Delete a kubernetes pod
+      tags:
+      - kubernetes
+  /kubernetes/{id}/namespaces/{namespace}/pods/{name}/restart:
+    post:
+      description: 'Restart all containers in a single Kubernetes pod in place using
+
+        the Kubernetes 1.35 alpha pod-restart subresource. The pod itself
+
+        is preserved. Requires the cluster to expose the corresponding
+
+        subresource (and the matching feature gate to be enabled).
+
+        **Access policy**: Authenticated user.'
+      operationId: RestartKubernetesPod
+      parameters:
+      - description: Environment(Endpoint) identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: Namespace
+        in: path
+        name: namespace
+        required: true
+        schema:
+          type: string
+      - description: Pod name
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload, such as missing required fields or
+            fields not meeting validation criteria.
+        '401':
+          description: Unauthorized access - the user is not authenticated or does
+            not have the necessary permissions. Ensure that you have provided a valid
+            API key or JWT token, and that you have the required permissions.
+        '403':
+          description: Permission denied - the user is authenticated but does not
+            have the necessary permissions to access the requested resource or perform
+            the specified operation. Check your user roles and permissions.
+        '404':
+          description: Unable to find an environment, the specified pod, or the cluster
+            does not expose the pod-restart subresource (Kubernetes <1.35 or feature
+            gate disabled).
+        '405':
+          description: The cluster does not support the pod-restart subresource (Kubernetes
+            <1.35 or feature gate disabled).
+        '500':
+          description: Server error occurred while attempting to restart the pod.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Restart all containers in a Kubernetes pod
+      tags:
+      - kubernetes
   /kubernetes/{id}/namespaces/{namespace}/secrets/{secret}:
     get:
       description: 'Get a Secret by name for a given namespace.
@@ -7745,6 +8286,65 @@ paths:
       - ApiKeyAuth: []
         jwt: []
       summary: Get a kubernetes service account
+      tags:
+      - kubernetes
+  /kubernetes/{id}/namespaces/{namespace}/service_accounts/{name}/image_pull_secrets:
+    put:
+      description: 'Replace the imagePullSecrets list on a service account with the
+        provided list.
+
+        **Access policy**: Authenticated user.'
+      operationId: UpdateKubernetesServiceAccountImagePullSecrets
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: Namespace
+        in: path
+        name: namespace
+        required: true
+        schema:
+          type: string
+      - description: Service account name
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/kubernetes.K8sServiceAccountImagePullSecretsUpdatePayload'
+        description: New imagePullSecrets list
+        required: true
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload, such as missing required fields or
+            fields not meeting validation criteria.
+        '401':
+          description: Unauthorized access - the user is not authenticated or does
+            not have the necessary permissions. Ensure that you have provided a valid
+            API key or JWT token, and that you have the required permissions.
+        '403':
+          description: Permission denied - the user is authenticated but does not
+            have the necessary permissions to access the requested resource or perform
+            the specified operation. Check your user roles and permissions.
+        '404':
+          description: Unable to find an environment with the specified identifier,
+            namespace, or service account.
+        '500':
+          description: Server error occurred while attempting to update image pull
+            secrets for the service account.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Update image pull secrets for a service account
       tags:
       - kubernetes
   /kubernetes/{id}/namespaces/{namespace}/services:
@@ -8116,6 +8716,267 @@ paths:
       - ApiKeyAuth: []
         jwt: []
       summary: Get CPU and memory limits of all nodes within k8s cluster.
+      tags:
+      - kubernetes
+  /kubernetes/{id}/persistent_volume_claims:
+    get:
+      description: 'Get a list of all PersistentVolumeClaims within the given environment.
+        Scoped by namespace for non-admin users.
+
+        **Access policy**: Authenticated user.'
+      operationId: GetAllKubernetesPersistentVolumeClaims
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/models.K8sPersistentVolumeClaim'
+                type: array
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to retrieve persistent
+            volume claims.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get all PersistentVolumeClaims
+      tags:
+      - kubernetes
+  /kubernetes/{id}/persistent_volume_claims/delete:
+    post:
+      description: 'Delete the provided list of PersistentVolumeClaims.
+
+        **Access policy**: Authenticated user.'
+      operationId: DeleteKubernetesPersistentVolumeClaims
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/models.K8sVolumeDeleteRequest'
+              type: array
+        description: List of PVCs to delete (namespace + name)
+        required: true
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to delete persistent
+            volume claims.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Delete PersistentVolumeClaims
+      tags:
+      - kubernetes
+  /kubernetes/{id}/persistent_volume_claims/resize:
+    put:
+      description: 'Resize a PVC to a new size. The StorageClass must support volume
+        expansion.
+
+        **Access policy**: Authenticated user.'
+      operationId: ResizeKubernetesPersistentVolumeClaim
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/models.K8sPVCResizeRequest'
+        description: PVC resize request
+        required: true
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to resize the persistent
+            volume claim.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Resize a PersistentVolumeClaim
+      tags:
+      - kubernetes
+  /kubernetes/{id}/persistent_volumes:
+    get:
+      description: 'Get a list of all PersistentVolumes in the given environment.
+
+        **Access policy**: Authenticated user.'
+      operationId: GetAllKubernetesPersistentVolumes
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/models.K8sPersistentVolume'
+                type: array
+        '400':
+          description: Invalid request payload, such as missing required fields or
+            fields not meeting validation criteria.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to retrieve persistent
+            volumes.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get all PersistentVolumes in the cluster
+      tags:
+      - kubernetes
+  /kubernetes/{id}/persistent_volumes/{name}:
+    get:
+      description: 'Get a PersistentVolume by name in the given environment.
+
+        **Access policy**: Authenticated user.'
+      operationId: GetKubernetesPersistentVolume
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: PersistentVolume name
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.K8sPersistentVolume'
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '404':
+          description: PersistentVolume not found.
+        '500':
+          description: Server error occurred while attempting to retrieve the persistent
+            volume.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get a specific PersistentVolume
+      tags:
+      - kubernetes
+  /kubernetes/{id}/persistent_volumes/delete:
+    post:
+      description: 'Delete the provided list of PersistentVolumes.
+
+        **Access policy**: Authenticated user.'
+      operationId: DeleteKubernetesPersistentVolumes
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                type: string
+              type: array
+        description: List of PV names to delete
+        required: true
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to delete persistent
+            volumes.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Delete PersistentVolumes
+      tags:
+      - kubernetes
+  /kubernetes/{id}/persistent_volumes/reclaim_policy:
+    put:
+      description: 'Update the reclaim policy of a PersistentVolume.
+
+        **Access policy**: Authenticated user.'
+      operationId: UpdateKubernetesPersistentVolumeReclaimPolicy
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/models.K8sPVReclaimPolicyRequest'
+        description: Reclaim policy update request
+        required: true
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to update reclaim policy.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Update reclaim policy of a PersistentVolume
       tags:
       - kubernetes
   /kubernetes/{id}/rbac_enabled:
@@ -8658,6 +9519,198 @@ paths:
       - ApiKeyAuth: []
         jwt: []
       summary: Delete services
+      tags:
+      - kubernetes
+  /kubernetes/{id}/storage_classes:
+    get:
+      description: 'Get a list of all StorageClasses in the given environment.
+
+        **Access policy**: Authenticated user.'
+      operationId: GetAllKubernetesStorageClasses
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/models.K8sStorageClass'
+                type: array
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to retrieve storage
+            classes.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get all StorageClasses
+      tags:
+      - kubernetes
+  /kubernetes/{id}/storage_classes/{name}:
+    get:
+      description: 'Get a StorageClass by name in the given environment.
+
+        **Access policy**: Authenticated user.'
+      operationId: GetKubernetesStorageClass
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: StorageClass name
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.K8sStorageClass'
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '404':
+          description: StorageClass not found.
+        '500':
+          description: Server error occurred while attempting to retrieve the storage
+            class.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get a specific StorageClass
+      tags:
+      - kubernetes
+  /kubernetes/{id}/storage_classes/{name}/default:
+    put:
+      description: 'Set the specified StorageClass as the cluster default, removing
+        default from any other.
+
+        **Access policy**: Authenticated user.'
+      operationId: SetDefaultKubernetesStorageClass
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: StorageClass name
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to set default storage
+            class.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Set a StorageClass as default
+      tags:
+      - kubernetes
+  /kubernetes/{id}/storage_classes/delete:
+    post:
+      description: 'Delete the provided list of StorageClasses.
+
+        **Access policy**: Authenticated user.'
+      operationId: DeleteKubernetesStorageClasses
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                type: string
+              type: array
+        description: List of StorageClass names to delete
+        required: true
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload.
+        '403':
+          description: Unauthorized access or operation not allowed.
+        '500':
+          description: Server error occurred while attempting to delete storage classes.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Delete StorageClasses
+      tags:
+      - kubernetes
+  /kubernetes/{id}/version:
+    get:
+      description: 'Get the Kubernetes cluster version (major, minor, gitVersion,
+        ...)
+
+        as reported by the cluster''s discovery API, augmented with capability
+
+        flags Portainer uses to gate UI features (e.g. supportsPodRestart).
+
+        **Access policy**: Authenticated user.'
+      operationId: GetKubernetesVersion
+      parameters:
+      - description: Environment(Endpoint) identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_http_handler_kubernetes.kubernetesVersionResponse'
+        '401':
+          description: Unauthorized access - the user is not authenticated or does
+            not have the necessary permissions.
+        '403':
+          description: Permission denied - the user is authenticated but does not
+            have the necessary permissions to access the requested resource or perform
+            the specified operation.
+        '404':
+          description: Unable to find an environment with the specified identifier.
+        '500':
+          description: Server error occurred while attempting to retrieve the cluster
+            version.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get the Kubernetes cluster version and Portainer-relevant capabilities
       tags:
       - kubernetes
   /kubernetes/{id}/volumes:
@@ -9404,6 +10457,55 @@ paths:
       summary: Update alert rule endpoint groups
       tags:
       - observability
+  /observability/alerting/rules/{id}/tiers:
+    put:
+      description: 'Update multi-severity tier configuration for an editable internal
+        alert rule.
+
+        **Access policy**: Administrator.'
+      operationId: UpdateAlertRuleTiers
+      parameters:
+      - description: Alert rule identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/observability.alertRuleTiersUpdatePayload'
+        description: Alert rule tier configuration
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/portaineree.AlertingRule'
+        '400':
+          description: Invalid request payload, such as malformed tiers, unsupported
+            operators, or invalid tier ordering.
+        '401':
+          description: Unauthorized access - the user is not authenticated or does
+            not have the necessary permissions. Ensure that you have provided a valid
+            API key or JWT token, and that you have the required permissions.
+        '403':
+          description: Permission denied - only editable internal alert rules can
+            be tier-configured.
+        '404':
+          description: Unable to find an alert rule with the specified identifier.
+        '500':
+          description: Server error occurred while attempting to update alert rule
+            tiers.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Update alert rule tiers
+      tags:
+      - observability
   /observability/alerting/settings:
     get:
       description: 'Get a list of all alerting settings with their connection status.
@@ -10037,200 +11139,6 @@ paths:
       summary: Validate an Omni service account
       tags:
       - omni
-  /open_amt:
-    post:
-      deprecated: true
-      description: 'Enable Portainer''s OpenAMT capabilities
-
-        **Access policy**: administrator'
-      operationId: OpenAMTConfigure
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/openamt.openAMTConfigurePayload'
-        description: OpenAMT Settings
-        required: true
-      responses:
-        '204':
-          description: Success
-        '400':
-          description: Invalid request
-        '403':
-          description: Permission denied to access settings
-        '500':
-          description: Server error
-      security:
-      - jwt: []
-      summary: Enable Portainer's OpenAMT capabilities
-      tags:
-      - intel
-  /open_amt/{id}/activate:
-    post:
-      deprecated: true
-      description: 'Activate OpenAMT device and associate to agent endpoint
-
-        **Access policy**: administrator'
-      operationId: openAMTActivate
-      parameters:
-      - description: Environment identifier
-        in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      responses:
-        '200':
-          description: Success
-        '400':
-          description: Invalid request
-        '403':
-          description: Permission denied to access settings
-        '500':
-          description: Server error
-      security:
-      - jwt: []
-      summary: Activate OpenAMT device and associate to agent endpoint
-      tags:
-      - intel
-  /open_amt/{id}/devices:
-    get:
-      deprecated: true
-      description: 'Fetch OpenAMT managed devices information for endpoint
-
-        **Access policy**: administrator'
-      operationId: OpenAMTDevices
-      parameters:
-      - description: Environment(Endpoint) identifier
-        in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      responses:
-        '200':
-          description: Success
-        '400':
-          description: Invalid request
-        '403':
-          description: Permission denied to access settings
-        '500':
-          description: Server error
-      security:
-      - jwt: []
-      summary: Fetch OpenAMT managed devices information for endpoint
-      tags:
-      - intel
-  /open_amt/{id}/devices/{deviceId}/action:
-    post:
-      deprecated: true
-      description: 'Execute out of band action on an AMT managed device
-
-        **Access policy**: administrator'
-      operationId: DeviceAction
-      parameters:
-      - description: Environment identifier
-        in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      - description: Device identifier
-        in: path
-        name: deviceId
-        required: true
-        schema:
-          type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/openamt.deviceActionPayload'
-        description: Device Action
-        required: true
-      responses:
-        '204':
-          description: Success
-        '400':
-          description: Invalid request
-        '403':
-          description: Permission denied to access settings
-        '500':
-          description: Server error
-      security:
-      - jwt: []
-      summary: Execute out of band action on an AMT managed device
-      tags:
-      - intel
-  /open_amt/{id}/devices_features/{deviceId}:
-    post:
-      deprecated: true
-      description: 'Enable features on an AMT managed device
-
-        **Access policy**: administrator'
-      operationId: DeviceFeatures
-      parameters:
-      - description: Environment identifier
-        in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      - description: Device identifier
-        in: path
-        name: deviceId
-        required: true
-        schema:
-          type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/openamt.deviceFeaturesPayload'
-        description: Device Features
-        required: true
-      responses:
-        '204':
-          description: Success
-        '400':
-          description: Invalid request
-        '403':
-          description: Permission denied to access settings
-        '500':
-          description: Server error
-      security:
-      - jwt: []
-      summary: Enable features on an AMT managed device
-      tags:
-      - intel
-  /open_amt/{id}/info:
-    get:
-      deprecated: true
-      description: 'Request OpenAMT info from a node
-
-        **Access policy**: administrator'
-      operationId: OpenAMTHostInfo
-      parameters:
-      - description: Environment identifier
-        in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      responses:
-        '200':
-          description: Success
-        '400':
-          description: Invalid request
-        '403':
-          description: Permission denied to access settings
-        '500':
-          description: Server error
-      security:
-      - jwt: []
-      summary: Request OpenAMT info from a node
-      tags:
-      - intel
   /policies:
     get:
       description: 'List all policies in the bucket.
@@ -13652,6 +14560,50 @@ paths:
       summary: Update a user
       tags:
       - users
+  /users/{id}/effective-access:
+    get:
+      description: 'Returns the resolved role for each environment the user can access,
+
+        following the policy precedence used by the access viewer
+
+        (edge-admin override, RBAC policy, user-endpoint, user-group,
+
+        team-endpoint, team-group). Environments where the user has no
+
+        role are omitted.
+
+        **Access policy**: authenticated'
+      operationId: UserEffectiveAccessInspect
+      parameters:
+      - description: User identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/users.EffectiveAccessEntry'
+                type: array
+        '400':
+          description: Invalid request
+        '403':
+          description: Permission denied
+        '404':
+          description: User not found
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Inspect a user's effective access on every environment
+      tags:
+      - users
   /users/{id}/gitcredentials:
     get:
       description: 'Gets all saved git credentials for a user.
@@ -14465,73 +15417,191 @@ paths:
 tags:
 - description: Authenticate against Portainer HTTP API
   name: auth
+  x-displayName: Authentication
+- description: Automatic updates
+  name: auto_updates
+  x-displayName: Automatic updates
 - description: Manage backups
   name: backup
+  x-displayName: Backups
+- description: Manage cloud credentials
+  name: cloud_credentials
+  x-displayName: Cloud credentials
 - description: Manage Custom Templates
   name: custom_templates
+  x-displayName: Custom templates
 - description: Manage Docker resources
   name: docker
+  x-displayName: Docker resources
 - description: Manage Edge related environment settings
   name: edge
+  x-displayName: Edge settings
 - description: Manage Edge Groups
   name: edge_groups
+  x-displayName: Edge groups
 - description: Manage Edge Jobs
   name: edge_jobs
+  x-displayName: Edge jobs
 - description: Manage Edge Stacks
   name: edge_stacks
-- description: Manage Edge Templates
-  name: edge_templates
+  x-displayName: Edge stacks
+- description: Manage Edge Update Schedules
+  name: edge_update_schedules
+  x-displayName: Edge update schedules
+- description: Manage Edge configurations
+  name: edge_configs
+  x-displayName: Edge configurations
 - description: Manage environment groups
   name: endpoint_groups
+  x-displayName: Environment groups
 - description: Manage environments
   name: endpoints
+  x-displayName: Environments
 - description: Operate git repository
   name: gitops
+  x-displayName: GitOps
 - description: Manage Helm charts
   name: helm
-- description: Manage Intel AMT settings
-  name: intel
-- name: kaas
+  x-displayName: Helm charts
+- description: Manage KaaS
+  name: kaas
+  x-displayName: KaaS
 - description: Manage Kubernetes cluster
   name: kubernetes
+  x-displayName: Kubernetes management
 - description: Manage LDAP settings
   name: ldap
-- description: Manage metrics
-  name: metrics
+  x-displayName: LDAP
+- description: Manage licenses
+  name: license
+  x-displayName: Licenses
 - description: Fetch the message of the day
   name: motd
+  x-displayName: Message of the day
 - description: Manage Omni Talos clusters and machines
   name: omni
+  x-displayName: Omni Talos
 - description: Manage Docker registries
   name: registries
+  x-displayName: Registries
 - description: Manage access control on Docker resources
   name: resource_controls
+  x-displayName: Docker access control
 - description: Manage roles
   name: roles
+  x-displayName: Roles
 - description: Manage Portainer settings
   name: settings
+  x-displayName: Portainer settings
 - description: Manage stacks
   name: stacks
+  x-displayName: Stacks
 - description: Information about the Portainer instance
   name: status
+  x-displayName: Portainer status
 - description: Manage Portainer system
   name: system
+  x-displayName: Portainer system
 - description: Manage tags
   name: tags
+  x-displayName: Tags
 - description: Manage team memberships
   name: team_memberships
+  x-displayName: Team memberships
 - description: Manage teams
   name: teams
+  x-displayName: Teams
 - description: Manage App Templates
   name: templates
+  x-displayName: App templates
 - description: Upload files
   name: upload
+  x-displayName: Upload files
+- description: Manage user activity logs
+  name: useractivity
+  x-displayName: User activity
 - description: Manage users
   name: users
+  x-displayName: Users
 - description: Manage webhooks
   name: webhooks
+  x-displayName: Webhooks
 - description: Create exec sessions using websockets
   name: websocket
+  x-displayName: Websocket
+- description: Create and update your policies
+  name: policies
+  x-displayName: Policies
+- description: Alert configurations
+  name: observability
+  x-displayName: Observability
+- description: Retrieve your recommendations
+  name: recommendations
+  x-displayName: Recommendations
+- description: Retrieve your debug logs
+  name: support
+  x-displayName: Support
+- description: View and update SSL settings
+  name: ssl
+  x-displayName: SSL
+x-tagGroups:
+- name: Access Control
+  tags:
+  - auth
+  - cloud_credentials
+  - license
+  - roles
+  - team_memberships
+  - teams
+  - useractivity
+  - users
+- name: Administration
+  tags:
+  - auto_updates
+  - backup
+  - ldap
+  - motd
+  - observability
+  - settings
+  - status
+  - system
+  - recommendations
+  - ssl
+  - support
+  - upload
+- name: Docker
+  tags:
+  - templates
+  - custom_templates
+  - resource_controls
+  - docker
+  - registries
+  - stacks
+  - webhooks
+  - websocket
+- name: Edge Compute
+  tags:
+  - edge_configs
+  - edge_groups
+  - edge_jobs
+  - edge
+  - edge_stacks
+  - edge_update_schedules
+- name: Environment Management
+  tags:
+  - endpoint_groups
+  - endpoints
+  - policies
+  - tags
+- name: GitOps
+  tags:
+  - gitops
+- name: Kubernetes
+  tags:
+  - helm
+  - kaas
+  - kubernetes
+  - omni
 servers:
 - url: /api
 components:
@@ -14655,6 +15725,13 @@ components:
             $ref: '#/components/schemas/autoupdates.autoUpdateResponseItem'
           type: array
       type: object
+    backup.azureBackupStatus:
+      properties:
+        Failed:
+          type: boolean
+        TimestampUTC:
+          type: string
+      type: object
     backup.backupPayload:
       properties:
         Password:
@@ -14665,6 +15742,44 @@ components:
         Failed:
           type: boolean
         TimestampUTC:
+          type: string
+      type: object
+    backup.localBackupStatus:
+      properties:
+        failed:
+          type: boolean
+        path:
+          type: string
+        timestampUTC:
+          type: string
+      type: object
+    backup.restoreAzureSettings:
+      properties:
+        AuthMethod:
+          $ref: '#/components/schemas/portaineree.AzureAuthMethod'
+        BlobName:
+          type: string
+        ClientCertificate:
+          type: string
+        ClientCertificatePassword:
+          type: string
+        ClientID:
+          type: string
+        ClientSecret:
+          type: string
+        ContainerName:
+          type: string
+        ManagedIdentityClientID:
+          type: string
+        Password:
+          type: string
+        ServiceURL:
+          type: string
+        StorageAccountKey:
+          type: string
+        StorageAccountName:
+          type: string
+        TenantID:
           type: string
       type: object
     backup.restorePayload:
@@ -14789,6 +15904,15 @@ components:
         StateRestarting: StateRestarting indicates that the container is currently
           restarting.
         StateRunning: StateRunning indicates that the container is running.
+      x-enum-descriptions:
+      - StateCreated indicates the container is created, but not (yet) started.
+      - StateRunning indicates that the container is running.
+      - StatePaused indicates that the container's current state is paused.
+      - StateRestarting indicates that the container is currently restarting.
+      - StateRemoving indicates that the container is being removed.
+      - StateExited indicates that the container exited.
+      - StateDead indicates that the container failed to be deleted. Containers in
+        this state are attempted to be cleaned up when the daemon restarts.
       x-enum-varnames:
       - StateCreated
       - StateRunning
@@ -15004,7 +16128,7 @@ components:
           type: boolean
         RepositoryAuthorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           description: RepositoryAuthorizationType is the authorization type to use
           example: 0
         RepositoryGitCredentialID:
@@ -15023,7 +16147,7 @@ components:
           type: string
         RepositoryProvider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           description: RepositoryProvider is the provider to use
           example: 0
         RepositoryReferenceName:
@@ -15125,7 +16249,7 @@ components:
           type: boolean
         RepositoryAuthorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           description: RepositoryAuthorizationType is the authorization type to use
           example: 0
         RepositoryGitCredentialID:
@@ -15145,7 +16269,7 @@ components:
           type: string
         RepositoryProvider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           description: RepositoryProvider is the provider to use
           example: 0
         RepositoryReferenceName:
@@ -16653,12 +17777,12 @@ components:
     github_com_portainer_portainer-ee_api_git_types.GitAuthentication:
       properties:
         AuthorizationType:
-          $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          type: integer
         GitCredentialID:
           description: 'Git credentials identifier when the value is not 0
 
-            When the value is 0, Username, Password, and Authtype are set without
-            using saved credential
+            When the value is 0, Username and Password are set without using saved
+            credential
 
             This is introduced since 2.15.0'
           example: 0
@@ -16666,15 +17790,41 @@ components:
         Password:
           type: string
         Provider:
-          $ref: '#/components/schemas/gittypes.GitProvider'
+          type: integer
         Username:
           type: string
       type: object
+    github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType:
+      enum:
+      - 0
+      - 1
+      type: integer
+      x-enum-varnames:
+      - GitCredentialAuthType_Basic
+      - GitCredentialAuthType_Token
+    github_com_portainer_portainer-ee_api_git_types.GitProvider:
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      type: integer
+      x-enum-varnames:
+      - GitProviderCustom
+      - GitProviderGitHub
+      - GitProviderGitLab
+      - GitProviderBitbucketCloud
+      - GitProviderBitbucketDataCenter
+      - GitProviderAzureDevOps
+      - GitProviderGiteaForgejo
     github_com_portainer_portainer-ee_api_git_types.RepoConfig:
       properties:
         Authentication:
           allOf:
-          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitAuthentication'
+          - $ref: '#/components/schemas/github_com_portainer_portainer_api_git_types.GitAuthentication'
           description: Git credentials
         ConfigFilePath:
           description: 'ConfigFilePath is the path to the config file within the repository.
@@ -16808,7 +17958,7 @@ components:
           type: boolean
         RepositoryAuthorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           description: RepositoryAuthorizationType is the authorization type to use
           example: 0
         RepositoryGitCredentialID:
@@ -16822,7 +17972,7 @@ components:
           type: string
         RepositoryProvider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           description: RepositoryProvider is the provider to use
           example: 0
         RepositoryReferenceName:
@@ -17183,6 +18333,7 @@ components:
         Status:
           $ref: '#/components/schemas/portainer.EdgeStackStatusType'
         Time:
+          format: int64
           type: integer
         Version:
           type: integer
@@ -17191,6 +18342,50 @@ components:
       properties:
         describe:
           type: string
+      type: object
+    github_com_portainer_portainer-ee_api_http_handler_kubernetes.kubernetesVersionResponse:
+      properties:
+        buildDate:
+          type: string
+        compiler:
+          type: string
+        emulationMajor:
+          description: EmulationMajor is the major version of the emulation version
+          type: string
+        emulationMinor:
+          description: EmulationMinor is the minor version of the emulation version
+          type: string
+        gitCommit:
+          type: string
+        gitTreeState:
+          type: string
+        gitVersion:
+          type: string
+        goVersion:
+          type: string
+        major:
+          description: Major is the major version of the binary version
+          type: string
+        minCompatibilityMajor:
+          description: MinCompatibilityMajor is the major version of the minimum compatibility
+            version
+          type: string
+        minCompatibilityMinor:
+          description: MinCompatibilityMinor is the minor version of the minimum compatibility
+            version
+          type: string
+        minor:
+          description: Minor is the minor version of the binary version
+          type: string
+        platform:
+          type: string
+        supportsPodRestart:
+          description: "SupportsPodRestart is true when the cluster exposes the `pods/restart`\n\
+            subresource via API discovery \u2014 i.e. the feature gate is enabled\
+            \ and\nthe cluster version is recent enough. This is the authoritative\n\
+            signal for whether Portainer can call the pod-restart endpoint, and\n\
+            is preferred over a raw Kubernetes-version comparison."
+          type: boolean
       type: object
     github_com_portainer_portainer-ee_api_http_handler_kubernetes.namespacesToggleSystemPayload:
       properties:
@@ -17255,6 +18450,8 @@ components:
       type: object
     github_com_portainer_portainer_api_git_types.GitAuthentication:
       properties:
+        AuthorizationType:
+          type: integer
         GitCredentialID:
           description: 'Git credentials identifier when the value is not 0
 
@@ -17266,6 +18463,8 @@ components:
           type: integer
         Password:
           type: string
+        Provider:
+          type: integer
         Username:
           type: string
       type: object
@@ -17341,7 +18540,7 @@ components:
       properties:
         authorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           example: 0
         gitCredentialID:
           example: 0
@@ -17351,7 +18550,7 @@ components:
           type: string
         provider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           example: 0
         reference:
           example: refs/heads/main
@@ -17397,7 +18596,7 @@ components:
           type: boolean
         authorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           example: 0
         gitCredentialID:
           example: 0
@@ -17407,7 +18606,7 @@ components:
           type: string
         provider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           example: 0
         reference:
           example: refs/heads/master
@@ -17433,7 +18632,7 @@ components:
           type: boolean
         authorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           example: 0
         createdFromCustomTemplateID:
           type: integer
@@ -17459,7 +18658,7 @@ components:
           type: string
         provider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           example: 0
         reference:
           description: Specific Git repository reference. If empty, the reference
@@ -17483,7 +18682,7 @@ components:
           type: boolean
         authorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           example: 0
         createdFromCustomTemplateID:
           description: CreatedFromCustomTemplateID will fetch refs based on this custom
@@ -17497,7 +18696,7 @@ components:
           type: string
         provider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           example: 0
         repository:
           type: string
@@ -17510,32 +18709,6 @@ components:
       required:
       - repository
       type: object
-    gittypes.GitCredentialAuthType:
-      enum:
-      - 0
-      - 1
-      type: integer
-      x-enum-varnames:
-      - GitCredentialAuthType_Basic
-      - GitCredentialAuthType_Token
-    gittypes.GitProvider:
-      enum:
-      - 0
-      - 1
-      - 2
-      - 3
-      - 4
-      - 5
-      - 6
-      type: integer
-      x-enum-varnames:
-      - GitProviderCustom
-      - GitProviderGitHub
-      - GitProviderGitLab
-      - GitProviderBitbucketCloud
-      - GitProviderBitbucketDataCenter
-      - GitProviderAzureDevOps
-      - GitProviderGiteaForgejo
     helm.gitHelmDryRunPayload:
       properties:
         helmChartPath:
@@ -17551,14 +18724,14 @@ components:
         repositoryAuthentication:
           type: boolean
         repositoryAuthorizationType:
-          $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
         repositoryGitCredentialID:
           type: integer
         repositoryPassword:
           type: string
         repositoryProvider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           example: 0
         repositoryReferenceName:
           type: string
@@ -17628,10 +18801,14 @@ components:
       enum:
       - 0
       - 1
+      format: int64
       type: integer
       x-enum-comments:
         Int: The IntOrString holds an int.
         String: The IntOrString holds a string.
+      x-enum-descriptions:
+      - The IntOrString holds an int.
+      - The IntOrString holds a string.
       x-enum-varnames:
       - Int
       - String
@@ -17964,7 +19141,7 @@ components:
       properties:
         accessModes:
           items:
-            $ref: '#/components/schemas/v1.PersistentVolumeAccessMode'
+            type: string
           type: array
         annotations:
           additionalProperties:
@@ -17974,12 +19151,24 @@ components:
           $ref: '#/components/schemas/v1.ResourceList'
         claimRef:
           $ref: '#/components/schemas/v1.ObjectReference'
+        creationDate:
+          type: string
         csi:
           $ref: '#/components/schemas/v1.CSIPersistentVolumeSource'
+        humanReadableAccessModes:
+          items:
+            $ref: '#/components/schemas/v1.PersistentVolumeAccessMode'
+          type: array
+        labels:
+          additionalProperties:
+            type: string
+          type: object
         name:
           type: string
         persistentVolumeReclaimPolicy:
           $ref: '#/components/schemas/v1.PersistentVolumeReclaimPolicy'
+        status:
+          $ref: '#/components/schemas/v1.PersistentVolumePhase'
         storageClassName:
           type: string
         volumeMode:
@@ -17989,10 +19178,16 @@ components:
       properties:
         accessModes:
           items:
-            $ref: '#/components/schemas/v1.PersistentVolumeAccessMode'
+            type: string
           type: array
+        allowVolumeExpansion:
+          type: boolean
         creationDate:
           type: string
+        humanReadableAccessModes:
+          items:
+            $ref: '#/components/schemas/v1.PersistentVolumeAccessMode'
+          type: array
         id:
           type: string
         labels:
@@ -18014,6 +19209,8 @@ components:
         storage:
           type: integer
         storageClass:
+          type: string
+        storageRequest:
           type: string
         volumeMode:
           $ref: '#/components/schemas/v1.PersistentVolumeMode'
@@ -18053,12 +19250,39 @@ components:
           type: string
         type: array
       type: object
+    kubernetes.K8sServiceAccountImagePullSecretsUpdatePayload:
+      properties:
+        secretNames:
+          items:
+            type: string
+          type: array
+      type: object
     kubernetes.K8sStorageClass:
       properties:
         allowVolumeExpansion:
           type: boolean
+        annotations:
+          additionalProperties:
+            type: string
+          type: object
+        creationDate:
+          type: string
+        isDefault:
+          type: boolean
+        labels:
+          additionalProperties:
+            type: string
+          type: object
+        mountOptions:
+          items:
+            type: string
+          type: array
         name:
           type: string
+        parameters:
+          additionalProperties:
+            type: string
+          type: object
         provisioner:
           type: string
         reclaimPolicy:
@@ -18305,12 +19529,20 @@ components:
       - AlertRuleStateFiring
     metrics.EdgeAlertRule:
       properties:
+        annotations:
+          additionalProperties:
+            type: string
+          type: object
         enabled:
           type: boolean
         for_duration_minutes:
           type: integer
         id:
           type: integer
+        labels:
+          additionalProperties:
+            type: string
+          type: object
         name:
           type: string
         promql_expr:
@@ -18665,6 +19897,100 @@ components:
             $ref: '#/components/schemas/models.K8sStorageQuota'
           type: object
       type: object
+    models.K8sPVCResizeRequest:
+      properties:
+        name:
+          type: string
+        namespace:
+          type: string
+        newSize:
+          type: string
+      type: object
+    models.K8sPVReclaimPolicyRequest:
+      properties:
+        name:
+          type: string
+        reclaimPolicy:
+          $ref: '#/components/schemas/v1.PersistentVolumeReclaimPolicy'
+      type: object
+    models.K8sPersistentVolume:
+      properties:
+        accessModes:
+          items:
+            type: string
+          type: array
+        annotations:
+          additionalProperties:
+            type: string
+          type: object
+        capacity:
+          $ref: '#/components/schemas/v1.ResourceList'
+        claimRef:
+          $ref: '#/components/schemas/v1.ObjectReference'
+        creationDate:
+          type: string
+        csi:
+          $ref: '#/components/schemas/v1.CSIPersistentVolumeSource'
+        humanReadableAccessModes:
+          items:
+            $ref: '#/components/schemas/v1.PersistentVolumeAccessMode'
+          type: array
+        labels:
+          additionalProperties:
+            type: string
+          type: object
+        name:
+          type: string
+        persistentVolumeReclaimPolicy:
+          $ref: '#/components/schemas/v1.PersistentVolumeReclaimPolicy'
+        status:
+          $ref: '#/components/schemas/v1.PersistentVolumePhase'
+        storageClassName:
+          type: string
+        volumeMode:
+          $ref: '#/components/schemas/v1.PersistentVolumeMode'
+      type: object
+    models.K8sPersistentVolumeClaim:
+      properties:
+        accessModes:
+          items:
+            type: string
+          type: array
+        creationDate:
+          type: string
+        humanReadableAccessModes:
+          items:
+            $ref: '#/components/schemas/v1.PersistentVolumeAccessMode'
+          type: array
+        id:
+          type: string
+        labels:
+          additionalProperties:
+            type: string
+          type: object
+        name:
+          type: string
+        namespace:
+          type: string
+        owningApplications:
+          items:
+            $ref: '#/components/schemas/models.K8sApplication'
+          type: array
+        phase:
+          $ref: '#/components/schemas/v1.PersistentVolumeClaimPhase'
+        resourcesRequests:
+          $ref: '#/components/schemas/v1.ResourceList'
+        storage:
+          type: integer
+        storageClass:
+          type: string
+        storageRequest:
+          type: string
+        volumeMode:
+          $ref: '#/components/schemas/v1.PersistentVolumeMode'
+        volumeName:
+          type: string
+      type: object
     models.K8sResourceQuota:
       properties:
         cpuLimit:
@@ -18858,11 +20184,49 @@ components:
         TargetPort:
           type: string
       type: object
+    models.K8sStorageClass:
+      properties:
+        allowVolumeExpansion:
+          type: boolean
+        annotations:
+          additionalProperties:
+            type: string
+          type: object
+        creationDate:
+          type: string
+        isDefault:
+          type: boolean
+        labels:
+          additionalProperties:
+            type: string
+          type: object
+        mountOptions:
+          items:
+            type: string
+          type: array
+        name:
+          type: string
+        parameters:
+          additionalProperties:
+            type: string
+          type: object
+        provisioner:
+          type: string
+        reclaimPolicy:
+          $ref: '#/components/schemas/v1.PersistentVolumeReclaimPolicy'
+      type: object
     models.K8sStorageQuota:
       properties:
         enabled:
           type: boolean
         limit:
+          type: string
+      type: object
+    models.K8sVolumeDeleteRequest:
+      properties:
+        name:
+          type: string
+        namespace:
           type: string
       type: object
     models.LabelSet:
@@ -19204,6 +20568,21 @@ components:
             type: integer
           type: array
       type: object
+    observability.alertRuleTiersUpdatePayload:
+      properties:
+        conditionOperator:
+          $ref: '#/components/schemas/portaineree.ConditionOperator'
+        description:
+          type: string
+        duration:
+          type: integer
+        enabled:
+          type: boolean
+        tiers:
+          items:
+            $ref: '#/components/schemas/portaineree.AlertingRuleTier'
+          type: array
+      type: object
     observability.alertRuleUpdatePayload:
       properties:
         AlertingRule:
@@ -19470,36 +20849,8 @@ components:
             type: string
           type: array
       type: object
-    openamt.deviceActionPayload:
-      properties:
-        Action:
-          type: string
-      type: object
-    openamt.deviceFeaturesPayload:
-      properties:
-        Features:
-          $ref: '#/components/schemas/portainer.OpenAMTDeviceEnabledFeatures'
-      type: object
-    openamt.openAMTConfigurePayload:
-      properties:
-        CertFileContent:
-          type: string
-        CertFileName:
-          type: string
-        CertFilePassword:
-          type: string
-        DomainName:
-          type: string
-        Enabled:
-          type: boolean
-        MPSPassword:
-          type: string
-        MPSServer:
-          type: string
-        MPSUser:
-          type: string
-      type: object
     os.FileMode:
+      format: int32
       type: integer
       x-enum-comments:
         ModeAppend: 'a: append-only'
@@ -19516,6 +20867,22 @@ components:
         ModeSticky: 't: sticky'
         ModeSymlink: 'L: symbolic link'
         ModeTemporary: 'T: temporary file; Plan 9 only'
+      x-enum-descriptions:
+      - 'd: is a directory'
+      - 'a: append-only'
+      - 'l: exclusive use'
+      - 'T: temporary file; Plan 9 only'
+      - 'L: symbolic link'
+      - 'D: device file'
+      - 'p: named pipe (FIFO)'
+      - 'S: Unix domain socket'
+      - 'u: setuid'
+      - 'g: setgid'
+      - 'c: Unix character device, when ModeDevice is set'
+      - 't: sticky'
+      - '?: non-regular file; nothing else is known about this file'
+      - ''
+      - Unix permission bits, 0o777
       x-enum-varnames:
       - ModeDir
       - ModeAppend
@@ -20253,6 +21620,7 @@ components:
         Command:
           type: string
         Created:
+          format: int64
           type: integer
         Env:
           description: EE-5240
@@ -20439,6 +21807,7 @@ components:
           description: EE only feature
           type: integer
         Time:
+          format: int64
           type: integer
         Type:
           $ref: '#/components/schemas/portainer.EdgeStackStatusType'
@@ -21041,41 +22410,6 @@ components:
         UserIdentifier:
           type: string
       type: object
-    portainer.OpenAMTConfiguration:
-      properties:
-        certFileContent:
-          type: string
-        certFileName:
-          type: string
-        certFilePassword:
-          type: string
-        domainName:
-          type: string
-        enabled:
-          type: boolean
-        mpsPassword:
-          type: string
-        mpsServer:
-          type: string
-        mpsToken:
-          description: retrieved from API
-          type: string
-        mpsUser:
-          type: string
-      type: object
-    portainer.OpenAMTDeviceEnabledFeatures:
-      properties:
-        IDER:
-          type: boolean
-        KVM:
-          type: boolean
-        SOL:
-          type: boolean
-        redirection:
-          type: boolean
-        userConsent:
-          type: string
-      type: object
     portainer.Pair:
       properties:
         name:
@@ -21398,6 +22732,12 @@ components:
         StackStatusDeploying: 3 - deployment in progress
         StackStatusError: 4 - deployment failed
         StackStatusInactive: 2 - intentionally stopped
+      x-enum-descriptions:
+      - ''
+      - 1 - deployed and running
+      - 2 - intentionally stopped
+      - 3 - deployment in progress
+      - 4 - deployment failed
       x-enum-varnames:
       - _
       - StackStatusActive
@@ -21765,6 +23105,18 @@ components:
         Observability:
           type: boolean
       type: object
+    portaineree.AlertRuleCategory:
+      enum:
+      - portainer
+      - security
+      - environment
+      - backup
+      type: string
+      x-enum-varnames:
+      - AlertRuleCategoryPortainer
+      - AlertRuleCategorySecurity
+      - AlertRuleCategoryEnvironment
+      - AlertRuleCategoryBackup
     portaineree.AlertRuleEnvReason:
       enum:
       - included
@@ -21825,6 +23177,15 @@ components:
       properties:
         alertManagerID:
           type: integer
+        annotationTemplate:
+          type: string
+        category:
+          allOf:
+          - $ref: '#/components/schemas/portaineree.AlertRuleCategory'
+          enum:
+          - portainer
+          - security
+          - environment
         conditionOperator:
           allOf:
           - $ref: '#/components/schemas/portaineree.ConditionOperator'
@@ -21865,10 +23226,15 @@ components:
           - percentage
           - bytes
           - raw
+          - days
           type: string
         name:
           type: string
+        operatorFixed:
+          type: boolean
         promqlExpr:
+          type: string
+        promqlScalarTemplate:
           type: string
         promqlTemplate:
           type: string
@@ -21895,10 +23261,29 @@ components:
           type: array
         threshold:
           type: number
+        tiers:
+          items:
+            $ref: '#/components/schemas/portaineree.AlertingRuleTier'
+          type: array
         updatedAt:
           type: string
         useDurationAsFor:
           type: boolean
+        useTiers:
+          type: boolean
+      type: object
+    portaineree.AlertingRuleTier:
+      properties:
+        enabled:
+          type: boolean
+        severity:
+          enum:
+          - critical
+          - warning
+          - info
+          type: string
+        threshold:
+          type: number
       type: object
     portaineree.AlertingSettings:
       properties:
@@ -21996,6 +23381,57 @@ components:
       - AutoUpdateStatusInProgress
       - AutoUpdateStatusCompleted
       - AutoUpdateStatusFailed
+    portaineree.AzureAuthMethod:
+      enum:
+      - servicePrincipalSecret
+      - servicePrincipalCertificate
+      - managedIdentity
+      - storageAccountKey
+      type: string
+      x-enum-varnames:
+      - AzureAuthServicePrincipalSecret
+      - AzureAuthServicePrincipalCertificate
+      - AzureAuthManagedIdentity
+      - AzureAuthStorageAccountKey
+    portaineree.AzureBlobBackupSettings:
+      properties:
+        authMethod:
+          $ref: '#/components/schemas/portaineree.AzureAuthMethod'
+        clientCertificate:
+          description: "Service Principal \u2014 certificate (base64-encoded PEM/PFX\
+            \ bytes)"
+          type: string
+        clientCertificatePassword:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          description: "Service Principal \u2014 secret"
+          type: string
+        containerName:
+          type: string
+        cronRule:
+          type: string
+        managedIdentityClientId:
+          description: Managed Identity (empty = system-assigned; non-empty = user-assigned
+            client ID)
+          type: string
+        password:
+          type: string
+        serviceUrl:
+          description: 'Optional: override blob service URL for sovereign clouds or
+            Azurite testing'
+          type: string
+        storageAccountKey:
+          description: Storage account access key (base64-encoded, copied from the
+            Azure Portal Keys blade)
+          type: string
+        storageAccountName:
+          type: string
+        tenantId:
+          description: Service Principal common
+          type: string
+      type: object
     portaineree.CloudApiKeys:
       properties:
         CivoApiKey:
@@ -22609,10 +24045,6 @@ components:
       - EdgeUpdateFailureActionRollback
     portaineree.Endpoint:
       properties:
-        AMTDeviceGUID:
-          description: The identifier of the AMT Device associated with this environment(endpoint)
-          example: 4c4c4544-004b-3910-8037-b6c04f504633
-          type: string
         Agent:
           $ref: '#/components/schemas/portaineree.EnvironmentAgentData'
         AuthorizedTeams:
@@ -22692,6 +24124,7 @@ components:
           description: Associated Kubernetes data
         LastCheckInDate:
           description: LastCheckInDate mark last check-in date on checkin
+          format: int64
           type: integer
         LocalTimeZone:
           description: LocalTimeZone is the local time zone of the endpoint
@@ -22877,7 +24310,7 @@ components:
       properties:
         authorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           example: 0
         creationDate:
           example: 1587399600
@@ -22891,7 +24324,7 @@ components:
           type: string
         provider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           example: 0
         userId:
           example: 1
@@ -23065,6 +24498,15 @@ components:
           items:
             type: string
           type: array
+      type: object
+    portaineree.LocalBackupSettings:
+      properties:
+        cronRule:
+          description: Crontab rule to make periodical backups
+          type: string
+        retentionDays:
+          description: Number of days to retain backups (0 means keep forever)
+          type: integer
       type: object
     portaineree.MTLSSettings:
       properties:
@@ -23616,6 +25058,13 @@ components:
           additionalProperties:
             type: boolean
           type: object
+        ForceSecureCookies:
+          description: 'ForceSecureCookies forces the Secure attribute on auth cookies
+            regardless of detected scheme.
+
+            Enable when Portainer runs behind a TLS-terminating proxy.'
+          example: false
+          type: boolean
         GlobalDeploymentOptions:
           allOf:
           - $ref: '#/components/schemas/portaineree.GlobalDeploymentOptions'
@@ -23664,8 +25113,6 @@ components:
           description: The duration of a user session
           example: 5m
           type: string
-        openAMTConfiguration:
-          $ref: '#/components/schemas/portainer.OpenAMTConfiguration'
       type: object
     portaineree.Stack:
       properties:
@@ -24150,16 +25597,19 @@ components:
         TLSCACertFile:
           description: The TLS CA certificate file
           items:
+            format: int32
             type: integer
           type: array
         TLSCertFile:
           description: The TLS client certificate file
           items:
+            format: int32
             type: integer
           type: array
         TLSKeyFile:
           description: The TLS client key file
           items:
+            format: int32
             type: integer
           type: array
         TLSSkipVerify:
@@ -24652,6 +26102,10 @@ components:
             BinarySI: e.g., 12Mi (12 * 2^20)
             DecimalExponent: e.g., 12e6
             DecimalSI: e.g., 12M  (12 * 10^6)
+          x-enum-descriptions:
+          - e.g., 12e6
+          - e.g., 12Mi (12 * 2^20)
+          - e.g., 12M  (12 * 10^6)
           x-enum-varnames:
           - DecimalExponent
           - BinarySI
@@ -24857,9 +26311,6 @@ components:
           allOf:
           - $ref: '#/components/schemas/portaineree.GlobalDeploymentOptions'
           description: Deployment options for encouraging deployment as code
-        IsAMTEnabled:
-          description: Whether AMT is enabled
-          type: boolean
         IsObservabilityEnabled:
           description: Whether observability is enabled
           type: boolean
@@ -25019,6 +26470,11 @@ components:
             accepting anyone
           example: false
           type: boolean
+        ForceSecureCookies:
+          description: ForceSecureCookies forces the Secure attribute on auth cookies
+            regardless of the detected scheme
+          example: false
+          type: boolean
         GlobalDeploymentOptions:
           allOf:
           - $ref: '#/components/schemas/portaineree.GlobalDeploymentOptions'
@@ -25066,6 +26522,85 @@ components:
           description: The duration of a user session
           example: 5m
           type: string
+      type: object
+    sources.Source:
+      properties:
+        environments:
+          type: integer
+        error:
+          type: string
+        id:
+          type: string
+        lastSync:
+          type: integer
+        name:
+          type: string
+        provider:
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
+        status:
+          $ref: '#/components/schemas/workflows.Status'
+        type:
+          type: string
+        url:
+          type: string
+        usedBy:
+          type: integer
+      type: object
+    sources.SourceDetail:
+      properties:
+        authentication:
+          $ref: '#/components/schemas/sources.gitAuthInfo'
+        autoUpdate:
+          $ref: '#/components/schemas/sources.autoUpdateInfo'
+        connection:
+          $ref: '#/components/schemas/sources.connectionInfo'
+        environments:
+          type: integer
+        error:
+          type: string
+        id:
+          type: string
+        lastSync:
+          type: integer
+        name:
+          type: string
+        provider:
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
+        status:
+          $ref: '#/components/schemas/workflows.Status'
+        type:
+          type: string
+        url:
+          type: string
+        usedBy:
+          type: integer
+        workflows:
+          items:
+            $ref: '#/components/schemas/workflows.Workflow'
+          type: array
+      type: object
+    sources.autoUpdateInfo:
+      properties:
+        fetchInterval:
+          type: string
+        mechanism:
+          type: string
+      type: object
+    sources.connectionInfo:
+      properties:
+        configFilePath:
+          type: string
+        referenceName:
+          type: string
+        tlsSkipVerify:
+          type: boolean
+      type: object
+    sources.gitAuthInfo:
+      properties:
+        provider:
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
+        type:
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
       type: object
     ssl.Certificate:
       properties:
@@ -25136,11 +26671,29 @@ components:
       type: object
     ssl.Name:
       properties:
+        CommonName:
+          type: string
         Country:
           items:
             type: string
           type: array
         Locality:
+          items:
+            type: string
+          type: array
+        Organization:
+          items:
+            type: string
+          type: array
+        OrganizationalUnit:
+          items:
+            type: string
+          type: array
+        PostalCode:
+          items:
+            type: string
+          type: array
+        Province:
           items:
             type: string
           type: array
@@ -25257,7 +26810,7 @@ components:
           type: boolean
         RepositoryAuthorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           description: RepositoryAuthorizationType is the authorization type to use
           example: 0
         RepositoryGitCredentialID:
@@ -25276,7 +26829,7 @@ components:
           type: string
         RepositoryProvider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           description: RepositoryProvider is the provider to use
           example: 0
         RepositoryReferenceName:
@@ -25331,13 +26884,13 @@ components:
         RepositoryAuthentication:
           type: boolean
         RepositoryAuthorizationType:
-          $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
         RepositoryGitCredentialID:
           type: integer
         RepositoryPassword:
           type: string
         RepositoryProvider:
-          $ref: '#/components/schemas/gittypes.GitProvider'
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
         RepositoryReferenceName:
           type: string
         RepositoryURL:
@@ -25426,13 +26979,13 @@ components:
         RepositoryAuthentication:
           type: boolean
         RepositoryAuthorizationType:
-          $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
         RepositoryGitCredentialID:
           type: integer
         RepositoryPassword:
           type: string
         RepositoryProvider:
-          $ref: '#/components/schemas/gittypes.GitProvider'
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
         RepositoryReferenceName:
           type: string
         RepositoryUsername:
@@ -25478,13 +27031,13 @@ components:
         RepositoryAuthentication:
           type: boolean
         RepositoryAuthorizationType:
-          $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
         RepositoryGitCredentialID:
           type: integer
         RepositoryPassword:
           type: string
         RepositoryProvider:
-          $ref: '#/components/schemas/gittypes.GitProvider'
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
         RepositoryReferenceName:
           type: string
         RepositoryURL:
@@ -25599,7 +27152,7 @@ components:
           type: boolean
         RepositoryAuthorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           description: RepositoryAuthorizationType is the authorization type to use
           example: 0
         RepositoryGitCredentialID:
@@ -25618,7 +27171,7 @@ components:
           type: string
         RepositoryProvider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           description: RepositoryProvider is the provider to use
           example: 0
         RepositoryReferenceName:
@@ -25960,10 +27513,47 @@ components:
         totalCount:
           type: integer
       type: object
+    users.AccessLocation:
+      enum:
+      - environment
+      - environmentGroup
+      - policy
+      type: string
+      x-enum-varnames:
+      - AccessLocationEnvironment
+      - AccessLocationEnvironmentGroup
+      - AccessLocationPolicy
     users.CurrentUserEndpointAuthResponse:
       properties:
         Authorizations:
           $ref: '#/components/schemas/portainer.Authorizations'
+      type: object
+    users.EffectiveAccessEntry:
+      properties:
+        accessLocation:
+          $ref: '#/components/schemas/users.AccessLocation'
+        endpointId:
+          type: integer
+        endpointName:
+          type: string
+        groupId:
+          type: integer
+        groupName:
+          type: string
+        policyId:
+          type: integer
+        policyName:
+          type: string
+        roleId:
+          type: integer
+        roleName:
+          type: string
+        rolePriority:
+          type: integer
+        teamId:
+          type: integer
+        teamName:
+          type: string
       type: object
     users.User:
       properties:
@@ -26029,7 +27619,7 @@ components:
       properties:
         authorizationType:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
           description: Shadow to include the AuthType even if it's empty
           example: 0
         creationDate:
@@ -26044,7 +27634,7 @@ components:
           type: string
         provider:
           allOf:
-          - $ref: '#/components/schemas/gittypes.GitProvider'
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           description: Shadow to include Provider even if it's empty
           example: 0
         userId:
@@ -26110,14 +27700,14 @@ components:
     users.userGitCredentialCreatePayload:
       properties:
         authorizationType:
-          $ref: '#/components/schemas/gittypes.GitCredentialAuthType'
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
         name:
           example: my-credential
           type: string
         password:
           type: string
         provider:
-          $ref: '#/components/schemas/gittypes.GitProvider'
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
         username:
           type: string
       required:
@@ -27025,6 +28615,7 @@ components:
     v1.Duration:
       properties:
         time.Duration:
+          format: int64
           type: integer
           x-enum-varnames:
           - minDuration
@@ -28112,6 +29703,20 @@ components:
       x-enum-varnames:
       - PersistentVolumeBlock
       - PersistentVolumeFilesystem
+    v1.PersistentVolumePhase:
+      enum:
+      - Pending
+      - Available
+      - Bound
+      - Released
+      - Failed
+      type: string
+      x-enum-varnames:
+      - VolumePending
+      - VolumeAvailable
+      - VolumeBound
+      - VolumeReleased
+      - VolumeFailed
     v1.PersistentVolumeReclaimPolicy:
       enum:
       - Recycle
@@ -29568,6 +31173,10 @@ components:
           type: object
         namespace:
           type: string
+        resolvedEndpointIds:
+          items:
+            type: integer
+          type: array
       type: object
     workflows.Type:
       enum:
@@ -29579,6 +31188,8 @@ components:
       - TypeEdgeStack
     workflows.Workflow:
       properties:
+        autoUpdate:
+          $ref: '#/components/schemas/portainer.AutoUpdateSettings'
         creationDate:
           type: integer
         gitConfig:

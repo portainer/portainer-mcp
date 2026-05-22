@@ -1,6 +1,6 @@
 # Profiles
 
-The Portainer API spec exposes 350+ operations across 40+ tags. Auto-converting
+The Portainer API spec exposes 400+ operations across 40+ tags. Auto-converting
 all of them produces a tool list too noisy for MCP clients to navigate, so the
 server runs with a tag allowlist. Profiles are named bundles of those tags.
 
@@ -38,8 +38,8 @@ see everything but mutate nothing.
 ## Default coverage
 
 `PORTAINER_PROFILES=BASE,DOCKER,KUBERNETES` (the default) covers 10 tags and
-~180 spec operations. The five-profile union covers 28 tags and
-~306 operations. `ALL` covers everything.
+~197 spec operations. The five-profile union covers 28 tags and
+~342 operations. `ALL` covers everything.
 
 ## Orphan tags
 
@@ -48,12 +48,11 @@ when you need them, or switch to `ALL`:
 
 | Count | Tag | Notes |
 |---:|---|---|
-| 14 | `observability` | Container/pod logs, metrics, stats. |
+| 15 | `observability` | Container/pod logs, metrics, stats. |
 | 12 | `omni` | Talos Kubernetes cluster management. |
 | 10 | `custom_templates` | User-defined app templates. |
+| 9 | `gitops` | GitOps configuration surface. |
 | 8 | `cloud_credentials` | Cloud provider credentials. |
-| 6 | `gitops` | GitOps configuration surface. |
-| 6 | `intel` | Edge intel surface. |
 | 6 | `webhooks` | Webhook management. |
 | 4 | `kaas` | Kubernetes-as-a-Service provisioning. |
 | 4 | `useractivity` | Audit log. |
@@ -64,7 +63,7 @@ when you need them, or switch to `ALL`:
 | 1 | `auto_updates` | Auto-update configuration. |
 | 1 | `upload` | File upload endpoint. |
 
-Total orphaned: 15 tags, 81 operations. Tags repeatedly requested via
+Total orphaned: 14 tags, 79 operations. Tags repeatedly requested via
 `PORTAINER_TAGS_EXTRA` are the signal that a profile should grow or a new
 profile should be added.
 

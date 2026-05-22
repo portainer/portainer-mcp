@@ -31,10 +31,10 @@ register the server with Claude Code:
 claude mcp add portainer \
   -e PORTAINER_URL=https://portainer.example.com \
   -e PORTAINER_API_KEY=ptr_xxxxxxxxxxxxxxxx \
-  -- uvx --from "mcp-portainer~=2.41.0" mcp-portainer
+  -- uvx --from "mcp-portainer~=2.42.0" mcp-portainer
 ```
 
-`~=2.41.0` picks up MCP-only patch fixes against the same Portainer minor —
+`~=2.42.0` picks up MCP-only patch fixes against the same Portainer minor —
 see [Version compatibility](#version-compatibility) for the policy.
 
 **Recommended: install the hygiene skill.** This repo ships a Claude Code
@@ -44,7 +44,7 @@ context. Install user-wide, pinned to the same tag as the server:
 
 ```bash
 mkdir -p ~/.claude/skills/portainer-mcp-hygiene && \
-  curl -fsSL https://raw.githubusercontent.com/portainer/portainer-mcp/2.41.0/skills/portainer-mcp-hygiene/SKILL.md \
+  curl -fsSL https://raw.githubusercontent.com/portainer/portainer-mcp/2.42.0/skills/portainer-mcp-hygiene/SKILL.md \
   -o ~/.claude/skills/portainer-mcp-hygiene/SKILL.md
 ```
 
@@ -62,6 +62,7 @@ major+minor tracks the Portainer API version the embedded spec targets.
 
 | Server version | Portainer (CE / EE) |
 | -------------- | ------------------- |
+| `2.42.x`       | `2.42.x`            |
 | `2.41.x`       | `2.41.x`            |
 
 - Full policy: [`docs/versioning.md`](docs/versioning.md).
