@@ -4,5 +4,7 @@ __pycache__/
 spec/upstream/
 logs/
 *.local.md
+docs/local
 .env
 dist/
+.DS_Store
