@@ -13,6 +13,17 @@ the MCP server.
 
 Targets Portainer 2.42.x.
 
+### Added
+
+- **Maintainer release skill** at
+  [`.claude/skills/portainer-mcp-release/`](.claude/skills/portainer-mcp-release/SKILL.md).
+  Project-local Claude Code skill that walks through spec-bump releases
+  (Portainer minor → MCP minor): finding the upstream patch target, spec
+  regeneration, op/tag delta recounting, orphan inventory refresh, pin
+  bumps across distribution docs, CHANGELOG promotion, commit, push,
+  merge, tag. Bundles a `spec_deltas.py` script that prints the new
+  per-profile coverage and orphan table paste-ready for `docs/profiles.md`.
+
 ### Changed
 
 - **Embedded spec bumped to Portainer EE 2.42.0** (was 2.41.1). Default
