@@ -22,8 +22,11 @@ specs:
 	uv run python spec/patch_spec.py $(UPSTREAM_DIR)/versions/ee/$(VERSION).yaml
 
 # Local dev server (HTTP transport). One-time setup:
-#   1. cp .env.example .env  and fill in PORTAINER_URL + PORTAINER_API_KEY
-#   2. claude mcp add portainer-dev --transport http http://127.0.0.1:8000/mcp
+#   1. cp .env.example .env, fill in PORTAINER_URL + PORTAINER_API_KEY, and set
+#      PORTAINER_MCP_AUTH_TOKEN to a fresh secret: `openssl rand -hex 32`.
+#   2. Register with Claude using the same token:
+#      claude mcp add portainer-dev --transport http http://127.0.0.1:8000/mcp \
+#        --header "Authorization: Bearer <token>"
 # Then iterate: edit code, ctrl-c, make dev again. Claude reconnects automatically.
 dev:
 	PORTAINER_MCP_TRANSPORT=http uv run --env-file .env portainer-mcp

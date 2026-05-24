@@ -63,6 +63,14 @@ Key things to internalise before changing code:
   OpenAPI responses as `{"result": …}` to fit MCP's structured-content
   schema. `_select_wrapper` unwraps that single-key envelope before
   projecting, so callers write `[].Id` rather than `result[].Id`.
+- **HTTP transport requires a bearer token.** `auth.py` defines
+  `StaticBearerVerifier` (a `fastmcp.server.auth.TokenVerifier` subclass
+  using `hmac.compare_digest`); `build_server()` wires it into
+  `FastMCP.from_openapi(..., auth=…)` only when transport=http. Stdio
+  ignores `PORTAINER_MCP_AUTH_TOKEN`. Strict validation at startup
+  (min 32 chars, ASCII printable, no whitespace) — loud-fail like the
+  unknown-profile check. Don't relax this for "convenience"; the strict
+  rule eliminates the make-dev-no-token footgun.
 
 ## Spec generation
 

@@ -2,7 +2,7 @@
 
 Requires PORTAINER_URL and PORTAINER_API_KEY. Tunables:
 
-- PORTAINER_PROFILES (default: BASE,DOCKER,KUBERNETES) — see `docs/profiles.md`.
+- PORTAINER_PROFILES (default: BASE,DOCKER,KUBERNETES) — named tag bundles.
 - PORTAINER_TAGS_EXTRA — comma-separated tags to append, escape hatch for
   surfaces no profile covers.
 - PORTAINER_READ_ONLY=1 — strict: registers GET/HEAD operations only.
@@ -13,6 +13,8 @@ Requires PORTAINER_URL and PORTAINER_API_KEY. Tunables:
   for the dev workflow and the eventual remote container.
 - PORTAINER_MCP_HTTP_HOST — bind host when transport=http (default 127.0.0.1).
 - PORTAINER_MCP_HTTP_PORT — bind port when transport=http (default 8000).
+- PORTAINER_MCP_AUTH_TOKEN — shared bearer secret. Required when
+  transport=http; ignored for stdio.
 """
 
 from __future__ import annotations
@@ -28,7 +30,7 @@ import yaml
 from fastmcp import FastMCP
 from fastmcp.server.providers.openapi import MCPType, RouteMap
 
-from portainer_mcp import profiles, proxy, shaping
+from portainer_mcp import auth, profiles, proxy, shaping
 
 SPEC_PATH = files("portainer_mcp") / "data" / "portainer-patched.yaml"
 
@@ -58,6 +60,15 @@ def _resolve_log_level() -> int:
     return logging.getLevelNamesMapping()[raw]
 
 
+def _resolve_transport() -> str:
+    raw = (os.environ.get("PORTAINER_MCP_TRANSPORT") or "stdio").lower()
+    if raw not in {"stdio", "http"}:
+        raise SystemExit(
+            f"PORTAINER_MCP_TRANSPORT must be 'stdio' or 'http' (got {raw!r})"
+        )
+    return raw
+
+
 def _setup_logging() -> None:
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(
@@ -73,6 +84,13 @@ def _setup_logging() -> None:
 
 def build_server() -> FastMCP:
     _setup_logging()
+
+    transport = _resolve_transport()
+    auth_provider = None
+    if transport == "http":
+        token = auth.require_token(os.environ.get(auth.ENV_VAR))
+        auth_provider = auth.StaticBearerVerifier(token)
+        logger.info("HTTP auth: enabled (token %s)", auth.fingerprint(token))
 
     base = os.environ["PORTAINER_URL"].rstrip("/") + "/api"
     verify = _env_flag("PORTAINER_TLS_VERIFY", default=True)
@@ -113,6 +131,7 @@ def build_server() -> FastMCP:
         name="portainer",
         route_maps=route_maps,
         validate_output=False,
+        auth=auth_provider,
     )
     if no_proxy:
         logger.info("proxy tools skipped (PORTAINER_NO_PROXY=1)")
@@ -141,18 +160,13 @@ def build_server() -> FastMCP:
 
 def main() -> None:
     server = build_server()
-    transport = (os.environ.get("PORTAINER_MCP_TRANSPORT") or "stdio").lower()
+    transport = _resolve_transport()
     if transport == "stdio":
         server.run(show_banner=False)
         return
-    if transport in {"http", "streamable-http"}:
-        host = os.environ.get("PORTAINER_MCP_HTTP_HOST") or "127.0.0.1"
-        port = int(os.environ.get("PORTAINER_MCP_HTTP_PORT") or 8000)
-        server.run(transport="http", host=host, port=port, show_banner=False)
-        return
-    raise SystemExit(
-        f"PORTAINER_MCP_TRANSPORT must be 'stdio' or 'http' (got {transport!r})"
-    )
+    host = os.environ.get("PORTAINER_MCP_HTTP_HOST") or "127.0.0.1"
+    port = int(os.environ.get("PORTAINER_MCP_HTTP_PORT") or 8000)
+    server.run(transport="http", host=host, port=port, show_banner=False)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,28 @@
+.git
+.github
+.venv
+.pytest_cache
+.claude
+.DS_Store
+__pycache__
+*.egg-info
+dist
+build
+
+# Local-only docs / notes
+docs/local
+*.local.md
+TODO.local.md
+
+# Upstream spec checkout (the patched spec under src/portainer_mcp/data is what we ship)
+spec/upstream
+
+# Tests are not needed in the image
+tests
+
+# Env files
+.env
+.env.example
+
+# Dev-only files
+Makefile

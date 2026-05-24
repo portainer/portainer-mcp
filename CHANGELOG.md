@@ -9,6 +9,26 @@ the MCP server.
 
 ## [Unreleased]
 
+### Added
+
+- **Container image** at `docker.io/portainer/portainer-mcp`, multi-arch
+  (`linux/amd64`, `linux/arm64`). Tagged `X.Y.Z` and `X.Y` on each release;
+  no `latest` tag. Published from `.github/workflows/release-docker.yml`
+  on every `X.Y.Z` tag push. See [`docs/docker.md`](docs/docker.md).
+- **HTTP bearer auth.** New `PORTAINER_MCP_AUTH_TOKEN` env, **required**
+  when `PORTAINER_MCP_TRANSPORT=http` and ignored for stdio. Strict
+  validation at startup (min 32 chars, ASCII printable, no whitespace —
+  loud-fail on any defect); constant-time comparison via
+  `hmac.compare_digest`; masked fingerprint in the startup log, full
+  value never logged. Wired through FastMCP's `TokenVerifier` protocol —
+  FastMCP renders the 401 + `WWW-Authenticate` response on failure.
+
+### Changed
+
+- **`make dev` now requires `PORTAINER_MCP_AUTH_TOKEN`.** Local HTTP dev
+  loop is no longer auth-less — add the token to `.env` and pass it via
+  `claude mcp add … --header "Authorization: Bearer <token>"`.
+
 ## [2.42.0] — 2026-05-22
 
 Targets Portainer 2.42.x.

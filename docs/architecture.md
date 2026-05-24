@@ -49,6 +49,18 @@ OpenAPI spec (Portainer forwards them as a subpath to the underlying
 daemon), so they can't be generated. Each tool validates the path (no
 `..`, no `?#`) and blocks auth-bypass headers.
 
+### HTTP auth — `auth.py`
+
+Only relevant when `PORTAINER_MCP_TRANSPORT=http`. `build_server()` reads
+`PORTAINER_MCP_AUTH_TOKEN`, validates it (min 32 chars, no whitespace,
+loud-fail on any defect), and wires a `StaticBearerVerifier` — a
+`fastmcp.server.auth.TokenVerifier` subclass — into the FastMCP
+constructor. Every HTTP request must carry `Authorization: Bearer
+<token>`; the verifier uses `hmac.compare_digest` for constant-time
+comparison and returns `None` on mismatch, at which point FastMCP renders
+the 401 + `WWW-Authenticate` response itself. Stdio transport
+short-circuits the auth path entirely (`_get_auth_context()` in FastMCP).
+
 ### Response shaping — `shaping.py`
 
 Two cooperating layers, applied to every tool the server exposes:
