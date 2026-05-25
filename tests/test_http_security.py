@@ -67,7 +67,7 @@ def test_build_settings_pins_origins_to_localhost_set():
 
 
 @pytest.mark.parametrize(
-    "host", ["127.0.0.1:8000", "localhost:8000", "[::1]:8000"]
+    "host", ["127.0.0.1:17717", "localhost:17717", "[::1]:17717"]
 )
 async def test_allows_default_localhost_hosts(host):
     response = await _get(_build_app(), host=host)
@@ -85,7 +85,7 @@ async def test_rejects_unknown_host():
 async def test_allows_request_without_origin():
     # Programmatic MCP clients don't send Origin; the absence must not
     # block them. Browser-pivot attacks send Origin and are caught below.
-    response = await _get(_build_app(), host="localhost:8000")
+    response = await _get(_build_app(), host="localhost:17717")
     assert response.status_code == 200
 
 
@@ -95,7 +95,7 @@ async def test_rejects_unknown_origin():
     # to extend — the 403 body deliberately stays terse.
     response = await _get(
         _build_app(),
-        host="localhost:8000",
+        host="localhost:17717",
         origin="http://evil.example.com",
     )
     assert response.status_code == 403

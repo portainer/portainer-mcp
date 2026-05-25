@@ -23,7 +23,7 @@ Startup fails loudly if either is missing.
 |---|---|---|
 | `PORTAINER_MCP_TRANSPORT` | `stdio` | `stdio` or `http`. The container image overrides to `http`. |
 | `PORTAINER_MCP_HTTP_HOST` | `127.0.0.1` | Bind address when `transport=http`. Container image overrides to `0.0.0.0` so it's reachable from outside the container. |
-| `PORTAINER_MCP_HTTP_PORT` | `8000` | Bind port when `transport=http`. |
+| `PORTAINER_MCP_HTTP_PORT` | `17717` | Bind port when `transport=http`. |
 | `PORTAINER_MCP_AUTH_TOKEN` | _required for http_ | Shared bearer secret. ≥32 ASCII-printable characters, no whitespace. Generate with `openssl rand -hex 32`. Ignored under stdio. |
 
 The stdio transport ignores everything in this section except

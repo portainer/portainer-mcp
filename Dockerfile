@@ -32,13 +32,12 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PORTAINER_MCP_TRANSPORT=http \
     PORTAINER_MCP_HTTP_HOST=0.0.0.0 \
-    PORTAINER_MCP_HTTP_PORT=8000 \
     PORTAINER_MCP_LOG_FORMAT=json
 
 USER portainer
-EXPOSE 8000
+EXPOSE 17717
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', 8000)); s.close()"
+  CMD python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', 17717)); s.close()"
 
 ENTRYPOINT ["mcp-portainer"]

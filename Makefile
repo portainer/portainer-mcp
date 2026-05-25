@@ -25,7 +25,7 @@ specs:
 #   1. cp .env.example .env, fill in PORTAINER_URL + PORTAINER_API_KEY, and set
 #      PORTAINER_MCP_AUTH_TOKEN to a fresh secret: `openssl rand -hex 32`.
 #   2. Register with Claude using the same token:
-#      claude mcp add portainer-dev --transport http http://127.0.0.1:8000/mcp \
+#      claude mcp add portainer-dev --transport http http://127.0.0.1:17717/mcp \
 #        --header "Authorization: Bearer <token>"
 # Then iterate: edit code, ctrl-c, make dev again. Claude reconnects automatically.
 dev:

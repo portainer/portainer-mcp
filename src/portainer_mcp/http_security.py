@@ -19,7 +19,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 ALLOWED_HOSTS_ENV = "PORTAINER_MCP_ALLOWED_HOSTS"
 
 # Mirror MCP SDK's localhost defaults so `make dev` and the documented
-# `docker run -p 8000:8000` example work without extra config.
+# `docker run -p 17717:17717` example work without extra config.
 DEFAULT_ALLOWED_HOSTS = ["127.0.0.1:*", "localhost:*", "[::1]:*"]
 
 # Origin allowlist is hardcoded — programmatic MCP clients (Claude Code,

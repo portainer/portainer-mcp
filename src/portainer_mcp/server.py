@@ -15,7 +15,7 @@ Requires PORTAINER_URL and PORTAINER_API_KEY. Tunables:
 - PORTAINER_MCP_TRANSPORT — stdio (default) or http. http binds an HTTP server
   for the dev workflow and the eventual remote container.
 - PORTAINER_MCP_HTTP_HOST — bind host when transport=http (default 127.0.0.1).
-- PORTAINER_MCP_HTTP_PORT — bind port when transport=http (default 8000).
+- PORTAINER_MCP_HTTP_PORT — bind port when transport=http (default 17717).
 - PORTAINER_MCP_AUTH_TOKEN — shared bearer secret. Required when
   transport=http; ignored for stdio.
 - PORTAINER_MCP_ALLOWED_HOSTS — comma-separated `Host` allowlist for
@@ -274,7 +274,7 @@ def main() -> None:
         server.run(show_banner=False)
         return
     host = os.environ.get("PORTAINER_MCP_HTTP_HOST") or "127.0.0.1"
-    port = int(os.environ.get("PORTAINER_MCP_HTTP_PORT") or 8000)
+    port = int(os.environ.get("PORTAINER_MCP_HTTP_PORT") or 17717)
     settings = http_security.build_settings(
         hosts=os.environ.get(http_security.ALLOWED_HOSTS_ENV),
     )

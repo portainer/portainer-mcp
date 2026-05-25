@@ -20,14 +20,14 @@ uv sync                              # install deps from uv.lock
 uv run pytest                        # run the full test suite
 uv run pytest tests/test_proxy.py    # one file
 uv run pytest -k select_unwraps      # one test by name
-make dev                             # local HTTP server via uv + .env (port 8000)
+make dev                             # local HTTP server via uv + .env (port 17717)
 make specs VERSION=2.41.1            # refresh src/portainer_mcp/data/portainer-patched.yaml
 ```
 
 `make dev` requires `.env` (copy from `.env.example`). It runs the server
-over HTTP at `127.0.0.1:8000` so you can iterate without restarting an MCP
+over HTTP at `127.0.0.1:17717` so you can iterate without restarting an MCP
 client — the client (added with `claude mcp add portainer-dev --transport
-http http://127.0.0.1:8000/mcp`) reconnects automatically after a ctrl-c +
+http http://127.0.0.1:17717/mcp`) reconnects automatically after a ctrl-c +
 `make dev`.
 
 Lint/format: none configured. CI runs only `uv sync --frozen && uv run

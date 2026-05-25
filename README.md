@@ -56,11 +56,11 @@ The recommended way to have multiple users interacting with your Portainer insta
 Run the MCP server as a container in your infrastructure:
 
 ```bash
-docker run -d --name portainer-mcp -p 8000:8000 \
+docker run -d --name portainer-mcp -p 17717:17717 \
   -e PORTAINER_URL=https://portainer.example.com \
   -e PORTAINER_API_KEY=ptr_xxxxxxxxxxxxxxxx \
   -e PORTAINER_MCP_AUTH_TOKEN="$(openssl rand -hex 32)" \
-  -e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com:8000 \
+  -e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com:17717 \
   portainer/portainer-mcp:2.42
 ```
 
@@ -70,7 +70,7 @@ Set `PORTAINER_MCP_ALLOWED_HOSTS` to the hostname or IP address that users will 
 
 Adding the MCP endpoint on Claude Code:
 ```bash
-claude mcp add portainer --transport http http://mcp.example.com:8000/mcp --header "Authorization: Bearer <token>"
+claude mcp add portainer --transport http http://mcp.example.com:17717/mcp --header "Authorization: Bearer <token>"
 ```
 
 ### Hygiene skill (recommended)
