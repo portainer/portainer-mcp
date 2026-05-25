@@ -35,6 +35,13 @@ claude mcp add portainer --transport http http://<host>:8000/mcp \
   --header "Authorization: Bearer <token>"
 ```
 
+If `<host>` is anything other than `localhost` / `127.0.0.1` / `[::1]`, add
+it to `PORTAINER_MCP_ALLOWED_HOSTS` (see [Hardening defaults](#hardening-defaults));
+otherwise the DNS-rebinding check rejects the request with 421. The
+startup log emits a WARNING when this combo is detected, and the 421
+response body names the env var to set — either signal is enough to
+self-diagnose.
+
 ## Reverse-proxy / TLS
 
 The container terminates HTTP, not HTTPS, and serves auth as a single shared
@@ -51,24 +58,45 @@ single shared bearer only.
 
 ## Tunables
 
-All the server env vars work in the container — see the top of
-[`src/portainer_mcp/server.py`](../src/portainer_mcp/server.py) for the full
-list. The image overrides three defaults:
+Every server env var works in the container. Full reference in
+[`configuration.md`](configuration.md). The image overrides four defaults:
 
 | Var                          | Container default | Server default |
 |------------------------------|-------------------|----------------|
 | `PORTAINER_MCP_TRANSPORT`    | `http`            | `stdio`        |
 | `PORTAINER_MCP_HTTP_HOST`    | `0.0.0.0`         | `127.0.0.1`    |
 | `PORTAINER_MCP_HTTP_PORT`    | `8000`            | `8000`         |
+| `PORTAINER_MCP_LOG_FORMAT`   | `json`            | `text`         |
 
-Anything else (`PORTAINER_PROFILES`, `PORTAINER_READ_ONLY`,
-`PORTAINER_NO_PROXY`, `PORTAINER_TLS_VERIFY`, `PORTAINER_MCP_LOG_LEVEL`,
-`PORTAINER_TAGS_EXTRA`, `PORTAINER_MAX_RESPONSE_CHARS`) passes straight through.
+## Hardening defaults
+
+The HTTP server ships two controls on top of the bearer secret —
+DNS-rebinding allowlist (Host + Origin) and audit-log of every auth
+attempt. Defaults are localhost-only, so **any non-local client must be
+added to `PORTAINER_MCP_ALLOWED_HOSTS`** or the request gets
+421-rejected. Knob reference and rationale in
+[`configuration.md`](configuration.md#hardening-http-transport-only).
+
+Rate limiting is intentionally not done in-process — apply it at the
+reverse proxy if you need it.
 
 ## Logs
 
 The server logs to stderr at INFO by default. `docker logs <container>` is the
 intended consumption path. Bump verbosity with `-e PORTAINER_MCP_LOG_LEVEL=DEBUG`.
+
+Container output is JSON (`PORTAINER_MCP_LOG_FORMAT=json`) so it ships
+cleanly into log aggregators. Each line is a single JSON envelope; audit
+and request records have their fields hoisted into the envelope rather
+than nested as strings. Override with `-e PORTAINER_MCP_LOG_FORMAT=text`
+if you prefer human-readable output.
+
+Audit + request records carry `client_ip`, `user_agent`, and
+`session_id` for traceability — join an audit row to its tool calls via
+`session_id`. See [Audit & traceability](configuration.md#audit--traceability)
+in `configuration.md` for the `jq` queries operators most often want
+(failed-auth alerting, per-session forensics, unfamiliar-client
+detection).
 
 The startup line includes a masked fingerprint of the auth token
 (`first4…last4`) so you can confirm the right secret loaded without exposing

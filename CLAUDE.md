@@ -71,6 +71,62 @@ Key things to internalise before changing code:
   (min 32 chars, ASCII printable, no whitespace) — loud-fail like the
   unknown-profile check. Don't relax this for "convenience"; the strict
   rule eliminates the make-dev-no-token footgun.
+- **Two HTTP hardening layers stack on top of the bearer.** Wired in
+  `build_server()` + `main()`: a contextualised `StructuredLoggingMiddleware`
+  applies to every transport; `http_security.DNSRebindingMiddleware` is
+  passed to `server.run(..., middleware=[…])` only for http. Starlette
+  appends user middleware *after* the auth backend, so DNS-rebinding
+  fires inside the auth chain — bearer-auth runs first, then the Host
+  check. Practical impact is small (the audit record may include
+  rebinding-probe attempts that present a valid token; failed-auth
+  attempts hit 401 before any Host check), but don't assume the Host
+  reject precedes bearer-auth when reading audit logs.
+  `StaticBearerVerifier.verify_token` emits a structured audit record on
+  every attempt under the `portainer_mcp.audit` sub-logger — never include
+  the attempted token in those records. In-process rate limiting was
+  intentionally dropped: at numbers that didn't impede legitimate clients
+  it didn't bound blast radius either, and a reverse proxy is the right
+  place for that control.
+- **Per-request context is read from the live HTTP request.**
+  `request_context.snapshot()` returns `client_ip`, `user_agent`, and
+  the MCP `Mcp-Session-Id` from `fastmcp.server.dependencies.get_http_request()`.
+  Both the audit log (in `verify_token`) and the FastMCP-layer structured
+  request log (`_ContextualStructuredLogging`) call it. Custom outer
+  ContextVars don't work here: MCP's streamable-HTTP session manager
+  dispatches each JSON-RPC message into a long-lived task whose context
+  was captured at session-creation time, so subsequent requests would
+  log the stale `initialize`-time values. `get_http_request()` reads
+  through MCP SDK's per-message `request_ctx` instead, which is current.
+  FastMCP's own `RequestContextMiddleware` is inserted at position 0 of
+  the middleware stack (`fastmcp.server.http.create_base_app`), so it
+  runs outside the bearer-auth middleware and `get_http_request()` is
+  already populated by the time `verify_token` executes — no custom
+  prepend needed. If a future FastMCP refactor moves that insertion or
+  the auth backend grows to read the request before fastmcp's
+  middleware runs, the audit log will silently lose its context fields;
+  re-add a small ASGI middleware via `StaticBearerVerifier.get_middleware()`
+  if that happens. With a single shared bearer the audit deliberately
+  omits `token_fp` (it would be a constant); `session_id` is what
+  actually joins an audit row to its request rows.
+- **DNS-rebinding rejections carry the env var name back to the operator.**
+  `_enrich` rewrites the SDK's bare 421 body to include
+  `PORTAINER_MCP_ALLOWED_HOSTS`; `misconfig_warning` logs a startup
+  WARNING when the bind host is non-loopback while the allowlist is
+  still the localhost defaults. The two together turn the "I deployed
+  it and it 421s" first-deploy moment into a self-diagnosing error —
+  keep the env-var name in both signals when refactoring. The `Origin`
+  allowlist is hardcoded (no env var): programmatic MCP clients omit
+  `Origin` and pass through, the local Inspector is covered by the
+  localhost defaults, and the MCP spec MUSTs the check itself, not the
+  configurability. Don't re-add an `ALLOWED_ORIGINS` env var unless a
+  real browser-hosted client use case shows up.
+- **Log shape is selectable.** `PORTAINER_MCP_LOG_FORMAT=text|json`
+  (default `text`, container image overrides to `json`). The `json`
+  formatter merges records whose `msg` is itself a JSON object into the
+  envelope, so audit and request records become first-class fields. Keep
+  this property when adding new structured loggers — emit
+  `json.dumps({...})` as the message and the formatter does the right
+  thing in both modes.
 
 ## Spec generation
 
@@ -120,4 +176,6 @@ prepends `spec/` to `sys.path` (it's a script dir, not a package).
   surprising behaviour, workarounds for spec defects). Don't add WHAT
   comments — identifiers carry that.
 - Env-var flags are parsed via `_env_flag` in `server.py`; falsy values
-  are `0`, `false`, `False`.
+  are `0`, `false`, `False`. Operator-facing knob reference lives in
+  [`docs/configuration.md`](docs/configuration.md); keep it in sync when
+  adding or renaming env vars.

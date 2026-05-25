@@ -1,6 +1,6 @@
 # Portainer MCP
 
-MCP server for Portainer, generated from the Portainer OpenAPI spec via
+Official MCP server for Portainer, generated from the Portainer OpenAPI spec via
 [FastMCP](https://github.com/PrefectHQ/fastmcp).
 
 ## Overview
@@ -29,7 +29,9 @@ from the same release — the difference is how clients reach it.
 | Team deployment, shared MCP endpoint | HTTP + bearer token | [Container](#team-deployment-container) |
 
 Generate an API key in Portainer under **My Account → Access tokens** first;
-both paths need it.
+both paths need it. Every env var and tunable knob is documented in
+[`docs/configuration.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/configuration.md)
+— the examples below only show what's required to get each path running.
 
 ### Single user (stdio via `uvx`)
 
@@ -56,8 +58,9 @@ Contributions for other client instructions are welcome!
 
 ### Team deployment (container)
 
-For shared deployments — one MCP endpoint per Portainer tenant, accessed by
-multiple users over HTTP, gated by a shared bearer secret.
+For shared deployments — one MCP endpoint running on a VM in your
+infrastructure, accessed by team members from their workstations over
+HTTP, gated by a shared bearer secret.
 [`docker.io/portainer/portainer-mcp`](https://hub.docker.com/r/portainer/portainer-mcp)
 ships multi-arch (`linux/amd64`, `linux/arm64`).
 
@@ -66,18 +69,32 @@ ships multi-arch (`linux/amd64`, `linux/arm64`).
 > interceptable on any path between client and server without TLS
 > termination.
 
+On the VM that will host the MCP endpoint:
+
 ```bash
 docker run -d --name portainer-mcp -p 8000:8000 \
   -e PORTAINER_URL=https://portainer.example.com \
   -e PORTAINER_API_KEY=ptr_xxxxxxxxxxxxxxxx \
   -e PORTAINER_MCP_AUTH_TOKEN="$(openssl rand -hex 32)" \
+  -e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com:8000 \
   portainer/portainer-mcp:2.42
 ```
 
-`PORTAINER_MCP_AUTH_TOKEN` is **required** in HTTP mode — startup fails loudly
-without it. Distribute the same token to every team member; their MCP client
-sends it as `Authorization: Bearer <token>`. Full setup, tag scheme, and
-reverse-proxy guidance:
+Set `PORTAINER_MCP_ALLOWED_HOSTS` to the hostname your team will use to
+reach the VM — otherwise the DNS-rebinding allowlist 421-rejects the
+request. The startup log emits a WARNING flagging the mismatch and the
+421 body names the env var, so the fix is visible from either side.
+
+`PORTAINER_MCP_AUTH_TOKEN` is **required** in HTTP mode; startup fails
+loudly without it. Distribute the same token to every team member; their
+MCP client sends it as `Authorization: Bearer <token>`:
+
+```bash
+claude mcp add portainer --transport http http://mcp.example.com:8000/mcp \
+  --header "Authorization: Bearer <token>"
+```
+
+Full setup, tag scheme, and reverse-proxy guidance:
 [`docs/docker.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/docker.md).
 
 ### Hygiene skill (recommended for both paths)
@@ -109,24 +126,8 @@ major+minor tracks the Portainer API version the embedded spec targets.
 
 ## Configuration
 
-All knobs are environment variables. Only `PORTAINER_URL` and
-`PORTAINER_API_KEY` are required.
-
-| Env var | Default | Effect |
-|---|---|---|
-| `PORTAINER_URL` | — | **Required.** Portainer base URL. |
-| `PORTAINER_API_KEY` | — | **Required.** Portainer API key. |
-| `PORTAINER_PROFILES` | `BASE,DOCKER,KUBERNETES` | Tag bundles to enable. `ALL` disables the filter. |
-| `PORTAINER_TAGS_EXTRA` | _empty_ | Extra tags appended to the profile union (escape hatch). |
-| `PORTAINER_READ_ONLY` | `0` | `1` restricts to `GET`/`HEAD` operations. |
-| `PORTAINER_NO_PROXY` | `0` | `1` skips `docker_proxy` / `kubernetes_proxy`. |
-| `PORTAINER_TLS_VERIFY` | `1` | `0` skips TLS verification (Portainer instance using self-signed certs). |
-| `PORTAINER_MAX_RESPONSE_CHARS` | `50000` | Response truncation cap. Size to ~80% of your MCP client's output ceiling. |
-| `PORTAINER_MCP_LOG_LEVEL` | `INFO` | One of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. Logs go to stderr. |
-| `PORTAINER_MCP_TRANSPORT` | `stdio` | `stdio` (default) or `http`. `http` binds a local server for dev / remote deployment. |
-| `PORTAINER_MCP_HTTP_HOST` | `127.0.0.1` | Bind host when `PORTAINER_MCP_TRANSPORT=http`. |
-| `PORTAINER_MCP_HTTP_PORT` | `8000` | Bind port when `PORTAINER_MCP_TRANSPORT=http`. |
-| `PORTAINER_MCP_AUTH_TOKEN` | — | **Required** when `PORTAINER_MCP_TRANSPORT=http`; ignored for stdio. Shared bearer secret; clients must send `Authorization: Bearer <token>`. Min 32 chars, no whitespace — generate with `openssl rand -hex 32`. |
-
+Full env-var reference, grouped by concern (transport, hardening,
+profiles, behaviour, logging):
+[`docs/configuration.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/configuration.md).
 Advanced profile setup — per-profile tag lists, orphan tags, read-only
 semantics — see [`docs/profiles.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/profiles.md).

@@ -7,11 +7,20 @@ is unaffected.
 from __future__ import annotations
 
 import hmac
+import json
+import logging
 
 from fastmcp.server.auth import AccessToken, TokenVerifier
 
+from . import request_context
+
 ENV_VAR = "PORTAINER_MCP_AUTH_TOKEN"
 MIN_TOKEN_LENGTH = 32
+
+# Dedicated sub-logger so operators can route audit events to a separate
+# sink via standard logging config without touching the rest of the
+# server's output.
+audit_logger = logging.getLogger("portainer_mcp.audit")
 
 
 def require_token(raw: str | None) -> str:
@@ -62,7 +71,13 @@ class StaticBearerVerifier(TokenVerifier):
         self._expected = token.encode("utf-8")
 
     async def verify_token(self, token: str) -> AccessToken | None:
+        # With a single shared secret, fingerprinting the *expected* token
+        # would just emit the same constant on every record — useless as a
+        # correlator. The request-context fields (client_ip, user_agent,
+        # session_id) are what actually distinguish callers here.
+        context = request_context.snapshot()
         if hmac.compare_digest(token.encode("utf-8"), self._expected):
+            audit_logger.info(json.dumps({"event": "auth", "outcome": "ok", **context}))
             # Store the fingerprint, not the raw secret. AccessToken is a
             # Pydantic model whose default __repr__ dumps all fields, so
             # any downstream log of request.user.access_token would leak
@@ -74,4 +89,10 @@ class StaticBearerVerifier(TokenVerifier):
                 scopes=[],
                 expires_at=None,
             )
+        # Mismatch — don't fingerprint the attempted token. The forensic
+        # signal worth keeping is "auth failed at time T from <ip/ua>";
+        # the attacker's supplied bytes are noise.
+        audit_logger.warning(
+            json.dumps({"event": "auth", "outcome": "mismatch", **context})
+        )
         return None
