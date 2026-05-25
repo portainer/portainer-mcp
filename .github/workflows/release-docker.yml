@@ -32,7 +32,6 @@ jobs:
       # test failure blocks the image push even if PyPI publishes.
       - run: uv run pytest
 
-      - uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
       - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
       - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
@@ -51,11 +50,11 @@ jobs:
       - uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Disable SLSA attestations so the published manifest stays a plain
-          # multi-arch index — provenance adds an extra unknown/unknown entry
-          # that confuses Docker Hub's UI and pull-by-platform tooling.
+          # Disable SLSA attestations so the published image stays a plain
+          # image manifest — provenance adds an unknown/unknown entry that
+          # turns it into an index and confuses Docker Hub's UI.
           provenance: false
