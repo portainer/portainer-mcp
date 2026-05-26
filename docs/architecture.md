@@ -15,6 +15,9 @@ data/portainer-patched.yaml ──► FastMCP.from_openapi ──► tag filter 
                                                   SelectArgTransform (per tool)
                                                                       │
                                                                       ▼
+                                                  redact_envs (before projection)
+                                                                      │
+                                                                      ▼
                                                   ResponseCapMiddleware (per call)
                                                                       │
                                                                       ▼
@@ -124,9 +127,9 @@ than nested strings. Two structured emitters feed it:
 None}` to `server.run()`, so a single formatter owns every record
 regardless of which library installed handlers first.
 
-### Response shaping — `shaping.py`
+### Response shaping — `shaping.py` and `redaction.py`
 
-Two cooperating layers, applied to every tool the server exposes:
+Three cooperating layers, applied to every tool the server exposes:
 
 1. **`SelectArgTransform`** injects an optional `select` parameter on
    every tool. The caller passes a JMESPath expression; the server
@@ -134,15 +137,35 @@ Two cooperating layers, applied to every tool the server exposes:
    trims noisy Portainer payloads (snapshots, K8s `managedFields`, etc.)
    server-side instead of dragging them into context.
 
-2. **`ResponseCapMiddleware`** is the final safety valve. If a tool
+2. **`redact_envs`** walks the parsed response and rewrites env values to
+   the sentinel `[REDACTED]` before `select` runs, so that a JMESPath
+   expression like `select="Env[0].value"` lands on the sentinel rather
+   than the real secret. The walker is field-name driven (`env` /
+   `envvars`, case-insensitive) and dispatches on value shape — list of
+   `{name, value}` dicts (Portainer `Env`/`EnvVars`, K8s `env`), or list
+   of `"KEY=VAL"` strings (Docker-native). K8s `valueFrom` references
+   are preserved — they're references to a Secret/ConfigMap, not the
+   secret material itself. When redaction fires, the response carries a
+   one-line summary `TextContent` naming `PORTAINER_EXPOSE_ENV_VALUES`
+   so the caller knows how to disclose. Disabled with
+   `PORTAINER_EXPOSE_ENV_VALUES=1`; the posture is logged at startup
+   (`env value redaction: enabled` or `DISABLED (env values exposed)`).
+
+3. **`ResponseCapMiddleware`** is the final safety valve. If a tool
    result exceeds `PORTAINER_MAX_RESPONSE_CHARS` (default 50 000), the
    middleware truncates and appends a hint that names `select` with a
    concrete example. The cap is sized to fire *before* Claude Code's
    own MCP output cap (~62k chars for dense JSON), so our hint reaches
    the model instead of Claude Code's generic "saved to file" message.
 
-`select` narrows first (cheaper bodies); the cap catches whatever still
-slips through.
+Redaction runs first on every JSON-shaped response (`select` and the
+cap can't bypass it), `select` narrows next (cheaper bodies), and the
+cap catches whatever still slips through. Both projection sites — the
+wrapper around OpenAPI-generated tools (`_select_wrapper`) and the
+proxy tools (`_apply_select`) — call `redact_envs` before applying the
+JMESPath. Non-JSON proxy bodies (Docker logs / stats / error pages)
+pass through unchanged: the walker is field-name driven and has
+nothing to match.
 
 ## Why this shape
 
@@ -150,9 +173,14 @@ slips through.
   FastMCP generate the tools so spec bumps are mostly a regen.
 - **Filter at the spec layer.** Profiles reduce the visible surface
   without touching individual tools.
-- **Universal shaping.** `select` and the cap apply to every tool —
-  generated and hand-written alike — so the model learns one pattern
-  that works everywhere.
+- **Universal shaping.** `select`, redaction, and the cap apply to
+  every tool — generated and hand-written alike — so the model learns
+  one pattern that works everywhere.
+- **Safe-by-default disclosure.** Env values in JSON responses are
+  redacted on the server before they reach the model, instead of
+  relying on the model to ask the right `select`. The toggle is global
+  and operator-controlled, so exposure is an explicit decision rather
+  than a per-tool oversight.
 
 ## Pointers
 

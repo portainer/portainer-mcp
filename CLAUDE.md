@@ -63,6 +63,16 @@ Key things to internalise before changing code:
   OpenAPI responses as `{"result": …}` to fit MCP's structured-content
   schema. `_select_wrapper` unwraps that single-key envelope before
   projecting, so callers write `[].Id` rather than `result[].Id`.
+- **Env values redacted before projection.** `redaction.redact_envs()`
+  walks the parsed response in `_select_wrapper` and in the proxy tools
+  *before* JMESPath `select` runs — so `select="Env[0].value"` lands on
+  the `[REDACTED]` sentinel rather than the real value. The walker is
+  field-name driven (`env` / `envvars`, case-insensitive) and handles
+  Shapes A/F/G (list of `{name, value}` dicts) and Shape C (Docker
+  `"KEY=VAL"` strings); K8s `valueFrom` references are preserved.
+  Disabled with `PORTAINER_EXPOSE_ENV_VALUES=1`; logged at startup so
+  the posture is greppable. When redaction fires, the response carries a
+  one-line summary TextContent naming the env var.
 - **HTTP transport requires a bearer token.** `auth.py` defines
   `StaticBearerVerifier` (a `fastmcp.server.auth.TokenVerifier` subclass
   using `hmac.compare_digest`); `build_server()` wires it into

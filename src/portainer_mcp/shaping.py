@@ -30,6 +30,8 @@ from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
 from pydantic import Field
 
+from portainer_mcp import redaction
+
 logger = logging.getLogger("portainer_mcp")
 
 # Must fire before Claude Code's MCP output cap (~25k tokens, ~62k chars
@@ -96,45 +98,67 @@ class ResponseCapMiddleware(Middleware):
         return result
 
 
+def _parse_for_shaping(result: ToolResult, select: str | None) -> Any:
+    """Return parsed JSON body of `result`, or `None` if there's nothing
+    to shape. Raises `ValueError` only when `select` was asked for but the
+    body isn't JSON — the redaction-only path passes through quietly.
+    """
+    data = result.structured_content
+    if data is not None:
+        return data
+    text_blocks = [
+        getattr(c, "text", None) for c in result.content if hasattr(c, "text")
+    ]
+    candidate = next((t for t in text_blocks if isinstance(t, str) and t), None)
+    if candidate is None:
+        return None
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError as exc:
+        if select:
+            raise ValueError(
+                f"response was not JSON; cannot apply `select`: {exc}"
+            ) from exc
+        return None
+
+
 async def _select_wrapper(
     select: Annotated[str | None, Field(description=SELECT_DESCRIPTION)] = None,
     **kwargs: Any,
 ) -> ToolResult:
-    """Call the parent tool, then project its result via JMESPath."""
+    """Call the parent tool, redact env values, then project via JMESPath."""
     result = await forward(**kwargs)
-    if not select:
-        return result
+    expose = redaction.is_expose_enabled()
+    if expose and not select:
+        return result  # nothing to do; preserve the existing fast path
 
-    data: Any = result.structured_content
+    data = _parse_for_shaping(result, select)
     if data is None:
-        text_blocks = [
-            getattr(c, "text", None) for c in result.content if hasattr(c, "text")
-        ]
-        candidate = next(
-            (t for t in text_blocks if isinstance(t, str) and t), None
-        )
-        if candidate is None:
-            return result  # nothing projectable (no text, no structured)
-        try:
-            data = json.loads(candidate)
-        except json.JSONDecodeError as exc:
-            raise ValueError(
-                f"response was not JSON; cannot apply `select`: {exc}"
-            ) from exc
+        return result
 
     # FastMCP wraps non-dict OpenAPI responses as `{"result": ...}` so they
     # fit MCP's structured_content schema (which must be an object). Unwrap
-    # before applying JMESPath so callers write against the natural API
+    # before redacting / projecting so callers write against the natural API
     # shape — e.g. `[].Id` against a list endpoint — rather than
-    # `result[].Id`.
+    # `result[].Id`, and so the env walker reaches list-of-objects bodies.
     if isinstance(data, dict) and set(data.keys()) == {"result"}:
         data = data["result"]
 
-    projected = project(data, select)
+    redaction_count = 0
+    if not expose:
+        data, redaction_count = redaction.redact_envs(data)
+    if select:
+        data = project(data, select)
+
+    content = [TextContent(type="text", text=json.dumps(data))]
+    if redaction_count:
+        content.append(
+            TextContent(type="text", text=redaction.hint(redaction_count))
+        )
     return ToolResult(
-        content=[TextContent(type="text", text=json.dumps(projected))],
+        content=content,
         # MCP structured_content must be a dict; drop it for lists/scalars.
-        structured_content=projected if isinstance(projected, dict) else None,
+        structured_content=data if isinstance(data, dict) else None,
     )
 
 

@@ -92,6 +92,7 @@ The MCP server comes with the following capabilities enabled by default:
 * Docker operation support
 * Kubernetes operation support
 * Docker and Kubernetes proxy support
+* Redacting environment variables values (enabled by default)
 
 For restricting or expanding this set of capabilities, see [`docs/profiles.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/profiles.md).
 

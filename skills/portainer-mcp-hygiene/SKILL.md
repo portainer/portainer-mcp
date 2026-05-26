@@ -55,7 +55,7 @@ kubernetes_proxy(path="/apis/apps/v1/deployments", select="items[].{name:metadat
 The OpenAPI-generated `GetAllKubernetesApplications`, `GetAllKubernetesConfigMaps`, `GetAllKubernetesIngresses`, etc. return arrays where each element carries its full object body. Same rules as the proxy: project to the named fields you need.
 
 **`StackList` and `StackInspect` — config and env vars.**
-Stacks carry the full compose/manifest content plus environment variable dictionaries. If the user asked "which stacks exist?", project to `{id, name, type, status}`. If they asked about a specific stack's config, fetch it directly and only then look at the body.
+Stacks carry the full compose/manifest content plus environment variable dictionaries. If the user asked "which stacks exist?", project to `{id, name, type, status}`. If they asked about a specific stack's config, fetch it directly and only then look at the body. Env *values* come back redacted by default — see *Env values are redacted by default* below.
 
 **Snapshot inspects (`snapshotInspect`, `snapshotContainersList`, etc.) — entire snapshots.**
 These return the *whole* snapshot blob by design. Always project.
@@ -65,6 +65,14 @@ These return the *whole* snapshot blob by design. Always project.
 
 **`EndpointGetCharts`, `dockerDashboard`, `EndpointSummaryCounts` — already aggregated.**
 These are the lightweight "summary" tools. Prefer them over `EndpointList` + projection when the user's question is purely a count or rollup — fewer characters, less work, more accurate (server-side aggregation).
+
+**Env values are redacted by default.**
+Stack, container, and Kubernetes env values come back as `[REDACTED]`. The response also carries a one-line summary: `[N env value(s) redacted; set PORTAINER_EXPOSE_ENV_VALUES=1 on the MCP server to disclose]`.
+
+- Don't waste a tool call fishing for them via `select` — the projection runs *after* redaction, so any field path lands on the sentinel.
+- If the user genuinely needs an env value (troubleshooting a deploy), tell them to set `PORTAINER_EXPOSE_ENV_VALUES=1` on the MCP server and reconnect. Don't invoke the toggle yourself.
+- The sentinel `[REDACTED]` is a literal placeholder — never quote it back to the user as if it were the real value.
+- Redaction covers `Env` / `EnvVars` shapes (stack `Env` pairs, Docker `KEY=VAL` strings, K8s `env[].value`). K8s `valueFrom` references are preserved — they're references to a Secret/ConfigMap, not the secret material itself.
 
 ## Patterns for common questions
 
