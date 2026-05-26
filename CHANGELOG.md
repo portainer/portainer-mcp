@@ -9,12 +9,18 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.42.1] — 2026-05-26
+
+Targets Portainer 2.42.x. First build to ship a container image alongside
+the PyPI wheel, and the first release with a bearer-gated HTTP transport.
+
 ### Added
 
-- **Container image** at `docker.io/portainer/portainer-mcp`, multi-arch
-  (`linux/amd64`, `linux/arm64`). Tagged `X.Y.Z` and `X.Y` on each release;
-  no `latest` tag. Published from `.github/workflows/release-docker.yml`
-  on every `X.Y.Z` tag push. See [`docs/docker.md`](docs/docker.md).
+- **Container image** at `docker.io/portainer/portainer-mcp`, published
+  on every `X.Y.Z` tag push from
+  [`.github/workflows/release-docker.yml`](.github/workflows/release-docker.yml).
+  Tagged `X.Y.Z` and `X.Y` per release; no `latest`. See
+  [`docs/docker.md`](docs/docker.md).
 - **HTTP bearer auth.** New `PORTAINER_MCP_AUTH_TOKEN` env, **required**
   when `PORTAINER_MCP_TRANSPORT=http` and ignored for stdio. Strict
   validation at startup (min 32 chars, ASCII printable, no whitespace —
@@ -22,6 +28,28 @@ the MCP server.
   `hmac.compare_digest`; masked fingerprint in the startup log, full
   value never logged. Wired through FastMCP's `TokenVerifier` protocol —
   FastMCP renders the 401 + `WWW-Authenticate` response on failure.
+- **DNS-rebinding allowlist** for the HTTP transport.
+  `PORTAINER_MCP_ALLOWED_HOSTS` (default `127.0.0.1:*,localhost:*,[::1]:*`)
+  validates the `Host` header on every request; mismatches return 421
+  with a body that names the env var. The `Origin` allowlist is hardcoded
+  to localhost — programmatic MCP clients omit `Origin` and pass through.
+  A startup WARNING fires when the bind host is non-loopback while the
+  allowlist is still the localhost defaults, so the
+  "deployed-then-it-421s" case self-diagnoses.
+- **Auth audit log.** Every HTTP auth attempt emits a structured record
+  under the `portainer_mcp.audit` sub-logger with `outcome`, `client_ip`,
+  `user_agent`, and the MCP `session_id` — joinable against the
+  FastMCP-layer `request_start` / `request_success` records by
+  `session_id`. The attempted token is never written.
+- **Selectable log shape.** `PORTAINER_MCP_LOG_FORMAT=text|json`
+  (default `text`; container image overrides to `json`). In `json` mode,
+  records whose message is itself a JSON object are merged into the
+  envelope, so audit and request records become first-class fields
+  rather than nested strings.
+- **Consolidated operator config reference** at
+  [`docs/configuration.md`](docs/configuration.md), grouped by concern
+  (transport, hardening, profiles, behaviour, logging) with the audit
+  and traceability story documented end-to-end.
 
 ### Changed
 
