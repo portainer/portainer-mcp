@@ -1,31 +1,31 @@
 # Portainer MCP
 
-MCP server for Portainer, generated from the Portainer OpenAPI spec via
-[FastMCP](https://github.com/PrefectHQ/fastmcp).
+Official MCP server for Portainer, generated from the Portainer OpenAPI spec via [FastMCP](https://github.com/PrefectHQ/fastmcp).
 
 ## Overview
 
-Exposes Portainer's REST API as MCP tools — list environments, manage
-Docker containers and stacks, query Kubernetes resources, run Helm
-releases. Two escape-hatch tools (`docker_proxy`, `kubernetes_proxy`)
-forward arbitrary paths to the underlying Docker/K8s APIs for endpoints
-the spec doesn't enumerate.
+This MCP server exposes the Portainer REST API as MCP tools: list and inspect environments, manage GitOps workflows, troubleshoot Docker and Kubernetes resources. It also supports proxying requests to the underlying Docker and K8s APIs of each environment.
 
-**Status: in development.** Tool names, env vars, and defaults can
-change between releases. Pin loosely (see
-[Version compatibility](#version-compatibility)) to pick up MCP-only
-fixes without surprise.
-
-Architecture overview: [`docs/architecture.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/architecture.md).
+Match the MCP server's minor version to your Portainer instance's minor — e.g. MCP server 2.42.x with Portainer 2.42.x. See [Version compatibility](#version-compatibility) for details.
 
 ## Getting started
 
-The server is distributed on PyPI as `mcp-portainer`. MCP clients launch it as
-a subprocess via [`uvx`](https://docs.astral.sh/uv/), so `uv` must be on
-`PATH` — see [the uv install docs](https://docs.astral.sh/uv/getting-started/installation/).
+The MCP server can be executed locally via `uvx` or as a container.
 
-Generate an API key in Portainer under **My Account → Access tokens**, then
-register the server with Claude Code:
+Use the first approach to explore the MCP capabilities locally and deploy it inside your infrastructure as a container for a team based deployment setup.
+
+> [!NOTE]
+> Before using the MCP, make sure to generate an API key in Portainer under **My Account → Access tokens** first as both paths need it.
+
+### Single user (stdio via `uvx`)
+
+The recommended way to test the MCP server locally. Runs as a stdio process on your machine and connects directly to the Portainer instance.
+
+> [!NOTE]
+> `uv` must be installed and available on `PATH`.
+> See [the uv install docs](https://docs.astral.sh/uv/getting-started/installation/).
+
+Register with Claude Code:
 
 ```bash
 claude mcp add portainer \
@@ -34,13 +34,48 @@ claude mcp add portainer \
   -- uvx --from "mcp-portainer~=2.42.0" mcp-portainer
 ```
 
-`~=2.42.0` picks up MCP-only patch fixes against the same Portainer minor —
-see [Version compatibility](#version-compatibility) for the policy.
+> [!NOTE]
+> Set `PORTAINER_TLS_VERIFY=0` if your Portainer instance uses self-signed TLS certificates.
 
-**Recommended: install the hygiene skill.** This repo ships a Claude Code
-skill ([`portainer-mcp-hygiene`](https://github.com/portainer/portainer-mcp/blob/main/skills/portainer-mcp-hygiene/SKILL.md))
-that helps the model query the MCP efficiently and keep responses within
-context. Install user-wide, pinned to the same tag as the server:
+For other clients, see
+[`docs/distribution/`](https://github.com/portainer/portainer-mcp/tree/main/docs/distribution).
+Contributions for other client instructions are welcome!
+
+### Team deployment (container)
+
+The recommended way to have multiple users interacting with your Portainer instance via MCP. Deployed as a [`container`](https://hub.docker.com/r/portainer/portainer-mcp) inside your infrastructure, accessed by users from their workstations over HTTP, gated by a shared bearer secret.
+
+> [!IMPORTANT]
+> The container terminates HTTP, **NOT HTTPS**, and serves auth as a single shared bearer.
+> The secret can be intercepted on any path between client and server without TLS termination.
+> 
+> It is **NOT** recommended to expose this MCP server on the public internet.
+> 
+> Even with a TLS-terminating reverse proxy in front, the recommendation is to gate this MCP server inside your private infrastructure.
+
+Run the MCP server as a container in your infrastructure:
+
+```bash
+docker run -d --name portainer-mcp -p 17717:17717 \
+  -e PORTAINER_URL=https://portainer.example.com \
+  -e PORTAINER_API_KEY=ptr_xxxxxxxxxxxxxxxx \
+  -e PORTAINER_MCP_AUTH_TOKEN="$(openssl rand -hex 32)" \
+  -e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com:17717 \
+  portainer/portainer-mcp:2.42
+```
+
+Set `PORTAINER_MCP_ALLOWED_HOSTS` to the hostname or IP address that users will use to reach the MCP — otherwise the DNS-rebinding allowlist 421-rejects the request.
+
+`PORTAINER_MCP_AUTH_TOKEN` is **required** in HTTP mode. It provides the key to gate access to the MCP, distribute this token to the users; their MCP client will send it via the `Authorization` header.
+
+Adding the MCP endpoint on Claude Code:
+```bash
+claude mcp add portainer --transport http http://mcp.example.com:17717/mcp --header "Authorization: Bearer <token>"
+```
+
+### Hygiene skill (recommended)
+
+This repo ships a Claude Code skill ([`portainer-mcp-hygiene`](https://github.com/portainer/portainer-mcp/blob/main/skills/portainer-mcp-hygiene/SKILL.md)) that helps the model query the MCP efficiently and keep responses within context. Install user-wide, pinned to the same tag as the server:
 
 ```bash
 mkdir -p ~/.claude/skills/portainer-mcp-hygiene && \
@@ -48,44 +83,35 @@ mkdir -p ~/.claude/skills/portainer-mcp-hygiene && \
   -o ~/.claude/skills/portainer-mcp-hygiene/SKILL.md
 ```
 
-Re-run on each server upgrade so the skill stays in sync.
+It is recommended to re-run on each server upgrade so the skill stays in sync.
 
-For other clients, see [`docs/distribution/`](https://github.com/portainer/portainer-mcp/tree/main/docs/distribution). See
-[Configuration](#configuration) for optional knobs.
+## Restricting and expanding the MCP server capabilities
 
-Contribution are welcome for other client instructions !
+The MCP server comes with the following capabilities enabled by default:
+* Basic Portainer operation support (settings, version, environments...)
+* Docker operation support
+* Kubernetes operation support
+* Docker and Kubernetes proxy support
+
+For restricting or expanding this set of capabilities, see [`docs/profiles.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/profiles.md).
 
 ## Version compatibility
 
-**Match your server's minor to your Portainer minor.** The
-major+minor tracks the Portainer API version the embedded spec targets.
+**Match the MCP server's minor to your Portainer minor.** The major+minor tracks the Portainer API version the embedded spec targets.
 
 | Server version | Portainer (CE / EE) |
 | -------------- | ------------------- |
 | `2.42.x`       | `2.42.x`            |
 | `2.41.x`       | `2.41.x`            |
 
-- Full policy: [`docs/versioning.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/versioning.md).
+For more information about the versioning policy, see [`docs/versioning.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/versioning.md).
 
 ## Configuration
 
-All knobs are environment variables. Only `PORTAINER_URL` and
-`PORTAINER_API_KEY` are required.
+The MCP server exposes different capabilities such as:
+* Enable different set of tools based on specific profile configuration
+* Widen the API coverage by specifying extra tags to cover
+* Expose only read-only capabilities
+* Disable proxy capabilities
 
-| Env var | Default | Effect |
-|---|---|---|
-| `PORTAINER_URL` | — | **Required.** Portainer base URL. |
-| `PORTAINER_API_KEY` | — | **Required.** Portainer API key. |
-| `PORTAINER_PROFILES` | `BASE,DOCKER,KUBERNETES` | Tag bundles to enable. `ALL` disables the filter. |
-| `PORTAINER_TAGS_EXTRA` | _empty_ | Extra tags appended to the profile union (escape hatch). |
-| `PORTAINER_READ_ONLY` | `0` | `1` restricts to `GET`/`HEAD` operations. |
-| `PORTAINER_NO_PROXY` | `0` | `1` skips `docker_proxy` / `kubernetes_proxy`. |
-| `PORTAINER_TLS_VERIFY` | `1` | `0` skips TLS verification (Portainer instance using self-signed certs). |
-| `PORTAINER_MAX_RESPONSE_CHARS` | `50000` | Response truncation cap. Size to ~80% of your MCP client's output ceiling. |
-| `PORTAINER_MCP_LOG_LEVEL` | `INFO` | One of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. Logs go to stderr. |
-| `PORTAINER_MCP_TRANSPORT` | `stdio` | `stdio` (default) or `http`. `http` binds a local server for dev / remote deployment. |
-| `PORTAINER_MCP_HTTP_HOST` | `127.0.0.1` | Bind host when `PORTAINER_MCP_TRANSPORT=http`. |
-| `PORTAINER_MCP_HTTP_PORT` | `8000` | Bind port when `PORTAINER_MCP_TRANSPORT=http`. |
-
-Advanced profile setup — per-profile tag lists, orphan tags, read-only
-semantics — see [`docs/profiles.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/profiles.md).
+For more information about the MCP server configuration, refer to [`docs/configuration.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/configuration.md).

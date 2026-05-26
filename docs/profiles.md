@@ -1,8 +1,6 @@
 # Profiles
 
-The Portainer API spec exposes 400+ operations across 40+ tags. Auto-converting
-all of them produces a tool list too noisy for MCP clients to navigate, so the
-server runs with a tag allowlist. Profiles are named bundles of those tags.
+The Portainer API spec exposes 400+ operations across 40+ tags. Auto-converting all of them produces a tool list too noisy for MCP clients to navigate, so the server runs with a tag allowlist. Profiles are named bundles of those tags.
 
 ## Quick reference
 
@@ -13,8 +11,7 @@ server runs with a tag allowlist. Profiles are named bundles of those tags.
 | `PORTAINER_READ_ONLY` | `0` | `1` restricts to `GET`/`HEAD` operations only (strict — HTTP method is the read/write classifier). |
 | `PORTAINER_NO_PROXY` | `0` | `1` skips `docker_proxy` / `kubernetes_proxy` registration. |
 
-Unknown profile names fail loudly at startup. Unknown extras (tags) log a warning
-and pass through harmlessly — they just won't match any operation.
+Unknown profile names will prevent the server from starting. Unknown extras (tags) log a warning and pass through harmlessly — they just won't match any operation.
 
 ## Profiles
 
@@ -34,12 +31,6 @@ means future upstream tags appear automatically without any code change here.
 
 Compose with `PORTAINER_READ_ONLY=1` for an inventory/audit persona that can
 see everything but mutate nothing.
-
-## Default coverage
-
-`PORTAINER_PROFILES=BASE,DOCKER,KUBERNETES` (the default) covers 10 tags and
-~197 spec operations. The five-profile union covers 28 tags and
-~342 operations. `ALL` covers everything.
 
 ## Orphan tags
 
@@ -63,10 +54,6 @@ when you need them, or switch to `ALL`:
 | 1 | `auto_updates` | Auto-update configuration. |
 | 1 | `upload` | File upload endpoint. |
 
-Total orphaned: 14 tags, 79 operations. Tags repeatedly requested via
-`PORTAINER_TAGS_EXTRA` are the signal that a profile should grow or a new
-profile should be added.
-
 ## Examples
 
 ```bash
@@ -89,9 +76,7 @@ PORTAINER_PROFILES=BASE,DOCKER,KUBERNETES PORTAINER_TAGS_EXTRA=observability \
 
 ## Read-only semantics
 
-`PORTAINER_READ_ONLY=1` filters by HTTP method: only `GET` and `HEAD`
-operations are registered as tools, and the proxy tools reject non-GET
-requests at call time. A handful of Portainer endpoints use `POST` for
-read-shaped operations (e.g. some snapshot listings); read-only mode hides
-those too. This is deliberate — the simple method-based rule is predictable
-and won't rot, where an operationId denylist would.
+`PORTAINER_READ_ONLY=1` filters by HTTP method: only `GET` and `HEAD` operations are registered as tools, and the proxy tools reject non-GET
+requests at call time. 
+A handful of Portainer endpoints use `POST` for read-shaped operations (e.g. some snapshot listings); read-only mode hides those too. 
+This is deliberate — the simple method-based rule is predictable and won't rot, where an operationId denylist would.

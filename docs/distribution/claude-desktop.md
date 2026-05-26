@@ -18,10 +18,16 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 }
 ```
 
-Restart Claude Desktop. Logs land in `~/Library/Logs/Claude/mcp*.log` (macOS)
-or `%APPDATA%\Claude\logs\` (Windows).
+`uv` must be on `PATH` — see
+[the uv install docs](https://docs.astral.sh/uv/getting-started/installation/).
 
-**Recommended: install the hygiene skill.** This repo ships a skill
+Restart Claude Desktop after every config change. Logs land in
+`~/Library/Logs/Claude/mcp*.log` (macOS) or `%APPDATA%\Claude\logs\`
+(Windows).
+
+## Recommended: install the hygiene skill
+
+This repo ships a skill
 ([`portainer-mcp-hygiene`](https://github.com/portainer/portainer-mcp/blob/main/skills/portainer-mcp-hygiene/SKILL.md))
 that helps the model query the MCP efficiently and keep responses within
 context. Install user-wide, pinned to the same tag as the server:

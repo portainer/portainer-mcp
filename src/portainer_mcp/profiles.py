@@ -5,8 +5,7 @@ their tag sets are union'd. `PORTAINER_TAGS_EXTRA` appends arbitrary tags
 as an escape hatch for surfaces no profile covers yet.
 
 The `ALL` sentinel bypasses the tag filter entirely so new upstream tags
-don't require a profile edit. See `docs/profiles.md` for the per-profile
-tag list and the orphan tags not covered by any profile.
+don't require a profile edit.
 """
 
 from __future__ import annotations
