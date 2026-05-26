@@ -9,6 +9,28 @@ the MCP server.
 
 ## [Unreleased]
 
+### Added
+
+- **Env value redaction on every response.** Stack, container, and
+  Kubernetes env values are rewritten to `[REDACTED]` before leaving the
+  MCP tool boundary so secrets don't leak into the model's context just
+  because a tool happened to include them. The redaction runs *before*
+  JMESPath `select`, so a projection like `select="Env[0].value"` lands
+  on the sentinel. The response carries a one-line summary naming the
+  toggle. Set `PORTAINER_EXPOSE_ENV_VALUES=1` to disclose; the posture
+  is logged at startup. Covers Portainer `Env`/`EnvVars` pairs, Docker
+  `"KEY=VAL"` strings, and Kubernetes `env[].value`; K8s `valueFrom`
+  references are preserved.
+  See [#61](https://github.com/portainer/portainer-mcp/issues/61).
+
+### Changed
+
+- Proxy responses (`docker_proxy`, `kubernetes_proxy`) are now re-serialised
+  through `json.dumps` whenever they're JSON and the redaction posture is
+  active (i.e. by default). Output is byte-identical for the model but no
+  longer preserves upstream whitespace or key ordering. Non-JSON bodies
+  (logs, stats, error pages) still pass through verbatim.
+
 ## [2.42.1] — 2026-05-26
 
 Targets Portainer 2.42.x. First build to ship a container image alongside

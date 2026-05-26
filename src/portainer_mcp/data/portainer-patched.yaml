@@ -488,8 +488,6 @@ paths:
       summary: Fetch the status of the last scheduled backup run
       tags:
       - backup
-  /cloud/{provider}/info: {}
-  /cloud/{provider}/provision: {}
   /cloud/amazon/provision:
     post:
       description: 'Provision a new KaaS cluster and create an environment.
@@ -762,7 +760,6 @@ paths:
       summary: Create Shared Git Credential
       tags:
       - cloud_credentials
-  /cloud/gitcredentials/{id}: {}
   /cloud/gke/provision:
     post:
       description: 'Provision a new KaaS cluster and create an environment.
@@ -4055,42 +4052,6 @@ paths:
       summary: fetch docker pull limits
       tags:
       - endpoints
-  /endpoints/{id}/edge/alerts:
-    post:
-      description: Authorized only if the request is made by a trusted Edge environment(endpoint)
-      operationId: EndpointEdgeAlertsReceive
-      parameters:
-      - description: Environment(Endpoint) identifier
-        in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              items:
-                $ref: '#/components/schemas/models.PostableAlert'
-              type: array
-        description: Alertmanager alert batch
-        required: true
-      responses:
-        '204':
-          description: No Content
-        '400':
-          description: Bad Request
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-      security:
-      - ApiKeyAuth: []
-      - jwt: []
-      summary: Receive Alertmanager-compatible alerts from an Edge agent
-      tags:
-      - edge
-      - endpoints
   /endpoints/{id}/edge/alerts/state:
     get:
       description: 'Returns the latest alert rule evaluation state reported by an
@@ -4191,108 +4152,6 @@ paths:
       - ApiKeyAuth: []
       - jwt: []
       summary: Update environment(endpoint) policy chart installation statuses
-      tags:
-      - endpoints
-  /endpoints/{id}/edge/jobs/{jobID}/logs:
-    post:
-      description: Authorized only if the request is done by an Edge Environment(Endpoint)
-      parameters:
-      - description: Environment(Endpoint) Id
-        in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      - description: Job Id
-        in: path
-        name: jobID
-        required: true
-        schema:
-          type: integer
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad Request
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-      summary: Update the logs collected from an Edge Job
-      tags:
-      - edge
-      - endpoints
-  /endpoints/{id}/edge/stacks/{stackId}:
-    get:
-      description: '**Access policy**: public'
-      parameters:
-      - description: Environment(Endpoint) Id
-        in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      - description: EdgeStack Id
-        in: path
-        name: stackId
-        required: true
-        schema:
-          type: integer
-      - description: Stack file version maintained by Portainer
-        in: query
-        name: version
-        schema:
-          type: integer
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/edge.StackPayload'
-        '400':
-          description: Bad Request
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
-      summary: Inspect an Edge Stack for an Environment(Endpoint)
-      tags:
-      - edge
-      - endpoints
-      - edge_stacks
-  /endpoints/{id}/edge/status:
-    get:
-      description: 'environment(endpoint) for edge agent to check status of environment(endpoint)
-
-        **Access policy**: restricted only to Edge environments(endpoints)'
-      operationId: EndpointEdgeStatusInspect
-      parameters:
-      - description: Environment(Endpoint) identifier
-        in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      responses:
-        '200':
-          description: Success
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/endpointedge.endpointEdgeStatusInspectResponse'
-        '400':
-          description: Invalid request
-        '403':
-          description: Permission denied to access environment(endpoint)
-        '404':
-          description: Environment(Endpoint) not found
-        '500':
-          description: Server error
-      security:
-      - ApiKeyAuth: []
-      - jwt: []
-      summary: Get environment(endpoint) status
       tags:
       - endpoints
   /endpoints/{id}/forceupdateservice:

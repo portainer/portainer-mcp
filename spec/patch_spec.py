@@ -25,6 +25,23 @@ EXCLUDED_OPERATION_IDS = {
     "provisionCluster",
 }
 
+# Edge-agent-only callbacks under `/endpoints/{id}/edge/*` that 403 outside
+# an agent context. Tagged with `endpoints` upstream, so they leak into the
+# default profile and surface as tools that can never succeed for a non-agent
+# MCP caller.
+#
+# Two of them have no operationId in the spec (FastMCP names them from
+# `summary` instead), so the existing operationId-based filter can't catch
+# them — match on (method, path) instead.
+EXCLUDED_PATH_METHODS = frozenset(
+    {
+        ("get", "/endpoints/{id}/edge/stacks/{stackId}"),
+        ("get", "/endpoints/{id}/edge/status"),
+        ("post", "/endpoints/{id}/edge/alerts"),
+        ("post", "/endpoints/{id}/edge/jobs/{jobID}/logs"),
+    }
+)
+
 EXCLUDED_PATH_PREFIXES = ("/websocket",)
 
 ENUM_STRIPS = (
@@ -56,8 +73,15 @@ def patch(spec: dict) -> dict:
             continue
         for method in list(paths[path]):
             op = paths[path][method]
-            if isinstance(op, dict) and op.get("operationId") in EXCLUDED_OPERATION_IDS:
+            if not isinstance(op, dict):
+                continue
+            if op.get("operationId") in EXCLUDED_OPERATION_IDS:
                 paths[path].pop(method)
+                continue
+            if (method.lower(), path) in EXCLUDED_PATH_METHODS:
+                paths[path].pop(method)
+        if not paths[path]:
+            paths.pop(path)
 
     schemas = spec.get("components", {}).get("schemas", {})
     for trail in ENUM_STRIPS:

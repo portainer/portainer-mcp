@@ -32,7 +32,21 @@ def test_excluded_operation_ids_are_removed():
         }
     )
     patch(spec)
-    assert spec["paths"]["/git/{id}"] == {}
+    # Path is removed entirely once all its methods drop out.
+    assert "/git/{id}" not in spec["paths"]
+
+
+def test_partial_method_drop_keeps_path():
+    spec = _spec(
+        paths={
+            "/git/{id}": {
+                "get": {"operationId": "SharedGitGet"},
+                "post": {"operationId": "KeepMe"},
+            },
+        }
+    )
+    patch(spec)
+    assert spec["paths"]["/git/{id}"] == {"post": {"operationId": "KeepMe"}}
 
 
 def test_unrelated_operations_are_kept():
@@ -61,6 +75,65 @@ def test_websocket_paths_are_dropped():
     )
     patch(spec)
     assert set(spec["paths"]) == {"/endpoints"}
+
+
+# --- EXCLUDED_PATH_METHODS (edge-agent-only callbacks) ----------------------
+
+
+def test_edge_agent_callbacks_dropped_even_without_operation_id():
+    # Two of the four agent-callback ops have no operationId in the spec —
+    # FastMCP names them from `summary`. The path-method filter catches them.
+    spec = _spec(
+        paths={
+            "/endpoints/{id}/edge/stacks/{stackId}": {
+                "get": {"summary": "Inspect an Edge Stack for an Environment(Endpoint)"},
+            },
+            "/endpoints/{id}/edge/status": {
+                "get": {"operationId": "EndpointEdgeStatusInspect"},
+            },
+            "/endpoints/{id}/edge/alerts": {
+                "post": {"operationId": "EndpointEdgeAlertsReceive"},
+            },
+            "/endpoints/{id}/edge/jobs/{jobID}/logs": {
+                "post": {"summary": "Update the logs collected from an Edge Job"},
+            },
+        }
+    )
+    patch(spec)
+    # All four paths had a single method each; after the drop the path
+    # itself is removed by the empty-path cleanup.
+    assert spec["paths"] == {}
+
+
+def test_edge_admin_tools_are_kept():
+    # `EdgeStackList` / `EdgeStackInspect` are admin-facing edge tools that
+    # do *not* require the agent header. They share the `edge` / `edge_stacks`
+    # tags with the callbacks but live on different paths — they must survive.
+    spec = _spec(
+        paths={
+            "/edge_stacks": {"get": {"operationId": "EdgeStackList"}},
+            "/edge_stacks/{id}": {"get": {"operationId": "EdgeStackInspect"}},
+        }
+    )
+    patch(spec)
+    assert set(spec["paths"]) == {"/edge_stacks", "/edge_stacks/{id}"}
+
+
+def test_path_with_remaining_methods_is_kept():
+    # If a future spec adds a non-agent method to one of the edge paths,
+    # the path must survive — only the targeted method is dropped.
+    spec = _spec(
+        paths={
+            "/endpoints/{id}/edge/status": {
+                "get": {"operationId": "EndpointEdgeStatusInspect"},
+                "put": {"operationId": "HypotheticalAdminWrite"},
+            },
+        }
+    )
+    patch(spec)
+    assert spec["paths"]["/endpoints/{id}/edge/status"] == {
+        "put": {"operationId": "HypotheticalAdminWrite"},
+    }
 
 
 # --- ENUM_STRIPS ------------------------------------------------------------

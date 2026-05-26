@@ -46,6 +46,7 @@ from portainer_mcp import (
     http_security,
     profiles,
     proxy,
+    redaction,
     request_context,
     shaping,
 )
@@ -264,6 +265,10 @@ def build_server() -> FastMCP:
     )
     mcp.add_middleware(shaping.ResponseCapMiddleware(max_chars))
     logger.info("response cap: %d chars", max_chars)
+    logger.info(
+        "env value redaction: %s",
+        "DISABLED (env values exposed)" if redaction.is_expose_enabled() else "enabled",
+    )
     return mcp
 
 

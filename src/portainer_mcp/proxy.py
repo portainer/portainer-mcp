@@ -15,6 +15,7 @@ import httpx
 from fastmcp import FastMCP
 from pydantic import Field
 
+from portainer_mcp import redaction
 from portainer_mcp.shaping import SELECT_DESCRIPTION, project
 
 logger = logging.getLogger("portainer_mcp")
@@ -26,13 +27,24 @@ _BLOCKED_HEADERS = frozenset({"x-api-key", "authorization", "cookie", "host"})
 
 
 def _apply_select(text: str, select: str | None) -> str:
-    if not select:
+    expose = redaction.is_expose_enabled()
+    if expose and not select:
         return text
     try:
         data = json.loads(text)
     except json.JSONDecodeError:
         return text  # not JSON (plain text, binary, error page); pass through
-    return json.dumps(project(data, select))
+
+    redaction_count = 0
+    if not expose:
+        data, redaction_count = redaction.redact_envs(data)
+    if select:
+        data = project(data, select)
+
+    out = json.dumps(data)
+    if redaction_count:
+        out = f"{out}\n\n{redaction.hint(redaction_count)}"
+    return out
 
 
 def _validate_path(path: str) -> None:
