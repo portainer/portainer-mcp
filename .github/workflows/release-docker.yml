@@ -54,7 +54,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Disable SLSA attestations so the published image stays a plain
-          # image manifest — provenance adds an unknown/unknown entry that
-          # turns it into an index and confuses Docker Hub's UI.
-          provenance: false
+          provenance: mode=max
+          sbom: true
