@@ -11,6 +11,9 @@ dependencies = [
     "httpx>=0.27",
     "jmespath>=1.0",
     "pyyaml>=6.0",
+    # transitive via fastmcp; pinned directly to hold a security floor
+    # nothing upstream enforces — don't drop as redundant.
+    "starlette>=1.0.1",
 ]
 
 [project.scripts]
