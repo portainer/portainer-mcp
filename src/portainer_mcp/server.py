@@ -23,6 +23,10 @@ Requires PORTAINER_URL and PORTAINER_API_KEY. Tunables:
   (127.0.0.1, localhost, [::1]); operator must extend for non-local
   deployments. The `Origin` allowlist is hardcoded to the localhost set
   (the only browser MCP client in scope is the local Inspector).
+- PORTAINER_REMOTE_AUTH — when truthy and transport=http, each client
+  provides its own Portainer API key via Authorization: Bearer or
+  X-Portainer-API-Key header. PORTAINER_API_KEY and
+  PORTAINER_MCP_AUTH_TOKEN are not required in this mode.
 """
 
 from __future__ import annotations
@@ -50,6 +54,7 @@ from portainer_mcp import (
     profiles,
     proxy,
     redaction,
+    remote_auth,
     request_context,
     shaping,
 )
@@ -208,20 +213,37 @@ def build_server() -> FastMCP:
     _setup_logging()
 
     transport = _resolve_transport()
+    remote_auth_enabled = _env_flag("PORTAINER_REMOTE_AUTH", default=False)
     auth_provider = None
-    if transport == "http":
+
+    if remote_auth_enabled:
+        if transport != "http":
+            raise SystemExit(
+                "PORTAINER_REMOTE_AUTH requires PORTAINER_MCP_TRANSPORT=http"
+            )
+        auth_provider = remote_auth.RemoteAuthVerifier()
+        logger.info("remote auth: enabled (per-client Portainer API key)")
+    elif transport == "http":
         token = auth.require_token(os.environ.get(auth.ENV_VAR))
         auth_provider = auth.StaticBearerVerifier(token)
         logger.info("HTTP auth: enabled (token %s)", auth.fingerprint(token))
 
     base = os.environ["PORTAINER_URL"].rstrip("/") + "/api"
     verify = _env_flag("PORTAINER_TLS_VERIFY", default=True)
-    client = httpx.AsyncClient(
+
+    client_kwargs: dict = dict(
         base_url=base,
-        headers={"X-API-KEY": os.environ["PORTAINER_API_KEY"]},
         verify=verify,
         timeout=30,
     )
+
+    if remote_auth_enabled:
+        # No fixed API key — token injected per-request from client headers
+        client_kwargs["event_hooks"] = {"request": [remote_auth.inject_token_hook]}
+    else:
+        client_kwargs["headers"] = {"X-API-KEY": os.environ["PORTAINER_API_KEY"]}
+
+    client = httpx.AsyncClient(**client_kwargs)
     with SPEC_PATH.open() as f:
         spec = yaml.safe_load(f)
 

@@ -73,6 +73,43 @@ Adding the MCP endpoint on Claude Code:
 claude mcp add portainer --transport http http://mcp.example.com:17717/mcp --header "Authorization: Bearer <token>"
 ```
 
+### Multi-user deployment (remote auth)
+
+For deployments where each user should use their own Portainer API key (preserving per-user permissions), enable remote authorization mode. Each client provides its own Portainer token via HTTP headers — no shared `PORTAINER_API_KEY` or `PORTAINER_MCP_AUTH_TOKEN` needed.
+
+```bash
+docker run -d --name portainer-mcp -p 17717:17717 \
+  -e PORTAINER_URL=https://portainer.example.com \
+  -e PORTAINER_MCP_TRANSPORT=http \
+  -e PORTAINER_MCP_HTTP_HOST=0.0.0.0 \
+  -e PORTAINER_REMOTE_AUTH=true \
+  -e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com:17717 \
+  portainer/portainer-mcp:2.42
+```
+
+Client configuration (Claude Code, Cursor, Kiro, etc.):
+```bash
+claude mcp add portainer --transport http http://mcp.example.com:17717/mcp \
+  --header "Authorization: Bearer ptr_your_personal_api_key"
+```
+
+Or using the custom header:
+```json
+{
+  "mcpServers": {
+    "portainer": {
+      "type": "streamable-http",
+      "url": "http://mcp.example.com:17717/mcp",
+      "headers": {
+        "X-Portainer-API-Key": "ptr_your_personal_api_key"
+      }
+    }
+  }
+}
+```
+
+Header priority: `X-Portainer-API-Key` > `Authorization: Bearer`.
+
 ### Hygiene skill (recommended)
 
 This repo ships a Claude Code skill ([`portainer-mcp-hygiene`](https://github.com/portainer/portainer-mcp/blob/main/skills/portainer-mcp-hygiene/SKILL.md)) that helps the model query the MCP efficiently and keep responses within context. Install user-wide, pinned to the same tag as the server:
