@@ -13,6 +13,7 @@ from typing import Annotated
 
 import httpx
 from fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from portainer_mcp import redaction
@@ -98,8 +99,14 @@ def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> Non
     `shaping.py`), not here.
     """
 
+    # Honest because read-only mode hard-rejects non-GET below; when writes
+    # are allowed the proxy can forward arbitrary DELETE/POST, so it is not
+    # read-only and inherits the spec's destructiveHint default.
+    proxy_annotations = ToolAnnotations(readOnlyHint=read_only)
+
     @mcp.tool(
         name="docker_proxy",
+        annotations=proxy_annotations,
         description=(
             "Proxy a Docker Engine API request through Portainer for a given environment. "
             "The `path` is forwarded as-is to the Docker daemon (e.g. /containers/json, "
@@ -147,6 +154,7 @@ def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> Non
 
     @mcp.tool(
         name="kubernetes_proxy",
+        annotations=proxy_annotations,
         description=(
             "Proxy a Kubernetes API request through Portainer for a given environment. "
             "The `path` is forwarded as-is to the K8s API server (e.g. /api/v1/pods, "

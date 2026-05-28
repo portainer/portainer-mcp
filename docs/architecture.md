@@ -52,6 +52,23 @@ OpenAPI spec (Portainer forwards them as a subpath to the underlying
 daemon), so they can't be generated. Each tool validates the path (no
 `..`, no `?#`) and blocks auth-bypass headers.
 
+### Tool annotations — `readOnlyHint`
+
+Every tool is stamped with the MCP `readOnlyHint` annotation so clients can
+relax approval prompts for non-mutating calls. OpenAPI tools derive it from
+the HTTP method via the `mcp_component_fn` hook passed to
+`FastMCP.from_openapi` — `GET`/`HEAD` are read-only, everything else is a
+write. Setting the hint `False` (rather than leaving it unset) on writes
+also activates the spec's `destructiveHint` default, so mutating methods
+need no per-method enumeration. The two proxy tools carry the flag via
+decorator instead: `readOnlyHint` tracks `PORTAINER_READ_ONLY`, which is
+honest because the proxy hard-rejects non-`GET` requests in read-only mode.
+`SelectArgTransform` re-wraps every tool but inherits the parent's
+annotations, so the hint survives the `select` injection. The hint is a
+client-side UX signal, not enforcement — the server's actual read-only
+guarantee is the `GET`/`HEAD` `RouteMap` restriction and the proxy's
+method check.
+
 ### HTTP auth — `auth.py`
 
 Only relevant when `PORTAINER_MCP_TRANSPORT=http`. `build_server()` reads

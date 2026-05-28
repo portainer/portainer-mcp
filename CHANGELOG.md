@@ -22,6 +22,15 @@ the MCP server.
   `"KEY=VAL"` strings, and Kubernetes `env[].value`; K8s `valueFrom`
   references are preserved.
   See [#61](https://github.com/portainer/portainer-mcp/issues/61).
+- **`readOnlyHint` tool annotation.** Every generated tool now carries the
+  MCP `readOnlyHint` annotation so clients can relax approval prompts for
+  non-mutating calls. Spec-derived tools derive it from the HTTP method
+  (`GET`/`HEAD` are read-only, everything else a write — setting it `False`
+  also activates the spec's `destructiveHint` default); `docker_proxy` /
+  `kubernetes_proxy` track `PORTAINER_READ_ONLY`, honest because the proxy
+  hard-rejects non-`GET` in read-only mode. The hint is a client-side UX
+  signal, not enforcement — the read-only guarantee remains the `GET`/`HEAD`
+  route filter and the proxy's method check.
 
 ### Changed
 

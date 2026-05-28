@@ -39,6 +39,9 @@ import yaml
 from fastmcp import FastMCP
 from fastmcp.server.middleware.logging import StructuredLoggingMiddleware
 from fastmcp.server.providers.openapi import MCPType, RouteMap
+from fastmcp.tools.tool import Tool
+from fastmcp.utilities.openapi import HTTPRoute
+from mcp.types import ToolAnnotations
 from starlette.middleware import Middleware
 
 from portainer_mcp import (
@@ -61,6 +64,18 @@ def _env_flag(name: str, *, default: bool) -> bool:
     if raw is None:
         return default
     return raw not in {"0", "false", "False"}
+
+
+_READ_ONLY_METHODS = {"GET", "HEAD"}
+
+
+def _annotate_read_only(route: HTTPRoute, component: Tool) -> None:
+    # readOnlyHint=False (not None) on mutating tools also activates the MCP
+    # spec's destructiveHint default, so write methods need no enumeration.
+    if isinstance(component, Tool):
+        component.annotations = ToolAnnotations(
+            readOnlyHint=route.method.upper() in _READ_ONLY_METHODS
+        )
 
 
 def _spec_tags(spec: dict) -> set[str]:
@@ -237,6 +252,7 @@ def build_server() -> FastMCP:
         client=client,
         name="portainer",
         route_maps=route_maps,
+        mcp_component_fn=_annotate_read_only,
         validate_output=False,
         auth=auth_provider,
     )
