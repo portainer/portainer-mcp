@@ -1,17 +1,25 @@
 """Unit tests for `src/portainer_mcp/proxy.py` validators.
 
-Covers the pure path/header guards. The HTTP-call path (`_call`,
-`docker_proxy`, `kubernetes_proxy`) needs a running httpx client and
-isn't covered here.
+Covers the pure path/header/param guards. One end-to-end test drives a
+proxy tool through FastMCP over a mock transport to confirm the
+`query_params` coercion survives argument validation.
 """
 
 from __future__ import annotations
 
 import json
 
+import httpx
 import pytest
+from fastmcp import FastMCP
 
-from portainer_mcp.proxy import _apply_select, _validate_headers, _validate_path
+from portainer_mcp.proxy import (
+    _apply_select,
+    _coerce_param_map,
+    _validate_headers,
+    _validate_path,
+    register,
+)
 from portainer_mcp.redaction import EXPOSE_ENV_VAR, SENTINEL
 
 
@@ -133,3 +141,80 @@ def test_apply_select_non_json_passes_through_under_redaction():
     # Even with redaction on, non-JSON bodies (logs, stats text) must pass
     # through unchanged.
     assert _apply_select("not json at all", None) == "not json at all"
+
+
+# --- _coerce_param_map ------------------------------------------------------
+
+
+def test_coerce_param_map_none_passes_through():
+    assert _coerce_param_map(None) is None
+
+
+def test_coerce_param_map_native_string_dict_unchanged():
+    assert _coerce_param_map({"all": "true"}) == {"all": "true"}
+
+
+def test_coerce_param_map_parses_json_string():
+    # Claude Desktop serializes the whole object argument as a JSON string.
+    assert _coerce_param_map('{"all": "true"}') == {"all": "true"}
+
+
+def test_coerce_param_map_stringifies_scalar_values():
+    # The model may send native bools/numbers; they belong in the query
+    # string as their wire form.
+    assert _coerce_param_map({"all": True, "limit": 5}) == {
+        "all": "true",
+        "limit": "5",
+    }
+
+
+def test_coerce_param_map_stringifies_nested_value():
+    # Docker's `filters` query parameter expects a JSON-encoded string.
+    assert _coerce_param_map({"filters": {"status": ["running"]}}) == {
+        "filters": '{"status": ["running"]}'
+    }
+
+
+def test_coerce_param_map_drops_none_values():
+    assert _coerce_param_map({"all": "true", "since": None}) == {"all": "true"}
+
+
+def test_coerce_param_map_keeps_literal_string_null():
+    # A real null is an unset optional; the literal string "null" is a value.
+    assert _coerce_param_map({"x": "null"}) == {"x": "null"}
+
+
+@pytest.mark.parametrize("value", ["{not json", '["a"]', "5", '"x"'])
+def test_coerce_param_map_rejects_non_object(value: str):
+    with pytest.raises(ValueError, match="expected a JSON object"):
+        _coerce_param_map(value)
+
+
+# --- end-to-end: BeforeValidator survives FastMCP arg validation ------------
+
+
+async def test_proxy_coerces_query_params_end_to_end():
+    # FastMCP validates tool arguments with pydantic; this confirms the
+    # BeforeValidator runs there, so a stringified dict reaches Docker as
+    # real query params rather than being rejected as a string.
+    captured: dict = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["params"] = dict(request.url.params)
+        return httpx.Response(200, json={"ok": True})
+
+    client = httpx.AsyncClient(
+        base_url="http://test", transport=httpx.MockTransport(handler)
+    )
+    mcp = FastMCP("test")
+    register(mcp, client, read_only=True)
+    tool = await mcp.get_tool("docker_proxy")
+
+    await tool.run(
+        {
+            "environment_id": 1,
+            "path": "/containers/json",
+            "query_params": '{"all": "true"}',
+        }
+    )
+    assert captured["params"] == {"all": "true"}

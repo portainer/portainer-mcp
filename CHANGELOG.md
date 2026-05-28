@@ -9,6 +9,17 @@ the MCP server.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Proxy `query_params` / `headers` tolerate how different MCP clients
+  serialize object arguments.** Some clients (notably Claude Desktop) send the
+  whole object as a JSON string, which pydantic rejected before the tool ran —
+  blocking every Docker/Kubernetes endpoint that needs a query string (logs,
+  `all=true`, label/field selectors, stats). A `BeforeValidator` now parses a
+  JSON-string argument back into an object and normalizes each value to its
+  wire form, so native bools/numbers and nested `filters` objects work too. The
+  tool schema is unchanged, so the model still sees one canonical contract.
+
 ## [2.42.2] — 2026-05-28
 
 Targets Portainer 2.42.x.

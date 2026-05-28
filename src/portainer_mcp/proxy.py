@@ -14,7 +14,7 @@ from typing import Annotated
 import httpx
 from fastmcp import FastMCP
 from mcp.types import ToolAnnotations
-from pydantic import Field
+from pydantic import BeforeValidator, Field
 
 from portainer_mcp import redaction
 from portainer_mcp.shaping import SELECT_DESCRIPTION, project
@@ -65,6 +65,32 @@ def _validate_headers(headers: dict[str, str] | None) -> None:
     for key in headers:
         if key.lower() in _BLOCKED_HEADERS:
             raise ValueError(f"header {key!r} is not allowed")
+
+
+def _coerce_param_map(value: object) -> object:
+    """Normalize a query-params / headers argument into `dict[str, str]`.
+
+    MCP clients differ in how they serialize object-typed arguments: some send
+    a native object, others (notably Claude Desktop) send the whole value as a
+    JSON string. Parse both, then stringify each value to its wire form so the
+    model isn't punished for sending native bools/numbers — and so a nested
+    object becomes the JSON string Docker's `filters` query expects. Keys whose
+    value is None are dropped: an unset optional, not the literal "null".
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"expected a JSON object, got invalid JSON: {exc}") from exc
+    if not isinstance(value, dict):
+        raise ValueError(f"expected a JSON object, got {type(value).__name__}")
+    return {
+        str(k): v if isinstance(v, str) else json.dumps(v)
+        for k, v in value.items()
+        if v is not None
+    }
 
 
 async def _call(
@@ -125,10 +151,14 @@ def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> Non
         ],
         method: Annotated[str, Field(description="HTTP method")] = "GET",
         query_params: Annotated[
-            dict[str, str] | None, Field(description="Query parameters")
+            dict[str, str] | None,
+            BeforeValidator(_coerce_param_map),
+            Field(description="Query parameters"),
         ] = None,
         headers: Annotated[
-            dict[str, str] | None, Field(description="Extra request headers")
+            dict[str, str] | None,
+            BeforeValidator(_coerce_param_map),
+            Field(description="Extra request headers"),
         ] = None,
         body: Annotated[
             str | None,
@@ -172,10 +202,13 @@ def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> Non
         method: Annotated[str, Field(description="HTTP method")] = "GET",
         query_params: Annotated[
             dict[str, str] | None,
+            BeforeValidator(_coerce_param_map),
             Field(description="Query parameters (labelSelector, fieldSelector, ...)"),
         ] = None,
         headers: Annotated[
-            dict[str, str] | None, Field(description="Extra request headers")
+            dict[str, str] | None,
+            BeforeValidator(_coerce_param_map),
+            Field(description="Extra request headers"),
         ] = None,
         body: Annotated[
             str | None,
