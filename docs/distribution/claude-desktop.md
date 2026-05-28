@@ -1,7 +1,9 @@
 # Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
-or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+Claude Desktop > Settings > Developer > Edit Config and choose one of the path below, alternatively you can edit that file directly with your preferred text editor.
+
+* macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+* Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
