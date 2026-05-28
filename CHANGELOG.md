@@ -9,6 +9,10 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.42.2] — 2026-05-28
+
+Targets Portainer 2.42.x.
+
 ### Added
 
 - **Env value redaction on every response.** Stack, container, and
