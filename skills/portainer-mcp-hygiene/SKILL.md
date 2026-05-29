@@ -9,21 +9,44 @@ The Portainer MCP server returns large JSON payloads by default — a list of en
 
 The cost of *not* projecting is real: 50K chars of dense JSON eats roughly 20K tokens out of your context for a question that usually needed a few hundred. Once truncation fires, you've wasted a round trip and the data past the cap is gone for that call. The default move on any list-shaped Portainer call is to pass `select` from the start.
 
+## Resolve the environment first
+
+Both proxy tools take an `environment_id`, and the IDs aren't predictable —
+they're assigned in creation order, not "local = 1". So for any
+environment-scoped question, resolve the target first with one call:
+
+```
+EndpointList(select="[].{id:Id,name:Name,type:Type,status:Status}")
+```
+
+and use the ID whose name matches what the user means. Guessing is a hard
+failure, not a silent one: a wrong ID makes the proxy raise an `API request
+failed (HTTP 404)` error, so a projection that returns `null` fields means the
+data is genuinely absent, not that you hit the wrong environment.
+
 ## The default pattern
 
 For any call that returns a list of objects, ship a JMESPath that keeps only the fields the user's question actually needs:
 
 ```
 EndpointList(select="[].{id:Id,name:Name,type:Type,status:Status}")
-docker_proxy(path="/containers/json", select="[].{id:Id,name:Names[0],state:State,image:Image}")
-kubernetes_proxy(path="/api/v1/pods", select="items[].{name:metadata.name,ns:metadata.namespace,phase:status.phase,node:spec.nodeName}")
+docker_proxy(environment_id=N, path="/containers/json", select="[].{id:Id,name:Names[0],state:State,image:Image}")
+kubernetes_proxy(environment_id=N, path="/api/v1/pods", select="items[].{name:metadata.name,ns:metadata.namespace,phase:status.phase,node:spec.nodeName}")
 ```
 
 JMESPath syntax notes that matter for these surfaces:
 - List shape: start with `[]` to map over array elements.
 - Wrapped list (Kubernetes `{items: [...]}`): start with `items[]`.
 - Single object: `{field1:path.to.value,field2:other.path}` — no leading `[]`.
-- Nested paths use dots: `Snapshots[0].RunningContainerCount`, `metadata.labels."app.kubernetes.io/name"` (quote keys that contain dots or hyphens).
+- Nested paths use dots: `Snapshots[0].RunningContainerCount`. But a key that
+  *itself* contains a dot or hyphen — compose labels, K8s annotations — collides
+  with that syntax, so quote it as an identifier:
+  `Labels."com.docker.compose.project"`, or in a filter
+  `[?Labels."com.docker.compose.project"=='myproj']`. Unquoted, JMESPath reads
+  the dots as nested keys and silently returns `null` — which looks like a
+  missing field rather than a broken expression. Quote with double quotes, not
+  backslashes (`\"…\"` fails to parse) and not backticks (those denote JSON
+  literals).
 
 ## Where the noise lives
 
@@ -45,10 +68,10 @@ EndpointList(select="[].{id:Id,name:Name,type:Type,status:Status}")
 
 ```
 # Pod summary
-kubernetes_proxy(path="/api/v1/pods", select="items[].{name:metadata.name,ns:metadata.namespace,phase:status.phase,restarts:status.containerStatuses[0].restartCount,node:spec.nodeName}")
+kubernetes_proxy(environment_id=N, path="/api/v1/pods", select="items[].{name:metadata.name,ns:metadata.namespace,phase:status.phase,restarts:status.containerStatuses[0].restartCount,node:spec.nodeName}")
 
 # Deployment readiness
-kubernetes_proxy(path="/apis/apps/v1/deployments", select="items[].{name:metadata.name,ns:metadata.namespace,replicas:spec.replicas,ready:status.readyReplicas}")
+kubernetes_proxy(environment_id=N, path="/apis/apps/v1/deployments", select="items[].{name:metadata.name,ns:metadata.namespace,replicas:spec.replicas,ready:status.readyReplicas}")
 ```
 
 **`GetAllKubernetes*` tools — full status blocks per object.**
@@ -113,12 +136,12 @@ kubernetes_proxy(environment_id=N, path="/apis/apps/v1/namespaces/Y/deployments/
 
 ## Non-JSON endpoints — `select` does not apply
 
-A handful of `docker_proxy` and `kubernetes_proxy` paths return plain text or streamed data rather than JSON. `select` is a no-op on these (the proxy detects non-JSON and passes the body through unchanged), but the response-size cap still fires, and `_select_wrapper` will raise a JSON parse error if you do pass `select`. **Narrow the upstream query parameters instead.**
+A handful of `docker_proxy` and `kubernetes_proxy` paths return plain text or streamed data rather than JSON — logs, stats, exec output. On these the proxy detects the non-JSON body and passes it through unchanged, so any `select` you pass is silently ignored — a no-op, not an error, since there's no JSON to project. The response-size cap still applies, so a noisy stream can still truncate. **Narrow the upstream query parameters instead of projecting.**
 
 **Container logs** — `/containers/{id}/logs`:
 - Set `tail` to limit lines (`tail=100` for the last hundred).
 - Set `since` to limit time range (Unix timestamp).
-- Always pass `stdout=true` and/or `stderr=true` — without them the daemon returns nothing.
+- Always pass `stdout=true` and/or `stderr=true` — without them Docker rejects the call with a 400.
 - Don't set `follow=true` — it streams indefinitely and will burn your context.
 
 **Container stats** — `/containers/{id}/stats`:
