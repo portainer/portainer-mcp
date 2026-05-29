@@ -42,7 +42,11 @@ jobs:
         uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
         with:
           images: portainer/portainer-mcp
-          # X.Y.Z and X.Y from the git tag. No :latest (see docs/release.md).
+          # X.Y.Z and X.Y from the git tag. latest=false is load-bearing:
+          # metadata-action's default flavor (latest=auto) would otherwise
+          # publish :latest for any non-prerelease semver tag (see docs/release.md).
+          flavor: |
+            latest=false
           tags: |
             type=match,pattern=\d+\.\d+\.\d+
             type=match,pattern=(\d+\.\d+)\.\d+,group=1
