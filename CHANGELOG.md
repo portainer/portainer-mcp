@@ -9,6 +9,17 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.42.3] — 2026-05-29
+
+Targets Portainer 2.42.x.
+
+### Security
+
+- **Pinned `starlette>=1.0.1` to close CVE-2026-48710 (BadHost).**
+  Starlette is transitive via `fastmcp`→`mcp` with no upstream floor at the
+  fixed version; the pin is asserted directly so a re-lock can't drift back to
+  a vulnerable release. Resolves to 1.2.0.
+
 ### Fixed
 
 - **Proxy `query_params` / `headers` tolerate how different MCP clients
