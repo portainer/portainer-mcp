@@ -12,9 +12,11 @@ import json
 import httpx
 import pytest
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 
 from portainer_mcp.proxy import (
     _apply_select,
+    _call,
     _coerce_param_map,
     _validate_headers,
     _validate_path,
@@ -218,3 +220,52 @@ async def test_proxy_coerces_query_params_end_to_end():
         }
     )
     assert captured["params"] == {"all": "true"}
+
+
+# --- _call HTTP error handling ----------------------------------------------
+
+
+def _client_returning(status: int, body: object) -> httpx.AsyncClient:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if isinstance(body, (dict, list)):
+            return httpx.Response(status, json=body)
+        return httpx.Response(status, text=str(body))
+
+    return httpx.AsyncClient(
+        base_url="http://test", transport=httpx.MockTransport(handler)
+    )
+
+
+async def test_call_raises_tool_error_on_http_error():
+    # A 4xx/5xx must read as a failure, not as empty data the model would
+    # then project with `select`.
+    client = _client_returning(404, {"message": "Unable to find an environment"})
+    with pytest.raises(ToolError) as exc:
+        await _call(
+            client,
+            kind="docker",
+            environment_id=9,
+            method="GET",
+            path="/containers/json",
+            query_params=None,
+            headers=None,
+            body=None,
+        )
+    msg = str(exc.value)
+    assert "404" in msg
+    assert "Unable to find an environment" in msg
+
+
+async def test_call_returns_body_on_success():
+    client = _client_returning(200, {"ok": True})
+    out = await _call(
+        client,
+        kind="docker",
+        environment_id=1,
+        method="GET",
+        path="/info",
+        query_params=None,
+        headers=None,
+        body=None,
+    )
+    assert json.loads(out) == {"ok": True}

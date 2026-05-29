@@ -19,6 +19,12 @@ the MCP server.
   JSON-string argument back into an object and normalizes each value to its
   wire form, so native bools/numbers and nested `filters` objects work too. The
   tool schema is unchanged, so the model still sees one canonical contract.
+- **Proxy tools surface upstream HTTP failures as errors.** `docker_proxy` /
+  `kubernetes_proxy` previously returned a 4xx/5xx body as a normal result, so
+  a failed call (e.g. a wrong `environment_id` 404) could be silently nulled
+  out by a `select` projection and look like empty data. They now raise a tool
+  error carrying the status and the (truncated) upstream body, so the model can
+  tell a failed request from a missing field.
 
 ## [2.42.2] — 2026-05-28
 

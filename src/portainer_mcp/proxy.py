@@ -13,6 +13,7 @@ from typing import Annotated
 
 import httpx
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import BeforeValidator, Field
 
@@ -83,7 +84,9 @@ def _coerce_param_map(value: object) -> object:
         try:
             value = json.loads(value)
         except json.JSONDecodeError as exc:
-            raise ValueError(f"expected a JSON object, got invalid JSON: {exc}") from exc
+            raise ValueError(
+                f"expected a JSON object, got invalid JSON: {exc}"
+            ) from exc
     if not isinstance(value, dict):
         raise ValueError(f"expected a JSON object, got {type(value).__name__}")
     return {
@@ -114,6 +117,17 @@ async def _call(
         headers=headers or None,
         content=body if body else None,
     )
+    if response.is_error:
+        # Surface 4xx/5xx as a tool error so the model can't mistake a failed
+        # call for empty data. The body is passed through as-is (not env-
+        # redacted like success bodies): error bodies overwhelmingly echo the
+        # caller's own request payload, already in the model's context, rather
+        # than server-side env state. Truncated because the response cap
+        # middleware doesn't apply to raised exceptions.
+        raise ToolError(
+            f"{kind} API request failed (HTTP {response.status_code}) for "
+            f"{method.upper()} {path}: {response.text[:2000]}"
+        )
     return response.text
 
 
@@ -164,9 +178,7 @@ def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> Non
             str | None,
             Field(description="Raw request body string (e.g. JSON for POST)"),
         ] = None,
-        select: Annotated[
-            str | None, Field(description=SELECT_DESCRIPTION)
-        ] = None,
+        select: Annotated[str | None, Field(description=SELECT_DESCRIPTION)] = None,
     ) -> str:
         if read_only and method.upper() != "GET":
             raise ValueError("only GET requests are allowed in read-only mode")
@@ -214,9 +226,7 @@ def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> Non
             str | None,
             Field(description="Raw request body string (e.g. JSON manifest for POST)"),
         ] = None,
-        select: Annotated[
-            str | None, Field(description=SELECT_DESCRIPTION)
-        ] = None,
+        select: Annotated[str | None, Field(description=SELECT_DESCRIPTION)] = None,
     ) -> str:
         if read_only and method.upper() != "GET":
             raise ValueError("only GET requests are allowed in read-only mode")
