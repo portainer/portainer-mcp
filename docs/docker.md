@@ -7,4 +7,4 @@ The container image lives at `docker.io/portainer/portainer-mcp`. Each `X.Y.Z` r
 
 No `latest` tag — pin a Portainer minor explicitly so a Portainer-side upgrade doesn't slide under you. See [`versioning.md`](versioning.md).
 
-Images are built for `linux/amd64`.
+Images are multi-arch: `linux/amd64` and `linux/arm64`.

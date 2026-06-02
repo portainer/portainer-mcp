@@ -9,6 +9,13 @@ the MCP server.
 
 ## [Unreleased]
 
+### Changed
+
+- **Container images are now multi-arch (`linux/amd64` + `linux/arm64`).**
+  The Docker Hub release workflow adds a QEMU setup step and builds both
+  platforms into a single manifest list under the existing `:X.Y.Z` / `:X.Y`
+  tags.
+
 ## [2.42.3] — 2026-05-29
 
 Targets Portainer 2.42.x.
