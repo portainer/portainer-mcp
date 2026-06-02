@@ -1,6 +1,6 @@
 [project]
 name = "mcp-portainer"
-version = "2.42.3"
+version = "2.42.4"
 description = "Portainer MCP server — manage Docker, Kubernetes, stacks, and Helm via the Model Context Protocol."
 readme = "README.md"
 license = "MIT"

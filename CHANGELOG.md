@@ -9,6 +9,10 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.42.4] — 2026-06-02
+
+Targets Portainer 2.42.x.
+
 ### Changed
 
 - **Container images are now multi-arch (`linux/amd64` + `linux/arm64`).**

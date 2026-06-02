@@ -654,7 +654,7 @@ wheels = [
 
 [[package]]
 name = "mcp-portainer"
-version = "2.42.3"
+version = "2.42.4"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
