@@ -1,6 +1,8 @@
 """Portainer MCP server, bootstrapped from the Portainer OpenAPI spec via FastMCP.
 
-Requires PORTAINER_URL and PORTAINER_API_KEY. Tunables:
+Requires PORTAINER_URL. Stdio also requires PORTAINER_API_KEY (the single
+upstream credential); HTTP forwards each client's own key per request instead
+and refuses to boot if PORTAINER_API_KEY is set. Tunables:
 
 - PORTAINER_PROFILES (default: BASE,DOCKER,KUBERNETES) — named tag bundles.
 - PORTAINER_TAGS_EXTRA — comma-separated tags to append, escape hatch for
@@ -16,8 +18,12 @@ Requires PORTAINER_URL and PORTAINER_API_KEY. Tunables:
   for the dev workflow and the eventual remote container.
 - PORTAINER_MCP_HTTP_HOST — bind host when transport=http (default 127.0.0.1).
 - PORTAINER_MCP_HTTP_PORT — bind port when transport=http (default 17717).
-- PORTAINER_MCP_AUTH_TOKEN — shared bearer secret. Required when
-  transport=http; ignored for stdio.
+- PORTAINER_MCP_AUTH_TOKEN — shared bearer gate secret. Required when
+  transport=http; ignored for stdio. Over HTTP it admits the request; the
+  caller's own Portainer key (X-Portainer-API-Key header) is then validated
+  and forwarded upstream as X-API-KEY.
+- PORTAINER_MCP_AUTH_CACHE_TTL — seconds to cache a validated per-user key
+  (default 60, positive results only, 0 disables). HTTP only.
 - PORTAINER_MCP_ALLOWED_HOSTS — comma-separated `Host` allowlist for
   DNS-rebinding protection. Defaults to the localhost set
   (127.0.0.1, localhost, [::1]); operator must extend for non-local
@@ -47,6 +53,7 @@ from starlette.middleware import Middleware
 from portainer_mcp import (
     auth,
     http_security,
+    passthrough,
     profiles,
     proxy,
     redaction,
@@ -149,23 +156,40 @@ class _ContextualStructuredLogging(StructuredLoggingMiddleware):
     """Add per-request context (client_ip, user_agent, session_id) to every
     record. `source: "client"` from the upstream middleware just means the
     request came over the transport — useless for distinguishing callers
-    when one bearer is shared across many MCP clients.
+    when one gate bearer is shared across many MCP clients. Under HTTP
+    passthrough, also attribute the validated Portainer identity (read from
+    the validation cache; never the key itself).
     """
 
-    def _create_before_message(self, context):
-        message = super()._create_before_message(context)
+    def __init__(self, *, cache: passthrough.ValidationCache | None = None, **kwargs):
+        super().__init__(**kwargs)
+        self._cache = cache
+
+    def _enrich(self, message: dict, context) -> dict:
+        # `source` is a Literal["client","server"] the base middleware stamps,
+        # but every request-path context hard-codes "client" (server-initiated
+        # messages don't flow through here) — a constant, so drop the noise.
+        message.pop("source", None)
         message.update(request_context.snapshot())
+        message.update(passthrough.identity_audit_fields(self._cache))
+        # `method` is just "tools/call"; surface the actual tool name from the
+        # call params so a request can be read without joining to the payload.
+        if context.method == "tools/call":
+            name = getattr(context.message, "name", None)
+            if name:
+                message["tool"] = name
         return message
+
+    def _create_before_message(self, context):
+        return self._enrich(super()._create_before_message(context), context)
 
     def _create_after_message(self, context, start_time):
-        message = super()._create_after_message(context, start_time)
-        message.update(request_context.snapshot())
-        return message
+        return self._enrich(super()._create_after_message(context, start_time), context)
 
     def _create_error_message(self, context, start_time, error):
-        message = super()._create_error_message(context, start_time, error)
-        message.update(request_context.snapshot())
-        return message
+        return self._enrich(
+            super()._create_error_message(context, start_time, error), context
+        )
 
 
 def _setup_logging() -> None:
@@ -208,20 +232,44 @@ def build_server() -> FastMCP:
     _setup_logging()
 
     transport = _resolve_transport()
-    auth_provider = None
-    if transport == "http":
-        token = auth.require_token(os.environ.get(auth.ENV_VAR))
-        auth_provider = auth.StaticBearerVerifier(token)
-        logger.info("HTTP auth: enabled (token %s)", auth.fingerprint(token))
-
     base = os.environ["PORTAINER_URL"].rstrip("/") + "/api"
     verify = _env_flag("PORTAINER_TLS_VERIFY", default=True)
-    client = httpx.AsyncClient(
-        base_url=base,
-        headers={"X-API-KEY": os.environ["PORTAINER_API_KEY"]},
-        verify=verify,
-        timeout=30,
-    )
+
+    auth_provider = None
+    cache: passthrough.ValidationCache | None = None
+    if transport == "http":
+        if os.environ.get("PORTAINER_API_KEY"):
+            # HTTP is per-user passthrough: each client forwards its own key.
+            # A shared PORTAINER_API_KEY here is a misconfiguration, not a
+            # fallback — fail loudly rather than silently ignore it.
+            raise SystemExit(
+                "PORTAINER_API_KEY is only valid with PORTAINER_MCP_TRANSPORT=stdio; "
+                "the HTTP transport forwards each client's own key from the "
+                "X-Portainer-API-Key header — remove PORTAINER_API_KEY"
+            )
+        token = auth.require_token(os.environ.get(auth.ENV_VAR))
+        ttl = passthrough.resolve_ttl()
+        cache = passthrough.ValidationCache(ttl)
+        # No baked X-API-KEY: the per-request hook injects the caller's own key.
+        client = httpx.AsyncClient(
+            base_url=base,
+            verify=verify,
+            timeout=30,
+            event_hooks={"request": [passthrough.inject_api_key]},
+        )
+        auth_provider = auth.PassthroughVerifier(token, client, cache)
+        logger.info(
+            "HTTP auth: per-user passthrough (gate %s, validation cache ttl=%ds)",
+            auth.fingerprint(token),
+            ttl,
+        )
+    else:
+        client = httpx.AsyncClient(
+            base_url=base,
+            headers={passthrough.UPSTREAM_KEY_HEADER: os.environ["PORTAINER_API_KEY"]},
+            verify=verify,
+            timeout=30,
+        )
     with SPEC_PATH.open() as f:
         spec = yaml.safe_load(f)
 
@@ -272,7 +320,9 @@ def build_server() -> FastMCP:
         )
     logger.info("`select` arg present on all %d tools", len(tools))
 
-    mcp.add_middleware(_ContextualStructuredLogging(include_payload_length=True))
+    mcp.add_middleware(
+        _ContextualStructuredLogging(include_payload_length=True, cache=cache)
+    )
     logger.info("structured request logging: enabled")
 
     max_chars = int(

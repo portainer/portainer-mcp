@@ -1,6 +1,6 @@
 # Configuration
 
-This files document every knob that the `portainer-mcp` exposes, grouped by concern. All values are read from the process environment at startup. Defaults are sized for two documented deployment shapes: **local stdio** (local process, no auth) and **shared-secret HTTP** (multi-user, bearer-gated).
+This files document every knob that the `portainer-mcp` exposes, grouped by concern. All values are read from the process environment at startup. Defaults are sized for two documented deployment shapes: **local stdio** (local process, no auth, single baked key) and **HTTP per-user passthrough** (multi-user, shared bearer gate + each client's own Portainer key).
 
 > [!NOTE]
 > Truthy parsing: any value other than `0`, `false`, or `False` is treated as truthy.
@@ -9,10 +9,10 @@ This files document every knob that the `portainer-mcp` exposes, grouped by conc
 
 | Var | Notes |
 |---|---|
-| `PORTAINER_URL` | Base URL of the Portainer instance, e.g. `https://portainer.example.com`. |
-| `PORTAINER_API_KEY` | Portainer-issued API key, carried as `X-API-KEY` on every upstream call. |
+| `PORTAINER_URL` | Base URL of the Portainer instance, e.g. `https://portainer.example.com`. Required for every transport. |
+| `PORTAINER_API_KEY` | Portainer-issued API key, carried as `X-API-KEY` on every upstream call. **stdio only** — required under stdio. Under HTTP each client forwards its own key instead (see [HTTP per-user passthrough](#http-per-user-passthrough)), so setting it under HTTP is a misconfiguration and the server refuses to boot. |
 
-The MCP server will not start if either is missing.
+The server will not start if `PORTAINER_URL` is missing, if `PORTAINER_API_KEY` is missing under stdio, or if it is *set* under HTTP.
 
 ## Transport
 
@@ -21,9 +21,28 @@ The MCP server will not start if either is missing.
 | `PORTAINER_MCP_TRANSPORT` | `stdio` | `stdio` or `http`. The container image overrides to `http`. |
 | `PORTAINER_MCP_HTTP_HOST` | `127.0.0.1` | Bind address when `transport=http`. Container image overrides to `0.0.0.0` so it's reachable from outside the container. |
 | `PORTAINER_MCP_HTTP_PORT` | `17717` | Bind port when `transport=http`. |
-| `PORTAINER_MCP_AUTH_TOKEN` | _required for http_ | Shared bearer secret. ≥32 ASCII-printable characters, no whitespace. Generate with `openssl rand -hex 32`. Ignored under stdio. |
+| `PORTAINER_MCP_AUTH_TOKEN` | _required for http_ | Shared bearer **gate** secret. ≥32 ASCII-printable characters, no whitespace. Generate with `openssl rand -hex 32`. Ignored under stdio. Admits the request; the caller's own Portainer key is then validated and forwarded (see below). |
+| `PORTAINER_MCP_AUTH_CACHE_TTL` | `60` | Seconds to cache a validated per-user key. Positive results only; `0` disables caching (validate every request). HTTP only. |
 
 The stdio transport ignores everything in this section except `PORTAINER_MCP_TRANSPORT` itself.
+
+### HTTP per-user passthrough
+
+Over HTTP, the server does **not** carry a single shared upstream identity. Each client sends two headers:
+
+| Header | Carries | Role |
+|---|---|---|
+| `Authorization: Bearer <gate-token>` | The shared `PORTAINER_MCP_AUTH_TOKEN` | Front gate — constant-time compared; admits the request. Same for every client of this deployment. |
+| `X-Portainer-API-Key: <ptr_…>` | The caller's **own** Portainer API key | Validated against `/users/me` on first use (cached), then forwarded upstream as `X-API-KEY`. Per-user. |
+
+```bash
+claude mcp add portainer --transport http http://mcp.example.com:17717/mcp \
+  --header "Authorization: Bearer <gate-token>" \
+  --header "X-Portainer-API-Key: <ptr_user_key>"
+```
+
+A missing/invalid gate token **or** missing/invalid per-user key returns 401 — there is no fallback to a shared key. This gives each user Portainer's own RBAC and per-user attribution in both Portainer's audit log and the MCP audit log.
+
 
 ## Hardening (HTTP transport only)
 
@@ -69,50 +88,47 @@ Two controls layered on top of the bearer secret:
 In `json` mode, every line is a single JSON object: app logs carry a `msg` string; audit + request records have their fields merged into the envelope (no nested-string dance). Example, mixing audit, request, and plain startup lines:
 
 ```json
-{"ts": "2026-05-25T12:00:00+0000", "level": "INFO", "logger": "portainer_mcp", "msg": "HTTP auth: enabled (token abcd…wxyz)"}
-{"ts": "2026-05-25T12:00:01+0000", "level": "INFO", "logger": "portainer_mcp.audit", "event": "auth", "outcome": "ok", "client_ip": "203.0.113.7", "user_agent": "Claude-Code/1.2.3", "session_id": "abf3…"}
-{"ts": "2026-05-25T12:00:01+0000", "level": "INFO", "logger": "fastmcp.middleware.structured_logging", "event": "request_success", "method": "tools/call", "source": "client", "duration_ms": 42.3, "client_ip": "203.0.113.7", "user_agent": "Claude-Code/1.2.3", "session_id": "abf3…"}
+{"ts": "2026-05-25T12:00:00+0000", "level": "INFO", "logger": "portainer_mcp", "msg": "HTTP auth: per-user passthrough (gate abcd…wxyz, validation cache ttl=60s)"}
+{"ts": "2026-05-25T12:00:01+0000", "level": "INFO", "logger": "portainer_mcp.audit", "event": "auth", "outcome": "ok", "client_ip": "203.0.113.7", "user_agent": "Claude-Code/1.2.3", "portainer_user_id": 1, "portainer_username": "admin"}
+{"ts": "2026-05-25T12:00:01+0000", "level": "INFO", "logger": "fastmcp.middleware.structured_logging", "event": "request_success", "method": "tools/call", "tool": "EndpointList", "duration_ms": 42.3, "client_ip": "203.0.113.7", "user_agent": "Claude-Code/1.2.3", "session_id": "abf3…", "portainer_user_id": 1, "portainer_username": "admin"}
 ```
 
 Audit and structured-request records both carry the same per-request context fields: `client_ip` (peer address), `user_agent` (HTTP header,
 distinguishes Claude Code / Inspector / custom scripts), and `session_id` (the MCP `Mcp-Session-Id` assigned at `initialize` —
-absent on the `initialize` request itself, present on every subsequent request in the session). With a single shared bearer the audit deliberately omits `token_fp` since it would be a constant; failed attempts likewise carry no token content.
+absent on the `initialize` request itself, present on every subsequent request in the session). With a single shared gate bearer the audit deliberately omits `token_fp` since it would be a constant; failed attempts likewise carry no token content, and the per-user `X-Portainer-API-Key` is never logged.
+
+The audit `outcome` is one of `ok`, `mismatch` (wrong gate token), `no_user_key` (gate passed but no `X-Portainer-API-Key`), or `invalid_user_key` (key rejected by `/users/me` or Portainer unreachable). A successful `ok` — and every matching structured-request record — is attributed with the validated Portainer identity: `portainer_user_id`, `portainer_username`. This is the per-user attribution the passthrough model buys; the key that resolves to that identity is never recorded. Structured-request records for a `tools/call` also carry the `tool` name (the `method` field alone is just `tools/call`).
 
 ### Audit & traceability
 
-The audit log fires **once per HTTP request**, not once per JSON-RPC method call. The MCP Streamable HTTP transport turns a single user-visible action (e.g. one `tools/call`) into several HTTP requests:
+The audit log records **auth events, not every request.** Successful `ok` fires only on a *validation* — i.e. a cache miss that round-trips `/users/me` — so a key produces roughly **one `ok` per `PORTAINER_MCP_AUTH_CACHE_TTL` window** (plus one on each new session's first request), not one per HTTP request. Cache hits admit silently. Failures (`mismatch`, `no_user_key`, `invalid_user_key`) are never cached, so they fire on **every** failing request — which is what you want for alerting.
 
-- 1 POST carrying the JSON-RPC `tools/call` message → 1 audit row +
-  1 `request_start` + 1 `request_success`
-- 1 GET to open the SSE stream the response is delivered on → 1 audit
-  row, no `request_*` record
-- 1+ POST 202s for client-side notifications and responses → 1 audit
-  row each, no `request_*` records
-
-So one tool invocation typically produces ~4 audit rows but only one `request_start` / `request_success` pair. The "extra" audits aren't duplicates — they're real bearer checks on transport-level traffic that doesn't carry a JSON-RPC method, so the FastMCP middleware has nothing to log.
+The MCP Streamable HTTP transport turns a single user-visible action (e.g. one `tools/call`) into several HTTP requests — the JSON-RPC POST, a GET to open the SSE response stream, and notification/response 202s. Each is a separate auth check, but with validation caching only the first (the miss) emits an `ok`; the rest are silent hits. Per-tool-call activity instead lives in the **structured request log** (`request_start` / `request_success`), which fires once per JSON-RPC method call and carries `tool`, identity, and `session_id`.
 
 Practical consequences:
 
-- **Count tool-call volume from `request_success`, not audit rows.**  Audit counts overstate tool traffic by ~4–6×.
-- **Tune `mismatch` alerts, not `ok` rate alerts.** A single chatty agent can produce 100+ `ok` audits/minute on its own; `mismatch` is rare under normal traffic and is the signal worth paging on.
-- **For "who called this tool at time T," start from the `request_*` row.** Take its `session_id`, then grep audit rows by `session_id` to see every HTTP request that session made — useful for spotting probes of unexpected paths or a client that authenticated and then went quiet.
+- **Count tool-call volume from `request_success`, not audit `ok` rows.** An `ok` is a validation event (~one per key per TTL window), not a request counter.
+- **Read `ok` as "key K validated as user U at time T".** It's the per-user attribution + the "this credential was exercised" signal, not a request trail.
+- **Alert on the failure outcomes.** `mismatch` (wrong/probing gate token) and a burst of `invalid_user_key` from one IP are the signals worth paging on; both fire per-request, uncached.
+- **For "who called this tool at time T," start from the `request_*` row** — it has `tool`, `portainer_username`, and `session_id` directly.
 
-**`session_id` is the join key.** Every audit row and every matching `request_start` / `request_success` from the same MCP session carry the same `session_id`. To trace a specific tool call back to its caller, find the `request_*` rows for the method, take the `session_id`, and grep for matching audit rows to see every authenticated HTTP request that session made — including the SSE stream, notifications, and the initial handshake.
+**`session_id` is the join key** across `request_start` / `request_success` records (and any failure audits) within a session. Note a validation `ok` often fires on the `initialize` request, before `Mcp-Session-Id` is assigned, so it may carry no `session_id` — trace activity through the request log, which always has it once the session is established.
 
 Operator queries (`jq` against `docker logs` in JSON mode):
 
 ```bash
 # Failed-auth attempts in the last hour — alert on bursts from one IP
 docker logs --since 1h portainer-mcp | jq -c \
-  'select(.logger == "portainer_mcp.audit" and .outcome == "mismatch")'
+  'select(.logger == "portainer_mcp.audit" and (.outcome | IN("mismatch","no_user_key","invalid_user_key")))'
 
 # Every record (audit + request) for a given session
 docker logs portainer-mcp | jq -c \
   'select(.session_id == "abf3c2…")'
 
-# Spot unfamiliar User-Agents that successfully authenticated
+# Which users validated, and from where
 docker logs portainer-mcp | jq -r \
-  'select(.logger == "portainer_mcp.audit" and .outcome == "ok") | .user_agent' \
+  'select(.logger == "portainer_mcp.audit" and .outcome == "ok")
+   | "\(.portainer_username) \(.client_ip) \(.user_agent)"' \
   | sort -u
 
 # Slowest tool calls (top 10) with their caller

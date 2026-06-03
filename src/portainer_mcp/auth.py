@@ -1,7 +1,10 @@
 """HTTP bearer-token auth for the streamable-HTTP transport.
 
-A single shared secret gates the HTTP `/mcp` endpoint. Stdio transport
-is unaffected.
+A shared secret gates the HTTP `/mcp` endpoint (`StaticBearerVerifier`).
+Over HTTP that gate is layered with per-user key validation
+(`PassthroughVerifier`): the gate admits the request, then the caller's own
+Portainer key is validated before the request is trusted. Stdio transport is
+unaffected (no auth).
 """
 
 from __future__ import annotations
@@ -10,9 +13,10 @@ import hmac
 import json
 import logging
 
+import httpx
 from fastmcp.server.auth import AccessToken, TokenVerifier
 
-from . import request_context
+from . import passthrough, request_context
 
 ENV_VAR = "PORTAINER_MCP_AUTH_TOKEN"
 MIN_TOKEN_LENGTH = 32
@@ -21,6 +25,20 @@ MIN_TOKEN_LENGTH = 32
 # sink via standard logging config without touching the rest of the
 # server's output.
 audit_logger = logging.getLogger("portainer_mcp.audit")
+
+
+def _audit(outcome: str, level: int, **extra: object) -> None:
+    """Emit one auth audit record. The per-request context is read here so
+    every call site stays a single line; `extra` carries outcome-specific
+    fields (e.g. the validated identity on `ok`) and must never include the
+    token or per-user key.
+    """
+    audit_logger.log(
+        level,
+        json.dumps(
+            {"event": "auth", "outcome": outcome, **request_context.snapshot(), **extra}
+        ),
+    )
 
 
 def require_token(raw: str | None) -> str:
@@ -70,29 +88,77 @@ class StaticBearerVerifier(TokenVerifier):
         super().__init__()
         self._expected = token.encode("utf-8")
 
+    def _matches(self, token: str) -> bool:
+        return hmac.compare_digest(token.encode("utf-8"), self._expected)
+
+    def _access_token(self, token: str) -> AccessToken:
+        # Store the fingerprint, not the raw secret. AccessToken is a Pydantic
+        # model whose default __repr__ dumps all fields, so any downstream log
+        # of request.user.access_token would leak the bearer. client_id carries
+        # identity; this field isn't used for re-verification downstream.
+        return AccessToken(
+            token=fingerprint(token),
+            client_id="portainer-mcp",
+            scopes=[],
+            expires_at=None,
+        )
+
     async def verify_token(self, token: str) -> AccessToken | None:
         # With a single shared secret, fingerprinting the *expected* token
         # would just emit the same constant on every record — useless as a
         # correlator. The request-context fields (client_ip, user_agent,
         # session_id) are what actually distinguish callers here.
-        context = request_context.snapshot()
-        if hmac.compare_digest(token.encode("utf-8"), self._expected):
-            audit_logger.info(json.dumps({"event": "auth", "outcome": "ok", **context}))
-            # Store the fingerprint, not the raw secret. AccessToken is a
-            # Pydantic model whose default __repr__ dumps all fields, so
-            # any downstream log of request.user.access_token would leak
-            # the bearer. client_id carries identity; this field isn't
-            # used for re-verification downstream.
-            return AccessToken(
-                token=fingerprint(token),
-                client_id="portainer-mcp",
-                scopes=[],
-                expires_at=None,
-            )
+        if self._matches(token):
+            _audit("ok", logging.INFO)
+            return self._access_token(token)
         # Mismatch — don't fingerprint the attempted token. The forensic
         # signal worth keeping is "auth failed at time T from <ip/ua>";
         # the attacker's supplied bytes are noise.
-        audit_logger.warning(
-            json.dumps({"event": "auth", "outcome": "mismatch", **context})
-        )
+        _audit("mismatch", logging.WARNING)
         return None
+
+
+class PassthroughVerifier(StaticBearerVerifier):
+    """Gate + per-user validation for the HTTP transport.
+
+    Layer 1: the shared gate bearer in `Authorization` is constant-time
+    compared (parent). Layer 2: the caller's own Portainer key in
+    `X-Portainer-API-Key` is validated against `/users/me` (cached) before the
+    request is admitted. Either failure → 401, with no fallback to a shared
+    upstream key. The gate runs first so credential-less floods die at a cheap
+    local 401 without ever reaching Portainer.
+    """
+
+    def __init__(
+        self,
+        token: str,
+        client: httpx.AsyncClient,
+        cache: passthrough.ValidationCache,
+    ) -> None:
+        super().__init__(token)
+        self._client = client
+        self._cache = cache
+
+    async def verify_token(self, token: str) -> AccessToken | None:
+        if not self._matches(token):
+            _audit("mismatch", logging.WARNING)
+            return None
+        key = passthrough.key_from_request()
+        if not key:
+            # Gate passed but no per-user key — the request can't act as anyone.
+            _audit("no_user_key", logging.WARNING)
+            return None
+        identity, validated_now = await passthrough.validate(
+            self._client, self._cache, key
+        )
+        if identity is None:
+            _audit("invalid_user_key", logging.WARNING)
+            return None
+        # Audit `ok` marks a *validation* event, not every admitted request:
+        # it fires only when the key was actually checked against Portainer (a
+        # cache miss). Cache hits admit silently — the per-request structured
+        # log still records them with identity. Attribute by the Portainer
+        # identity the key resolves to; the key itself is never logged.
+        if validated_now:
+            _audit("ok", logging.INFO, **identity.audit_fields())
+        return self._access_token(token)

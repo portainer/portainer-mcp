@@ -11,9 +11,12 @@ from __future__ import annotations
 import json
 import logging
 
+import httpx
 import pytest
+from fastmcp.server.http import set_http_request
+from starlette.requests import Request
 
-from portainer_mcp import auth
+from portainer_mcp import auth, passthrough
 
 
 # --- require_token -----------------------------------------------------------
@@ -186,6 +189,130 @@ async def test_verifier_audit_never_logs_token_bytes(caplog):
         await verifier.verify_token(expected)
         await verifier.verify_token(attempted)
     allowed_keys = {"event", "outcome", "client_ip", "user_agent", "session_id"}
+    for record in caplog.records:
+        payload = json.loads(record.message)
+        assert set(payload).issubset(allowed_keys), (
+            f"unexpected keys in audit payload: {set(payload) - allowed_keys}"
+        )
+
+
+# --- PassthroughVerifier -----------------------------------------------------
+
+GATE = "g" * 64
+ALICE = {"Id": 7, "Username": "alice", "Role": 1}
+
+
+def _request(headers: dict[str, str] | None = None) -> Request:
+    raw = [(k.lower().encode(), v.encode()) for k, v in (headers or {}).items()]
+    return Request(
+        {
+            "type": "http",
+            "method": "POST",
+            "path": "/mcp",
+            "raw_path": b"/mcp",
+            "query_string": b"",
+            "client": ("203.0.113.7", 51234),
+            "headers": raw,
+        }
+    )
+
+
+def _verifier(handler=None) -> auth.PassthroughVerifier:
+    if handler is None:
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=ALICE)
+
+    client = httpx.AsyncClient(
+        base_url="http://portainer/api", transport=httpx.MockTransport(handler)
+    )
+    return auth.PassthroughVerifier(GATE, client, passthrough.ValidationCache(ttl=60))
+
+
+async def test_passthrough_rejects_gate_mismatch():
+    verifier = _verifier()
+    with set_http_request(_request({"X-Portainer-API-Key": "ptr_alice"})):
+        assert await verifier.verify_token("b" * 64) is None
+
+
+async def test_passthrough_rejects_missing_user_key(caplog):
+    verifier = _verifier()
+    with set_http_request(_request({})):  # gate ok, but no per-user key
+        with caplog.at_level(logging.WARNING, logger="portainer_mcp.audit"):
+            assert await verifier.verify_token(GATE) is None
+    outcomes = [json.loads(r.message)["outcome"] for r in caplog.records]
+    assert outcomes == ["no_user_key"]
+
+
+async def test_passthrough_rejects_invalid_user_key(caplog):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401, json={"message": "invalid token"})
+
+    verifier = _verifier(handler)
+    with set_http_request(_request({"X-Portainer-API-Key": "ptr_bad"})):
+        with caplog.at_level(logging.WARNING, logger="portainer_mcp.audit"):
+            assert await verifier.verify_token(GATE) is None
+    outcomes = [json.loads(r.message)["outcome"] for r in caplog.records]
+    assert outcomes == ["invalid_user_key"]
+
+
+async def test_passthrough_accepts_and_attributes_identity(caplog):
+    verifier = _verifier()
+    with set_http_request(_request({"X-Portainer-API-Key": "ptr_alice"})):
+        with caplog.at_level(logging.INFO, logger="portainer_mcp.audit"):
+            access = await verifier.verify_token(GATE)
+    assert access is not None
+    assert access.client_id == "portainer-mcp"
+    assert access.token == auth.fingerprint(GATE)
+    payload = json.loads(caplog.records[0].message)
+    assert payload["outcome"] == "ok"
+    assert payload["portainer_user_id"] == 7
+    assert payload["portainer_username"] == "alice"
+    assert payload["client_ip"] == "203.0.113.7"
+
+
+async def test_passthrough_ok_fires_only_on_validation_not_cache_hits(caplog):
+    # The audit `ok` marks a validation event (cache miss → upstream call), not
+    # every admitted request. The first request validates and logs; subsequent
+    # cache hits admit silently.
+    handler_calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        handler_calls["n"] += 1
+        return httpx.Response(200, json=ALICE)
+
+    verifier = _verifier(handler)
+    with set_http_request(_request({"X-Portainer-API-Key": "ptr_alice"})):
+        with caplog.at_level(logging.INFO, logger="portainer_mcp.audit"):
+            assert await verifier.verify_token(GATE) is not None  # miss → ok
+            assert await verifier.verify_token(GATE) is not None  # hit → silent
+            assert await verifier.verify_token(GATE) is not None  # hit → silent
+    oks = [r for r in caplog.records if r.name == "portainer_mcp.audit"]
+    assert len(oks) == 1
+    assert json.loads(oks[0].message)["outcome"] == "ok"
+    assert handler_calls["n"] == 1  # only the cache miss hit Portainer
+
+
+async def test_passthrough_never_logs_the_user_key(caplog):
+    # The forwarded credential must never reach any audit record — only the
+    # identity it resolves to.
+    secret = "ptr_super_secret_value_that_must_not_leak"
+    verifier = _verifier()
+    with set_http_request(_request({"X-Portainer-API-Key": secret})):
+        with caplog.at_level(logging.INFO, logger="portainer_mcp.audit"):
+            await verifier.verify_token(GATE)  # ok
+            await verifier.verify_token("b" * 64)  # gate mismatch
+    for record in caplog.records:
+        assert secret not in record.message
+    allowed_keys = {
+        "event",
+        "outcome",
+        "client_ip",
+        "user_agent",
+        "session_id",
+        "portainer_user_id",
+        "portainer_username",
+    }
     for record in caplog.records:
         payload = json.loads(record.message)
         assert set(payload).issubset(allowed_keys), (

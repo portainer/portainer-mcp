@@ -31,8 +31,10 @@ data/portainer-patched.yaml ──► FastMCP.from_openapi ──► tag filter 
 `build_server()` loads `src/portainer_mcp/data/portainer-patched.yaml` (a
 locally-patched copy of Portainer's EE OpenAPI spec, bundled into the
 wheel and read via `importlib.resources`) and hands it to
-`FastMCP.from_openapi` with a shared `httpx.AsyncClient` carrying the
-operator's `X-API-KEY`. Each operation becomes an MCP tool.
+`FastMCP.from_openapi` with a shared `httpx.AsyncClient`. Under stdio the
+client carries the operator's `X-API-KEY` directly; under HTTP it carries no
+baked key — a per-request hook injects each caller's own key (see *HTTP auth*).
+Each operation becomes an MCP tool.
 
 ### Tag filter — `profiles.py`
 
@@ -69,21 +71,53 @@ client-side UX signal, not enforcement — the server's actual read-only
 guarantee is the `GET`/`HEAD` `RouteMap` restriction and the proxy's
 method check.
 
-### HTTP auth — `auth.py`
+### HTTP auth — `auth.py` and `passthrough.py`
 
-Only relevant when `PORTAINER_MCP_TRANSPORT=http`. `build_server()` reads
-`PORTAINER_MCP_AUTH_TOKEN`, validates it (min 32 chars, ASCII printable,
-no whitespace, loud-fail on any defect), and wires a
-`StaticBearerVerifier` — a `fastmcp.server.auth.TokenVerifier` subclass —
-into the FastMCP constructor. Every HTTP request must carry
-`Authorization: Bearer <token>`; the verifier uses `hmac.compare_digest`
-for constant-time comparison and returns `None` on mismatch, at which
-point FastMCP renders the 401 + `WWW-Authenticate` response itself. Stdio
-transport short-circuits the auth path entirely (`_get_auth_context()` in
-FastMCP). Every verify attempt — success or mismatch — emits a structured
-audit record on the `portainer_mcp.audit` sub-logger carrying the
-per-request context (see below); the attempted token bytes are never
-logged.
+Only relevant when `PORTAINER_MCP_TRANSPORT=http`. HTTP is **per-user
+passthrough**, not a shared upstream identity: there is no mode flag, and a
+shared `PORTAINER_API_KEY` over HTTP is a hard-fail misconfiguration (it's the
+stdio-only credential). Two layered checks run on every request, both inside
+`PassthroughVerifier.verify_token` so a failure 401s before any tool dispatch:
+
+1. **Front gate.** `build_server()` reads `PORTAINER_MCP_AUTH_TOKEN`, validates
+   it (min 32 chars, ASCII printable, no whitespace, loud-fail on any defect),
+   and the verifier constant-time-compares the request's `Authorization: Bearer`
+   against it (`hmac.compare_digest`). A miss returns `None` → FastMCP renders
+   401 + `WWW-Authenticate`. The gate is mandatory (no opt-out) and stops
+   credential-less floods at a cheap local 401 before they reach Portainer.
+2. **Per-user validation.** The caller's own Portainer key rides in a separate
+   `X-Portainer-API-Key` header. The verifier validates it against
+   `GET /users/me?noEndpointAuthorizations=true` (`passthrough.validate`) and
+   only on success admits the request, capturing `id/username` for the
+   audit log. Missing key → `no_user_key`; invalid/unreachable → `invalid_user_key`;
+   both 401, with no fallback to a shared key.
+
+The validated key is then injected upstream as `X-API-KEY` by an httpx request
+hook (`passthrough.inject_api_key`) that reads **only** the in-flight request,
+so one caller can never borrow another's key, and **fails closed** (raises)
+rather than ever sending a keyless upstream call. The two headers carry
+*distinct* credentials — the gate token (`Authorization`, verified, never
+forwarded) and the per-user key (`X-Portainer-API-Key`, validated, forwarded) —
+so the verified credential and the forwarded one are never the same value.
+
+Validation is cached positive-only (`ValidationCache`, keyed by the SHA-256 of
+the key, never the raw key) for `PORTAINER_MCP_AUTH_CACHE_TTL` seconds (default
+60). This collapses a session to one upstream `/users/me` per key per window;
+the front gate keeps the miss path from being an open amplifier. The TTL is a
+performance/DoS knob, not the authorization boundary — Portainer still rejects
+a revoked key on every real upstream call, so a stale entry lets a dead key
+pass the door for at most one window but never *act*. Negatives are never
+cached so a freshly minted key isn't locked out.
+
+Stdio transport short-circuits the auth path entirely (`_get_auth_context()` in
+FastMCP) and keeps the single baked `X-API-KEY`. The verifier emits structured
+audit records on the `portainer_mcp.audit` sub-logger carrying the per-request
+context (see below). `ok` fires only on a *validation* — a cache miss that
+round-trips `/users/me` — so it marks a validation event (~one per key per TTL
+window), not every admitted request; cache hits admit silently. The failure
+outcomes `mismatch` / `no_user_key` / `invalid_user_key` are uncached and fire
+on every failing request. The attempted gate-token bytes and the per-user key
+are **never** logged (regression-tested).
 
 ### HTTP security — `http_security.py`
 
@@ -111,7 +145,9 @@ the client side.
 `snapshot()` returns `client_ip`, `user_agent`, and the MCP
 `Mcp-Session-Id` for the in-flight HTTP request via
 `fastmcp.server.dependencies.get_http_request()`. Both the audit log (in
-`auth.verify_token`) and the FastMCP request log call it. Reading
+the verifier) and the FastMCP request log call it. `passthrough.py` reads
+the same live request for the per-user key (`key_from_request`) and for
+cache-only identity enrichment (`identity_audit_fields`). Reading
 directly from the live request avoids a subtle bug: MCP's
 streamable-HTTP session manager dispatches every JSON-RPC message into a
 long-lived task whose ContextVars were captured at session-creation
@@ -129,15 +165,20 @@ and merges records whose `msg` parses as a JSON object into that
 envelope, so audit and request records become first-class fields rather
 than nested strings. Two structured emitters feed it:
 
-- **Auth audit** — `StaticBearerVerifier.verify_token` emits one record
-  per attempt on `portainer_mcp.audit`, carrying outcome + per-request
-  context (`client_ip`, `user_agent`, `session_id`).
+- **Auth audit** — the verifier emits records on `portainer_mcp.audit`,
+  carrying outcome + per-request context (`client_ip`, `user_agent`,
+  `session_id`). `ok` fires only on a validation (cache miss), attributed with
+  the validated Portainer identity (`portainer_user_id`, `portainer_username`);
+  cache hits are silent. Failure outcomes fire per request.
 - **Request log** — `_ContextualStructuredLogging`, a thin subclass of
   FastMCP's `StructuredLoggingMiddleware`, adds the same per-request
   context to the before/after/error records the middleware already
-  emits. The upstream `source: "client"` field is dropped from
-  consideration as a caller distinguisher — one shared bearer means
-  every request shows the same value.
+  emits, plus the validated Portainer identity (read from the validation
+  cache, never the key) and, for a `tools/call`, the `tool` name (the
+  bare `method` is only ever `tools/call`). The upstream `source` field is
+  dropped entirely — it's a `Literal["client","server"]` that the request
+  path always stamps `"client"`, so it carries no signal; identity is what
+  distinguishes callers.
 
 `_setup_logging()` also strips pre-existing handlers from `fastmcp`,
 `httpx`, and `uvicorn.*` loggers and passes `uvicorn_config={"log_config":
