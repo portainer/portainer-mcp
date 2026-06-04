@@ -15,6 +15,7 @@ import logging
 
 import httpx
 from fastmcp.server.auth import AccessToken, TokenVerifier
+from starlette.middleware import Middleware
 
 from . import passthrough, request_context
 
@@ -26,6 +27,17 @@ MIN_TOKEN_LENGTH = 32
 # server's output.
 audit_logger = logging.getLogger("portainer_mcp.audit")
 
+# Process-wide posture set once at boot. When the operator opts into plaintext
+# (PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP) every audit record carries
+# `insecure_transport: true` so the log itself records that the credentials it
+# admitted crossed the wire unencrypted.
+_insecure_transport = False
+
+
+def mark_insecure_transport() -> None:
+    global _insecure_transport
+    _insecure_transport = True
+
 
 def _audit(outcome: str, level: int, **extra: object) -> None:
     """Emit one auth audit record. The per-request context is read here so
@@ -33,11 +45,11 @@ def _audit(outcome: str, level: int, **extra: object) -> None:
     fields (e.g. the validated identity on `ok`) and must never include the
     token or per-user key.
     """
+    record: dict[str, object] = {"event": "auth", "outcome": outcome}
+    if _insecure_transport:
+        record["insecure_transport"] = True
     audit_logger.log(
-        level,
-        json.dumps(
-            {"event": "auth", "outcome": outcome, **request_context.snapshot(), **extra}
-        ),
+        level, json.dumps({**record, **request_context.snapshot(), **extra})
     )
 
 
@@ -138,6 +150,22 @@ class PassthroughVerifier(StaticBearerVerifier):
         super().__init__(token)
         self._client = client
         self._cache = cache
+        self._pre_auth_middleware: list[Middleware] = []
+
+    def add_pre_auth_middleware(self, middleware: Middleware) -> None:
+        """Stack ASGI middleware ahead of the bearer-auth backend.
+
+        FastMCP appends the `server.run(middleware=…)` list *after* the auth
+        backend, but the provider's own `get_middleware()` is extended first —
+        so anything returned here runs before `verify_token`. The TLS check
+        uses this to reject a plaintext request before the per-user key is
+        validated upstream (otherwise the no-TLS reject would land only after
+        the key had already crossed the wire to Portainer).
+        """
+        self._pre_auth_middleware.append(middleware)
+
+    def get_middleware(self) -> list:
+        return [*self._pre_auth_middleware, *super().get_middleware()]
 
     async def verify_token(self, token: str) -> AccessToken | None:
         if not self._matches(token):

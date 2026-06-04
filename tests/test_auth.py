@@ -188,7 +188,14 @@ async def test_verifier_audit_never_logs_token_bytes(caplog):
     with caplog.at_level(logging.INFO, logger="portainer_mcp.audit"):
         await verifier.verify_token(expected)
         await verifier.verify_token(attempted)
-    allowed_keys = {"event", "outcome", "client_ip", "user_agent", "session_id"}
+    allowed_keys = {
+        "event",
+        "outcome",
+        "client_ip",
+        "user_agent",
+        "session_id",
+        "insecure_transport",
+    }
     for record in caplog.records:
         payload = json.loads(record.message)
         assert set(payload).issubset(allowed_keys), (

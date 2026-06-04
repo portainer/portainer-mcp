@@ -161,6 +161,28 @@ Key things to internalise before changing code:
   localhost defaults, and the MCP spec MUSTs the check itself, not the
   configurability. Don't re-add an `ALLOWED_ORIGINS` env var unless a
   real browser-hosted client use case shows up.
+- **TLS posture hard-fails on a non-loopback bind.** `tls.resolve_posture()`
+  in `main()` refuses to boot unless the operator declares one of three
+  shapes — server-terminated cert (`PORTAINER_MCP_TLS_CERT`/`_TLS_KEY` →
+  uvicorn `ssl_certfile`/`ssl_keyfile`), proxy attestation
+  (`PORTAINER_MCP_TRUST_PROXY_TLS=1` + `..._FORWARDED_ALLOW_IPS` →
+  `forwarded_allow_ips`), or the one loud plaintext opt-out
+  (`PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP=1`). Loopback binds are
+  exempt (dev). Both encrypted shapes converge on `scope["scheme"] ==
+  "https"`, enforced by `TLSRequiredMiddleware` as a backstop. Critically,
+  that middleware is installed via `PassthroughVerifier.get_middleware()`
+  (`add_pre_auth_middleware`), **not** the `server.run(middleware=[…])` list
+  — the list runs after the auth backend, but the TLS check must run *before*
+  it so a plaintext request is rejected before the per-user key is validated
+  and forwarded upstream (amplification). The loopback exemption is keyed on
+  the bind host at install time, never the per-request client IP. The
+  plaintext opt-out also flips `auth.mark_insecure_transport()`, so every
+  audit record carries `insecure_transport: true`. Self-signed certs WARN,
+  never block — the server only holds the leaf and can't judge true trust, so
+  a hard-fail would be inconsistent (it'd miss internal-CA certs) and would
+  break the legitimate mount-your-own-cert homelab path. No auto-self-signed
+  mode: real MCP clients reject self-signed certs and don't pin by
+  fingerprint.
 - **Log shape is selectable.** `PORTAINER_MCP_LOG_FORMAT=text|json`
   (default `text`, container image overrides to `json`). The `json`
   formatter merges records whose `msg` is itself a JSON object into the

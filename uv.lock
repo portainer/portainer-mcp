@@ -660,6 +660,7 @@ name = "mcp-portainer"
 version = "2.42.4"
 source = { editable = "." }
 dependencies = [
+    { name = "cryptography" },
     { name = "fastmcp" },
     { name = "httpx" },
     { name = "jmespath" },
@@ -674,6 +675,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", specifier = ">=42" },
     { name = "fastmcp", specifier = ">=3.4.2,<4" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "jmespath", specifier = ">=1.0" },

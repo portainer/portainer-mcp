@@ -140,6 +140,44 @@ error. The 421 response body is also rewritten to name
 `PORTAINER_MCP_ALLOWED_HOSTS` so the operator sees the same pointer from
 the client side.
 
+### TLS posture — `tls.py`
+
+Only relevant under HTTP. The server carries two secrets on the wire (the
+gate token and each caller's permanent Portainer key), so plaintext is
+never served on a non-loopback bind by accident. `resolve_posture(host)`
+runs at startup and **refuses to boot** unless one posture is declared,
+loud-failing (like the auth-token check) on any broken declaration — it
+never silently downgrades. Operators pick one of three shapes, all
+collapsing to a single runtime signal, `scheme == "https"`:
+
+1. **Server-terminated TLS** — `PORTAINER_MCP_TLS_CERT`/`_TLS_KEY` are
+   threaded into uvicorn's `ssl_certfile`/`ssl_keyfile` via the
+   `uvicorn_config` dict, so the process speaks HTTPS directly. The server
+   holds the cert, so it can `is_self_signed()`-check it and WARN (the only
+   posture where it can inspect the cert).
+2. **TLS-terminating proxy** — `PORTAINER_MCP_TRUST_PROXY_TLS=1` (explicit
+   attestation) plus `PORTAINER_MCP_FORWARDED_ALLOW_IPS` make uvicorn trust
+   the proxy's `X-Forwarded-Proto`, which rewrites the scheme. The
+   attestation is separate from `PORTAINER_MCP_FORWARDED_ALLOW_IPS` (a functional knob)
+   so a plaintext proxy can't silently satisfy the gate.
+3. **Plaintext opt-out** — `PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP=1`
+   is the one loud escape hatch; it WARNs every start and sets
+   `auth.mark_insecure_transport()` so every audit record carries
+   `insecure_transport: true`.
+
+`TLSRequiredMiddleware` enforces `scheme == "https"` as a backstop (a
+direct plaintext hit that bypasses a Tier-2 proxy still 426s). It is
+installed via the verifier's `get_middleware()` — `PassthroughVerifier.
+add_pre_auth_middleware()` stacks it *ahead* of the bearer-auth backend, so
+a plaintext request is rejected before the per-user key is validated and
+forwarded upstream (the `server.run(middleware=[…])` list runs *after*
+auth, which is why DNS-rebinding sits there but the TLS check can't). The
+loopback exemption is keyed on the **bind host** at install time, never on
+the per-request client IP. There is no auto-self-signed mode: Node-based
+MCP clients reject self-signed certs and none pin by fingerprint, so it
+would be encrypted-but-unconnectable; a homelab operator mounts their own
+(warned) instead.
+
 ### Per-request context — `request_context.py`
 
 `snapshot()` returns `client_ip`, `user_agent`, and the MCP
