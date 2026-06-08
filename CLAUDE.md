@@ -75,12 +75,43 @@ Key things to internalise before changing code:
   one-line summary TextContent naming the env var.
 - **HTTP transport requires a bearer token.** `auth.py` defines
   `StaticBearerVerifier` (a `fastmcp.server.auth.TokenVerifier` subclass
-  using `hmac.compare_digest`); `build_server()` wires it into
+  using `hmac.compare_digest`); `build_server()` wires a verifier into
   `FastMCP.from_openapi(..., auth=…)` only when transport=http. Stdio
   ignores `PORTAINER_MCP_AUTH_TOKEN`. Strict validation at startup
   (min 32 chars, ASCII printable, no whitespace) — loud-fail like the
   unknown-profile check. Don't relax this for "convenience"; the strict
   rule eliminates the make-dev-no-token footgun.
+- **HTTP is per-user passthrough, not a shared upstream key.** Over HTTP
+  the verifier is `auth.PassthroughVerifier` (subclass of
+  `StaticBearerVerifier`), and `PORTAINER_API_KEY` is *not* loaded — it's
+  the stdio-only credential, and `build_server()` hard-fails if it's set
+  under http (a misconfiguration, not a silent fallback). Two layered
+  checks run inside one `verify_token` so a failure 401s before any tool
+  dispatch: (1) the gate token in `Authorization` is constant-time
+  compared by the parent; (2) the caller's own key in the separate
+  `X-Portainer-API-Key` header is validated against `/users/me`
+  (`passthrough.validate`, positive-only `ValidationCache` keyed by the
+  SHA-256 of the key, TTL `PORTAINER_MCP_AUTH_CACHE_TTL` default 60).
+  The validated key is injected upstream as `X-API-KEY` by the
+  `passthrough.inject_api_key` httpx request hook, which reads *only* the
+  in-flight request (so one caller can't borrow another's key) and **fails
+  closed** — it raises rather than ever sending a keyless upstream call.
+  The two headers carry distinct credentials (gate vs per-user key), so
+  the verified token and the forwarded token are never the same value;
+  the httpx client under http therefore carries no baked `X-API-KEY`
+  (stdio still does). Audit outcomes gain `no_user_key` /
+  `invalid_user_key`. `ok` fires only on a *validation* (a cache miss that
+  hits `/users/me`), attributed with `portainer_user_id/username` — so it
+  marks a validation event (~one per key per TTL window), not every
+  admitted request; cache hits admit silently (`validate()` returns
+  `(identity, validated_now)` so the verifier knows which). The failure
+  outcomes are uncached and fire per request. The per-user key itself is
+  never logged (regression-tested). The structured request log adds the
+  `tool` name on a `tools/call` (the bare `method` is only ever
+  `tools/call`). The cache TTL is a
+  perf/DoS knob, not the authz boundary (Portainer rejects a revoked key
+  on every real call); never negative-cache (it would lock out a fresh
+  key).
 - **Two HTTP hardening layers stack on top of the bearer.** Wired in
   `build_server()` + `main()`: a contextualised `StructuredLoggingMiddleware`
   applies to every transport; `http_security.DNSRebindingMiddleware` is

@@ -43,34 +43,35 @@ Contributions for other client instructions are welcome!
 
 ### Team deployment (container)
 
-The recommended way to have multiple users interacting with your Portainer instance via MCP. Deployed as a [`container`](https://hub.docker.com/r/portainer/portainer-mcp) inside your infrastructure, accessed by users from their workstations over HTTP, gated by a shared bearer secret.
+The recommended way to have multiple users interacting with your Portainer instance via MCP. Deployed as a [`container`](https://hub.docker.com/r/portainer/portainer-mcp) inside your infrastructure, accessed by users from their workstations over HTTP. A shared secret gates the MCP server and every client also forwards its own Portainer API key so that each user acts under their own Portainer identity.
 
 > [!IMPORTANT]
-> The container terminates HTTP, **NOT HTTPS**, and serves auth as a single shared bearer.
-> The secret can be intercepted on any path between client and server without TLS termination.
+> The container terminates HTTP, **NOT HTTPS**. Both the gate secret and each user's Portainer API key can be intercepted on any path between client and server without TLS termination.
 > 
 > It is **NOT** recommended to expose this MCP server on the public internet.
 > 
-> Even with a TLS-terminating reverse proxy in front, the recommendation is to gate this MCP server inside your private infrastructure.
+> Even with a TLS-terminating reverse proxy in front, the recommendation is to host this MCP server inside your private infrastructure.
 
 Run the MCP server as a container in your infrastructure:
 
 ```bash
+TOKEN=$(openssl rand -hex 32)
 docker run -d --name portainer-mcp -p 17717:17717 \
   -e PORTAINER_URL=https://portainer.example.com \
-  -e PORTAINER_API_KEY=ptr_xxxxxxxxxxxxxxxx \
-  -e PORTAINER_MCP_AUTH_TOKEN="$(openssl rand -hex 32)" \
+  -e PORTAINER_MCP_AUTH_TOKEN="$TOKEN" \
   -e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com:17717 \
   portainer/portainer-mcp:2.42
 ```
 
 Set `PORTAINER_MCP_ALLOWED_HOSTS` to the hostname or IP address that users will use to reach the MCP — otherwise the DNS-rebinding allowlist 421-rejects the request.
 
-`PORTAINER_MCP_AUTH_TOKEN` is **required** in HTTP mode. It provides the key to gate access to the MCP, distribute this token to the users; their MCP client will send it via the `Authorization` header.
+`PORTAINER_MCP_AUTH_TOKEN` is **required** in HTTP mode. It's the shared front-gate secret you distribute to your users; their MCP client sends it via the `Authorization` header. It only admits the request — what each user can *do* is governed by their own Portainer API key.
 
 Adding the MCP endpoint on Claude Code:
 ```bash
-claude mcp add portainer --transport http http://mcp.example.com:17717/mcp --header "Authorization: Bearer <token>"
+claude mcp add portainer --transport http http://mcp.example.com:17717/mcp \
+  --header "Authorization: Bearer <gate-token>" \
+  --header "X-Portainer-API-Key: <ptr_user_key>"
 ```
 
 ### Hygiene skill (recommended)

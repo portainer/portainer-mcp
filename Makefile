@@ -21,12 +21,15 @@ specs:
 	git -C $(UPSTREAM_DIR) checkout
 	uv run python spec/patch_spec.py $(UPSTREAM_DIR)/versions/ee/$(VERSION).yaml
 
-# Local dev server (HTTP transport). One-time setup:
-#   1. cp .env.example .env, fill in PORTAINER_URL + PORTAINER_API_KEY, and set
+# Local dev server (HTTP transport = per-user passthrough). One-time setup:
+#   1. cp .env.example .env, fill in PORTAINER_URL, and set
 #      PORTAINER_MCP_AUTH_TOKEN to a fresh secret: `openssl rand -hex 32`.
-#   2. Register with Claude using the same token:
+#      Do NOT set PORTAINER_API_KEY — HTTP refuses to boot with it (it's
+#      stdio-only); your Portainer key travels as a client header instead.
+#   2. Register with Claude using the gate token + your own Portainer key:
 #      claude mcp add portainer-dev --transport http http://127.0.0.1:17717/mcp \
-#        --header "Authorization: Bearer <token>"
+#        --header "Authorization: Bearer <token>" \
+#        --header "X-Portainer-API-Key: <ptr_key>"
 # Then iterate: edit code, ctrl-c, make dev again. Claude reconnects automatically.
 dev:
 	PORTAINER_MCP_TRANSPORT=http uv run --env-file .env portainer-mcp
