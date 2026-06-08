@@ -1,6 +1,6 @@
 ---
 name: portainer-mcp-hygiene
-description: How to efficiently query the Portainer MCP server's tools — when to project responses with `select` (JMESPath), where the heavy fields live (snapshots, status blocks, managed fields), and how to handle non-JSON Docker/K8s proxy endpoints (logs, stats, exec). Trigger this whenever you're about to call any Portainer MCP tool — including `docker_proxy`, `kubernetes_proxy`, `EndpointList`, `GetAllKubernetes*`, `StackList`, `snapshot*`, `Helm*`, or any other `mcp__portainer__*` tool — and whenever the user asks about Portainer environments, Docker containers/images/stacks/networks managed by Portainer, Kubernetes resources via Portainer, or Helm releases. Use it even if the user doesn't mention Portainer by name, as long as the working answer requires one of these tools.
+description: How to efficiently query the Portainer MCP server's tools and read the responses correctly — when to project responses with `select` (JMESPath), where the heavy fields live (snapshots, status blocks, managed fields), how to handle non-JSON Docker/K8s proxy endpoints (logs, stats, exec), and how to interpret results that are easy to misread (e.g. an edge environment's health comes from its heartbeat, not its `Status` field). Trigger this whenever you're about to call any Portainer MCP tool — including `docker_proxy`, `kubernetes_proxy`, `EndpointList`, `GetAllKubernetes*`, `StackList`, `snapshot*`, `Helm*`, or any other `mcp__portainer__*` tool — and whenever the user asks about Portainer environments, Docker containers/images/stacks/networks managed by Portainer, Kubernetes resources via Portainer, or Helm releases. Use it even if the user doesn't mention Portainer by name, as long as the working answer requires one of these tools.
 ---
 
 # Portainer MCP hygiene
@@ -59,9 +59,13 @@ Each environment includes a full Docker or Kubernetes snapshot — container lis
 # Container counts per environment
 EndpointList(select="[].{name:Name,running:Snapshots[0].RunningContainerCount,total:Snapshots[0].ContainerCount}")
 
-# Just identity + reachability
+# Just identity + status field
 EndpointList(select="[].{id:Id,name:Name,type:Type,status:Status}")
 ```
+
+`Status` is the right reachability signal only for *direct* agents — for
+edge environments it stays `0` regardless of health. See *Interpreting
+results, not just shrinking them* below before reading it as up/down.
 
 **Kubernetes via `kubernetes_proxy` — `metadata.managedFields` and `status` are huge.**
 `metadata.managedFields` alone is routinely 30-70% of an object. The `status` block on Deployments, StatefulSets, Pods, and Nodes is similarly verbose. Project them out unless the user is asking about reconciliation state or controller history:
@@ -96,6 +100,33 @@ Stack, container, and Kubernetes env values come back as `[REDACTED]`. The respo
 - If the user genuinely needs an env value (troubleshooting a deploy), tell them to set `PORTAINER_EXPOSE_ENV_VALUES=1` on the MCP server and reconnect. Don't invoke the toggle yourself.
 - The sentinel `[REDACTED]` is a literal placeholder — never quote it back to the user as if it were the real value.
 - Redaction covers `Env` / `EnvVars` shapes (stack `Env` pairs, Docker `KEY=VAL` strings, K8s `env[].value`). K8s `valueFrom` references are preserved — they're references to a Secret/ConfigMap, not the secret material itself.
+
+## Interpreting results, not just shrinking them
+
+Projecting the right fields only helps if you read them correctly. The
+highest-frequency misread on this surface:
+
+**Edge environments — `Status` is not the health signal; `Heartbeat` is.**
+The endpoint `Status` field means up/down only for *direct* agents (`1 = up`,
+`2 = down`). For *edge* agents (`Type` 4 = EdgeAgentOnDocker, 7 =
+EdgeAgentOnKubernetes) `Status` is left at its zero value `0` and never tracks
+reachability — so reading `Status: 0` as "down" is a false alarm. Portainer
+judges an edge agent by its **heartbeat**: up if it checked in within
+`2 × interval + 20` seconds (the interval is `EdgeCheckinInterval`, falling
+back to the global Edge check-in setting, for standard agents; the smallest of
+the ping/command/snapshot intervals for async agents). The server exposes this
+as a computed `Heartbeat` boolean — which is exactly what the dashboard's
+environment badge renders ("Heartbeat" vs "Down").
+
+For a reachability check that's correct across both kinds, project the
+heartbeat inputs, not just `Status`:
+
+```
+EndpointList(select="[].{id:Id,name:Name,type:Type,status:Status,heartbeat:Heartbeat,lastCheckIn:LastCheckInDate}")
+```
+
+Read it as: **direct agent → trust `status`** (`1` = up); **edge agent
+(`type` 4/7) → trust `heartbeat`** (`true` = up) and ignore `status`.
 
 ## Patterns for common questions
 
