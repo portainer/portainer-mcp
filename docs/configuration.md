@@ -54,12 +54,39 @@ Two controls layered on top of the bearer secret:
 
 | Var | Default | Notes |
 |---|---|---|
-| `PORTAINER_MCP_ALLOWED_HOSTS` | `127.0.0.1:*,localhost:*,[::1]:*` | Comma-separated `Host` allowlist. **Extend whenever the container is reached via a non-local hostname** — including any reverse proxy that preserves the original `Host` header. |
+| `PORTAINER_MCP_ALLOWED_HOSTS` | `127.0.0.1:*,localhost:*,[::1]:*` | Comma-separated `Host` allowlist. **Extend whenever the server is reached via a non-local hostname**, including a reverse proxy. Set it to exactly the `host:port` clients target — see note below. |
+
+> [!NOTE]
+> Match the value to the `Host` header clients actually send:
+> - standard-443 reverse proxy → bare hostname (`mcp.example.com`) — clients omit the default port
+> - custom port (direct, or a non-443 proxy) → pin it (`mcp.example.com:17717`, `mcp.example.com:8443`)
+> - port genuinely varies → `:*` wildcard
+>
+> A `base:*` entry matches **only** Hosts that include a port, so it will *not* match a bare `mcp.example.com` — don't reach for the wildcard by default. Pinning is tighter, but the DNS-rebinding boundary is the **hostname**; the port is secondary.
 
 > [!NOTE]
 > The `Origin` allowlist is not configurable and ships pinned to the localhost to provide secure defaults.
 > MCP clients such as Claude Code, Claude Desktop, etc... uses programmatic access that omits the `Origin` header
 > so these won't be impacted.
+
+## TLS posture (HTTP transport only)
+
+Over HTTP the server carries two secrets on the wire — the gate token and each
+caller's own Portainer API key (which never expires, so a captured one is
+usable until manually revoked). To avoid serving those in clear text by
+accident, **a non-loopback bind refuses to boot unless one transport posture is
+declared.** Loopback binds (`make dev`, `127.0.0.1`) are exempt. A broken
+declaration (cert without key, an unreadable cert, `PORTAINER_MCP_TRUST_PROXY_TLS`
+without `PORTAINER_MCP_FORWARDED_ALLOW_IPS`) hard-fails at startup — it never
+silently downgrades.
+
+| Var | Default | Notes |
+|---|---|---|
+| `PORTAINER_MCP_TLS_CERT` | _unset_ | PEM certificate path. Must be set together with `PORTAINER_MCP_TLS_KEY`. Server-terminated TLS — no plaintext hop exists. The server **warns** if the cert is self-signed; most MCP clients reject self-signed certs by default, so install the cert's CA on each client. |
+| `PORTAINER_MCP_TLS_KEY` | _unset_ | PEM private-key path. Must be set together with `PORTAINER_MCP_TLS_CERT`. |
+| `PORTAINER_MCP_TRUST_PROXY_TLS` | `0` | Attest that a TLS-terminating reverse proxy sits in front. When truthy, the server trusts the proxy's `X-Forwarded-Proto: https`. Requires `PORTAINER_MCP_FORWARDED_ALLOW_IPS`. It's an explicit acknowledgment — `PORTAINER_MCP_FORWARDED_ALLOW_IPS` alone (a functional knob) does **not** satisfy the TLS gate, since it could be set for a plaintext proxy. |
+| `PORTAINER_MCP_FORWARDED_ALLOW_IPS` | _unset_ | Comma-separated IPs/subnets whose `X-Forwarded-*` headers the server trusts. **Prefer the proxy's exact IP** when it's stable; widen to its **subnet** only when the proxy's address is dynamic (Docker/Kubernetes reschedule containers onto new IPs, so you can only know the network range) — and keep that subnet free of untrusted workloads, since anything on it can then spoof the scheme. A container **name won't work** (this matches the numeric source IP, not DNS): give the proxy a static container IP, or trust the user-defined network's subnet. Use `*` only when nothing but the proxy can reach the container. If the container is directly reachable (e.g. a published port) while trusting any attacker-reachable range, an attacker can spoof `X-Forwarded-Proto: https` over plaintext and defeat the TLS check — so a proxy deployment should not publish the container's port (see the Tier-2 example, which omits `-p`). Also repairs audit attribution (real client IP instead of the proxy's). |
+| `PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP` | `0` | **Danger.** The only way to serve plain HTTP on a non-loopback bind. The gate token and every Portainer key cross the wire unencrypted — acceptable only on a trusted private network you fully control. Emits a `WARNING` on every start and marks the audit log with `insecure_transport: true`. Exists because self-signed certs don't work in real MCP clients, leaving small no-CA/no-IdP deployments no other option. |
 
 ## Profiles
 

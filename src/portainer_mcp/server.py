@@ -29,6 +29,14 @@ and refuses to boot if PORTAINER_API_KEY is set. Tunables:
   (127.0.0.1, localhost, [::1]); operator must extend for non-local
   deployments. The `Origin` allowlist is hardcoded to the localhost set
   (the only browser MCP client in scope is the local Inspector).
+- PORTAINER_MCP_TLS_CERT / PORTAINER_MCP_TLS_KEY — PEM cert+key; uvicorn
+  serves HTTPS directly (server-terminated TLS). Set together.
+- PORTAINER_MCP_TRUST_PROXY_TLS=1 + PORTAINER_MCP_FORWARDED_ALLOW_IPS —
+  attest a TLS-terminating proxy; trust its X-Forwarded-Proto from the
+  given IPs/subnets.
+- PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP=1 — serve plain HTTP
+  (unencrypted) on a non-loopback bind. The one loud opt-out; otherwise a
+  non-loopback bind refuses to boot without a TLS posture.
 """
 
 from __future__ import annotations
@@ -59,6 +67,7 @@ from portainer_mcp import (
     redaction,
     request_context,
     shaping,
+    tls,
 )
 
 SPEC_PATH = files("portainer_mcp") / "data" / "portainer-patched.yaml"
@@ -357,6 +366,25 @@ def main() -> None:
     warning = http_security.misconfig_warning(host, settings)
     if warning is not None:
         logger.warning(warning)
+
+    posture = tls.resolve_posture(host)
+    for line in posture.warnings:
+        logger.warning(line)
+    if posture.insecure_transport:
+        auth.mark_insecure_transport()
+    if posture.enforce_https:
+        # Installed via the verifier so it runs before the bearer-auth backend
+        # (not the `middleware=` list below, which Starlette appends after auth).
+        server.auth.add_pre_auth_middleware(Middleware(tls.TLSRequiredMiddleware))
+    logger.info(
+        "transport posture: %s",
+        "PLAINTEXT (insecure)"
+        if posture.insecure_transport
+        else "https enforced"
+        if posture.enforce_https
+        else "loopback (dev)",
+    )
+
     server.run(
         transport="http",
         host=host,
@@ -368,7 +396,7 @@ def main() -> None:
         # Uvicorn calls logging.config.dictConfig at server start, which
         # would overwrite the handlers we attached to uvicorn.* loggers.
         # Skip it so a single formatter owns every record.
-        uvicorn_config={"log_config": None},
+        uvicorn_config={"log_config": None, **posture.uvicorn_kwargs},
     )
 
 
