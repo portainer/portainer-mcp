@@ -144,7 +144,7 @@ This repo ships a Claude Code skill ([`portainer-mcp-hygiene`](https://github.co
 
 ````bash
 mkdir -p ~/.claude/skills/portainer-mcp-hygiene && \
-  curl -fsSL https://raw.githubusercontent.com/portainer/portainer-mcp/2.42.0/skills/portainer-mcp-hygiene/SKILL.md \
+  curl -fsSL https://raw.githubusercontent.com/portainer/portainer-mcp/2.42.5/skills/portainer-mcp-hygiene/SKILL.md \
   -o ~/.claude/skills/portainer-mcp-hygiene/SKILL.md
 ````
 

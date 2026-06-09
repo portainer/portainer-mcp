@@ -9,6 +9,49 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.42.5] — 2026-06-09
+
+Targets Portainer 2.42.x.
+
+### Changed
+
+- **BREAKING (HTTP transport): the HTTP credential model is now per-user
+  passthrough.** Previously the HTTP bearer token gated access while a single
+  shared `PORTAINER_API_KEY` was the upstream Portainer credential for every
+  caller. Now the bearer token is only a gate, and each caller must supply
+  **their own** Portainer API key in the `X-Portainer-API-Key` header; it is
+  validated against `/users/me` and injected upstream per-request. **Setting
+  `PORTAINER_API_KEY` under `PORTAINER_MCP_TRANSPORT=http` now hard-fails at
+  startup** — it is a stdio-only credential. Migration: drop `PORTAINER_API_KEY`
+  from your HTTP deployment and have each client send `X-Portainer-API-Key`
+  alongside the existing `Authorization: Bearer` gate token. Stdio transport is
+  unchanged. Validation is cached positive-only (TTL
+  `PORTAINER_MCP_AUTH_CACHE_TTL`, default 60s); audit records gain
+  `no_user_key` / `invalid_user_key` outcomes and the `tool` name, and the
+  per-user key is never logged. See [#66](https://github.com/portainer/portainer-mcp/pull/66).
+- **Bumped `fastmcp` to `>=3.4.2` and dropped the direct `starlette` pin.** The
+  CVE-2026-48710 floor is now carried transitively by the newer fastmcp, so the
+  explicit starlette pin added in 2.42.3 is no longer needed.
+
+### Added
+
+- **TLS posture enforcement on non-loopback HTTP binds.** The server refuses to
+  boot on a non-loopback bind unless the operator declares one of three shapes:
+  a server-terminated cert (`PORTAINER_MCP_TLS_CERT` / `_TLS_KEY`), proxy TLS
+  attestation (`PORTAINER_MCP_TRUST_PROXY_TLS=1` + `..._FORWARDED_ALLOW_IPS`),
+  or the loud plaintext opt-out
+  (`PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP=1`, which marks every audit
+  record `insecure_transport: true`). Loopback binds are exempt for dev. A
+  `TLSRequiredMiddleware` backstop runs *before* auth, so a plaintext request is
+  rejected before any per-user key is validated or forwarded upstream.
+  Self-signed certs WARN, never block. See [#67](https://github.com/portainer/portainer-mcp/pull/67).
+
+### Documentation
+
+- Clarified in the `portainer-mcp-hygiene` skill that an edge agent's health
+  comes from its heartbeat, not its `Status` field. See
+  [#70](https://github.com/portainer/portainer-mcp/pull/70).
+
 ## [2.42.4] — 2026-06-02
 
 Targets Portainer 2.42.x.
