@@ -209,3 +209,45 @@ The exception is non-JSON endpoints (see above) — there, ignore the `select` s
 - Kubernetes things on a specific environment → either the OpenAPI-generated `GetAllKubernetes*` / `GetKubernetes*` tools (Portainer-aware, often already filtered) or `kubernetes_proxy` (raw K8s API, full flexibility). Prefer the typed tool when it exists; fall back to the proxy for paths Portainer doesn't surface natively.
 - Helm releases → `HelmList`, `HelmGet`, `HelmGetHistory`. Don't try to route Helm through the K8s proxy — Portainer's Helm tools see the release metadata the K8s API alone doesn't.
 - Mutations (POST/PUT/DELETE) → only in read-write mode. If the server is in `PORTAINER_READ_ONLY=1`, non-GET calls are rejected at the tool with a clear error. Don't retry mutations as GET when this happens — surface the read-only state to the user.
+
+## When the skill itself is wrong
+
+If reality contradicts this skill — a `select` example fails to parse, redaction behaves
+differently than described, a documented tool is missing or renamed, the truncation hint
+doesn't match what's written here — offer to file an issue on
+[`portainer/portainer-mcp`](https://github.com/portainer/portainer-mcp), the repo this
+skill ships from, so the gap gets fixed for everyone. Server misbehaviour (a tool errors
+on valid input, the cap or redaction is broken) belongs there too. That repo is the *only*
+destination this section covers: user errors, instance misconfiguration, and Portainer
+product bugs are out of scope — handle them in conversation, don't offer to file them
+anywhere.
+
+First make sure the evidence points at the skill rather than at your own expression:
+re-run the *verbatim* example from this file, not your adaptation of it. A `null`
+projection usually means an unquoted dotted key in your own expression (see the JMESPath
+notes above), not a skill gap. Only a verbatim example failing, or behaviour that
+contradicts an explicit claim in this file, is reportable.
+
+1. **Offer once per session.** One line — "this looks like a gap in the
+   portainer-mcp-hygiene skill; want me to file an issue on `portainer/portainer-mcp`?"
+   If declined, drop it for the rest of the session. If more mismatches surface later,
+   fold them into the one offer (and one issue) rather than asking per finding.
+2. **Draft and scrub.** Replace hostnames/IPs/URLs, usernames, and resource names with
+   placeholders (`<portainer-host>`, `<stack-name>`); never include tokens, env values,
+   or response dumps. Quote the failing line, not the whole response — short bodies also
+   survive the prefilled-link fallback below.
+3. **Include**: the skill version from the footer of this file; the Portainer version
+   (`systemVersion` is one cheap call) and the `mcp-portainer` server version if the user
+   knows it; a title prefixed `[portainer-mcp-hygiene]` for skill-guidance gaps (plain
+   titles for server bugs); what the skill said (quote it); the tool call made (tool name
+   + sanitized arguments including the `select` expression); what actually happened; and
+   what you expected.
+4. **Show the draft, then file on approval** — `gh issue create --repo
+   portainer/portainer-mcp --title … --body …` if `gh` is available and authenticated;
+   otherwise hand the user a prefilled link they can open themselves:
+   `https://github.com/portainer/portainer-mcp/issues/new?title=<url-encoded>&body=<url-encoded>`.
+   Never file silently.
+
+---
+
+Skill version: 2.42.5 (matches the `mcp-portainer` release tag this file shipped with).
