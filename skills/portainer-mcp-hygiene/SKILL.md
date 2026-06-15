@@ -1,6 +1,6 @@
 ---
 name: portainer-mcp-hygiene
-description: How to efficiently query the Portainer MCP server's tools and read the responses correctly — when to project responses with `select` (JMESPath), where the heavy fields live (snapshots, status blocks, managed fields), how to handle non-JSON Docker/K8s proxy endpoints (logs, stats, exec), and how to interpret results that are easy to misread (e.g. an edge environment's health comes from its heartbeat, not its `Status` field). Trigger this whenever you're about to call any Portainer MCP tool — including `docker_proxy`, `kubernetes_proxy`, `EndpointList`, `GetAllKubernetes*`, `StackList`, `snapshot*`, `Helm*`, or any other `mcp__portainer__*` tool — and whenever the user asks about Portainer environments, Docker containers/images/stacks/networks managed by Portainer, Kubernetes resources via Portainer, or Helm releases. Use it even if the user doesn't mention Portainer by name, as long as the working answer requires one of these tools.
+description: How to drive the Portainer MCP server's tools correctly — both reading and mutating. Reading: project responses with `select` (JMESPath), where the heavy fields live (snapshots, status blocks, managed fields), how to handle non-JSON Docker/K8s proxy endpoints (container and pod logs, stats, exec), and how to interpret results that are easy to misread (e.g. an edge environment's health comes from its heartbeat, not its `Status` field; typed K8s tools use different field names than the raw proxy). Mutating: deploying, scaling, restarting, and deleting Portainer-managed resources — where success payloads are empty and must be verified out-of-band, and where cleanup (orphaned volumes) and recovery (name-based vs id-based calls) have gotchas. Trigger this whenever you're about to call any Portainer MCP tool — including `docker_proxy`, `kubernetes_proxy`, `EndpointList`, `GetAllKubernetes*`, `StackList`, `StackCreateKubernetes*`, `StackDelete*`, `CreateKubernetes*`, `snapshot*`, `Helm*`, or any other `mcp__portainer__*` tool — and whenever the user asks you to inspect, deploy, scale, restart, or remove Docker containers/images/stacks/networks, Kubernetes resources, or Helm releases managed by Portainer. Use it even if the user doesn't mention Portainer by name, as long as the working answer requires one of these tools.
 ---
 
 # Portainer MCP hygiene
@@ -19,10 +19,13 @@ environment-scoped question, resolve the target first with one call:
 EndpointList(select="[].{id:Id,name:Name,type:Type,status:Status}")
 ```
 
-and use the ID whose name matches what the user means. Guessing is a hard
+and use the ID whose name matches what the user means. Guessing the environment is a hard
 failure, not a silent one: a wrong ID makes the proxy raise an `API request
-failed (HTTP 404)` error, so a projection that returns `null` fields means the
-data is genuinely absent, not that you hit the wrong environment.
+failed (HTTP 404)` error rather than returning empty data — so a wrong environment is *not*
+a source of `null` projections. Two other things are, though: an unquoted dotted key (see the
+JMESPath notes below) and a field-name mismatch on the typed `GetAllKubernetes*` tools (see
+their note under *Where the noise lives*). So read an all-`null` result as a wrong-keys signal
+to investigate, not as proof the data is absent.
 
 ## The default pattern
 
@@ -78,8 +81,15 @@ kubernetes_proxy(environment_id=N, path="/api/v1/pods", select="items[].{name:me
 kubernetes_proxy(environment_id=N, path="/apis/apps/v1/deployments", select="items[].{name:metadata.name,ns:metadata.namespace,replicas:spec.replicas,ready:status.readyReplicas}")
 ```
 
-**`GetAllKubernetes*` tools — full status blocks per object.**
-The OpenAPI-generated `GetAllKubernetesApplications`, `GetAllKubernetesConfigMaps`, `GetAllKubernetesIngresses`, etc. return arrays where each element carries its full object body. Same rules as the proxy: project to the named fields you need.
+**`GetAllKubernetes*` tools — full object body per element, in a Portainer-specific shape.**
+The OpenAPI-generated `GetAllKubernetesApplications`, `GetAllKubernetesPersistentVolumes`, `GetAllKubernetesConfigMaps`, etc. return arrays where each element carries its full body — so project to the fields you need. But mind the field names: these typed tools do **not** use the raw-K8s paths the proxy uses (`metadata.name`, `status.phase`, `spec.…`), and they don't reliably match the PascalCase of `EndpointList` (`Id`, `Name`) either. They tend to be flattened camelCase, and some fields collapse — e.g. `GetAllKubernetesPersistentVolumes` returns identity as a top-level `name` (not `metadata.name`) and `status` as a bare string `"Bound"` (not `status.phase`):
+
+```
+# Actual shape — camelCase, flattened, status-as-string
+GetAllKubernetesPersistentVolumes(select="[].{name:name,status:status,claimNs:claimRef.namespace,sc:storageClassName,reclaim:persistentVolumeReclaimPolicy}")
+```
+
+Because the convention varies by tool, an all-`null` projection here almost always means you guessed the wrong keys — reusing the proxy's `metadata.name` or `EndpointList`'s `Name` — not that the data is absent. When unsure, **fetch one element with no `select` first** to read the real field names, then project. If you'd rather work in raw-K8s field names, use `kubernetes_proxy` instead.
 
 **`StackList` and `StackInspect` — config and env vars.**
 Stacks carry the full compose/manifest content plus environment variable dictionaries. If the user asked "which stacks exist?", project to `{id, name, type, status}`. If they asked about a specific stack's config, fetch it directly and only then look at the body. Env *values* come back redacted by default — see *Env values are redacted by default* below.
@@ -175,6 +185,12 @@ A handful of `docker_proxy` and `kubernetes_proxy` paths return plain text or st
 - Always pass `stdout=true` and/or `stderr=true` — without them Docker rejects the call with a 400.
 - Don't set `follow=true` — it streams indefinitely and will burn your context.
 
+**Kubernetes pod logs** — `kubernetes_proxy` path `/api/v1/namespaces/{ns}/pods/{pod}/log`:
+- Cap the output with `tailLines` (e.g. `tailLines=100`) and/or `limitBytes` — the K8s equivalents of Docker's `tail`. Both are query params.
+- Add `previous=true` to read the *prior* container after a crash/restart — the current container may be too young to show what failed.
+- In a multi-container pod, pass `container=<name>` to pick one (otherwise the API errors).
+- Don't set `follow=true` — like the Docker case it streams without end. `select` is a no-op here too; the body is plain text.
+
 **Container stats** — `/containers/{id}/stats`:
 - Always pass `stream=false` to get a single snapshot. The streaming form is unbounded.
 
@@ -202,13 +218,34 @@ When you do hit the cap, the response ends with a bracketed `[truncated: ... Ret
 
 The exception is non-JSON endpoints (see above) — there, ignore the `select` suggestion and re-shape the upstream query instead.
 
+## Mutations: verify, recover, clean up
+
+Most of this skill is about reading; the same care applies when you *change* things. The Portainer mutation tools have a few habits worth planning around.
+
+**Success is usually silent — verify out-of-band.** Create/update/delete tools tend to return nothing useful: `CreateKubernetesNamespace` returns an empty body, and `StackCreateKubernetesFile` / `StackDelete` return `{"Output":""}` on success. An empty response is *not* proof of success — it's indistinguishable from a swallowed error. After any mutation, confirm with a read: list the resource or fetch it and check its status. Don't report "done" off a non-error alone.
+
+**When a name-based call misbehaves, fall back to id.** Some `…ByName` convenience tools need parameters you can't supply through the MCP and will reject the call. The reliable pattern is `list → act-by-id`: resolve the object first (`StackList` with a `{id,name,type}` projection), then act on the numeric id (`StackDelete`). Reach for this whenever a name-based mutation errors on something you can't satisfy.
+
+**Deletions can leave orphans — check the reclaim policy.** Deleting a PVC (or a stack that owns one) does not necessarily reclaim its storage: under a `Retain` storage class the underlying PersistentVolume is left behind in `Released` state, still holding disk. After deleting volume-backed resources, list `/persistentvolumes` (via `kubernetes_proxy`, for accurate field names) and delete the released PV with `DeleteKubernetesPersistentVolumes` if you meant to free the space — but only the one you intend, never a `Bound` PV another workload is using.
+
+**Restart by scaling, not by deleting the pod.** There's no first-class scale tool, so to stop or restart a workload, merge-PATCH its replica count through the proxy:
+
+```
+kubernetes_proxy(environment_id=N, method="PATCH",
+                 path="/apis/apps/v1/namespaces/{ns}/deployments/{name}",
+                 headers={"Content-Type": "application/merge-patch+json"},
+                 body='{"spec":{"replicas":0}}')
+```
+
+Scale to `0`, confirm the pod is gone, then back to the target count. For any workload that must not run two copies at once — anything writing to a single shared volume, such as a game server, a database, or any app with non-shared backing storage — this scale-to-zero-then-up cycle is the *only* safe restart. Never raise replicas above one to "roll" such a workload: two pods writing the same volume can corrupt it.
+
 ## Tool selection cheatsheet
 
 - Environment-level summary (counts, status, reachability) → `EndpointList` with snapshot projection, or `EndpointSummaryCounts`/`dockerDashboard` if the question is purely aggregate.
 - Docker things on a specific environment → `docker_proxy`. The OpenAPI-generated `dockerContainerGpusInspect`, `containerImageStatus`, etc. are specific helpers; use them when they directly answer the question, otherwise the proxy is more flexible.
 - Kubernetes things on a specific environment → either the OpenAPI-generated `GetAllKubernetes*` / `GetKubernetes*` tools (Portainer-aware, often already filtered) or `kubernetes_proxy` (raw K8s API, full flexibility). Prefer the typed tool when it exists; fall back to the proxy for paths Portainer doesn't surface natively.
 - Helm releases → `HelmList`, `HelmGet`, `HelmGetHistory`. Don't try to route Helm through the K8s proxy — Portainer's Helm tools see the release metadata the K8s API alone doesn't.
-- Mutations (POST/PUT/DELETE) → only in read-write mode. If the server is in `PORTAINER_READ_ONLY=1`, non-GET calls are rejected at the tool with a clear error. Don't retry mutations as GET when this happens — surface the read-only state to the user.
+- Mutations (POST/PUT/DELETE) → only in read-write mode. If the server is in `PORTAINER_READ_ONLY=1`, non-GET calls are rejected at the tool with a clear error. Don't retry mutations as GET when this happens — surface the read-only state to the user. See *Mutations: verify, recover, clean up* above for verifying success and cleaning up after writes.
 
 ## When the skill itself is wrong
 
