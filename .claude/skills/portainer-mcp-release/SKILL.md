@@ -176,6 +176,8 @@ gh run watch
 
 The workflow verifies tag == `pyproject.version`, runs tests, builds the wheel, publishes to PyPI via OIDC Trusted Publishing. On success, the release is live at `https://pypi.org/project/mcp-portainer/X.Y.0/`.
 
+The same tag also fires `release-docker.yml` (Docker Hub image) and `release-mcpb.yml` (the Claude Desktop `.mcpb` bundles, attached to the GitHub Release). Both are independent of the PyPI publish. The `.mcpb` manifest version is stamped from the tag at build time — there is **no manifest file to bump** in Step 6. See [`docs/release.md`](../../../docs/release.md#github-release-mcpb-bundles).
+
 ## Gotchas
 
 - **Tag/version mismatch fails fast.** If you forgot to bump `pyproject.toml` or tagged the wrong commit, the workflow refuses to publish. Delete the tag locally and remotely (`git tag -d X.Y.0 && git push --delete origin X.Y.0`), fix the version, retag. See [`docs/release.md`](../../../docs/release.md) for the full recovery flow.

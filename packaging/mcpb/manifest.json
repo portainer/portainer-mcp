@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/schemas/mcpb-manifest-v0.2.schema.json",
+  "manifest_version": "0.2",
+  "name": "portainer-mcp",
+  "display_name": "Portainer",
+  "version": "0.0.0",
+  "description": "Manage Docker, Kubernetes, stacks, and Helm on your Portainer instance.",
+  "long_description": "MCP server for Portainer. Exposes tools generated from Portainer's EE OpenAPI spec across Docker, Kubernetes, stacks, Helm, edge and admin surfaces, plus docker_proxy / kubernetes_proxy escape hatches. Runs locally over stdio and talks directly to your Portainer instance with your API key.",
+  "author": {
+    "name": "Portainer",
+    "url": "https://github.com/portainer/portainer-mcp"
+  },
+  "homepage": "https://github.com/portainer/portainer-mcp",
+  "documentation": "https://github.com/portainer/portainer-mcp/blob/main/README.md",
+  "license": "MIT",
+  "server": {
+    "type": "binary",
+    "entry_point": "server/portainer-mcp",
+    "mcp_config": {
+      "command": "${__dirname}/server/portainer-mcp",
+      "args": [],
+      "env": {
+        "PORTAINER_URL": "${user_config.portainer_url}",
+        "PORTAINER_API_KEY": "${user_config.portainer_api_key}",
+        "PORTAINER_PROFILES": "BASE,DOCKER,KUBERNETES,EDGE,ADMIN",
+        "PORTAINER_TLS_VERIFY": "${user_config.portainer_tls_verify}",
+        "PORTAINER_READ_ONLY": "${user_config.portainer_read_only}"
+      }
+    }
+  },
+  "user_config": {
+    "portainer_url": {
+      "type": "string",
+      "title": "Portainer URL",
+      "description": "Base URL of your Portainer instance, e.g. https://portainer.example.com",
+      "required": true
+    },
+    "portainer_api_key": {
+      "type": "string",
+      "title": "Portainer API key",
+      "description": "An API key issued from your Portainer account. Stored in the OS keychain.",
+      "sensitive": true,
+      "required": true
+    },
+    "portainer_tls_verify": {
+      "type": "boolean",
+      "title": "Verify TLS certificate",
+      "description": "Uncheck for a Portainer instance using a self-signed or otherwise untrusted certificate.",
+      "default": true,
+      "required": false
+    },
+    "portainer_read_only": {
+      "type": "boolean",
+      "title": "Read-only mode",
+      "description": "Only allow read operations — look but don't touch.",
+      "default": false,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"]
+  }
+}

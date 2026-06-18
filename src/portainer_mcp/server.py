@@ -47,6 +47,7 @@ import logging
 import os
 import sys
 from importlib.resources import files
+from pathlib import Path
 
 import httpx
 import yaml
@@ -72,7 +73,40 @@ from portainer_mcp import (
 
 SPEC_PATH = files("portainer_mcp") / "data" / "portainer-patched.yaml"
 
+# Single source of truth is skills/portainer-mcp-hygiene/SKILL.md. The wheel
+# (hatch force-include) and the frozen .mcpb binary (PyInstaller datas) ship a
+# copy here; an editable dev checkout has neither, so _load_instructions falls
+# back to the repo source.
+HYGIENE_SKILL = files("portainer_mcp") / "data" / "SKILL.md"
+_DEV_SKILL = (
+    Path(__file__).resolve().parents[2]
+    / "skills"
+    / "portainer-mcp-hygiene"
+    / "SKILL.md"
+)
+
 logger = logging.getLogger("portainer_mcp")
+
+
+def _strip_frontmatter(text: str) -> str:
+    # The SKILL.md YAML frontmatter (name/description/triggers) is skill-runtime
+    # machinery, meaningless as server instructions — keep only the body.
+    if text.startswith("---"):
+        fence = text.find("\n---", 3)
+        if fence != -1:
+            eol = text.find("\n", fence + 4)
+            if eol != -1:
+                return text[eol + 1 :].lstrip()
+    return text.lstrip()
+
+
+def _load_instructions() -> str | None:
+    """The hygiene guidance, surfaced to clients as MCP server instructions."""
+    if HYGIENE_SKILL.is_file():
+        return _strip_frontmatter(HYGIENE_SKILL.read_text(encoding="utf-8"))
+    if _DEV_SKILL.is_file():
+        return _strip_frontmatter(_DEV_SKILL.read_text(encoding="utf-8"))
+    return None
 
 
 def _env_flag(name: str, *, default: bool) -> bool:
@@ -304,6 +338,14 @@ def build_server() -> FastMCP:
         logger.info("profiles tag set (%d): %s", len(allowed_tags), list(allowed_tags))
     route_maps.append(RouteMap(pattern=r".*", mcp_type=MCPType.EXCLUDE))
 
+    instructions = _load_instructions()
+    logger.info(
+        "server instructions: %s",
+        f"hygiene guidance loaded ({len(instructions)} chars)"
+        if instructions
+        else "none (hygiene skill not found)",
+    )
+
     mcp = FastMCP.from_openapi(
         openapi_spec=spec,
         client=client,
@@ -312,6 +354,7 @@ def build_server() -> FastMCP:
         mcp_component_fn=_annotate_read_only,
         validate_output=False,
         auth=auth_provider,
+        instructions=instructions,
     )
     if no_proxy:
         logger.info("proxy tools skipped (PORTAINER_NO_PROXY=1)")

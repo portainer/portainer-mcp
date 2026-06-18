@@ -38,6 +38,16 @@ claude mcp add portainer \
 
 For other clients, see
 [`docs/distribution/`](https://github.com/portainer/portainer-mcp/tree/main/docs/distribution).
+
+### Claude Desktop (one-click bundle)
+
+Each [release](https://github.com/portainer/portainer-mcp/releases) ships a
+self-contained `.mcpb` bundle per platform — no `uv` or Python required.
+Download the one for your platform, double-click to install, and enter your
+Portainer URL and API key. See
+[`docs/distribution/claude-desktop.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/distribution/claude-desktop.md)
+(the bundles are not yet code-signed, so it documents a one-time
+Gatekeeper/SmartScreen step).
 Contributions for other client instructions are welcome!
 
 ### Team deployment (container)

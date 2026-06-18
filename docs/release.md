@@ -39,6 +39,42 @@ Image tag scheme: `:X.Y.Z` and `:X.Y` per release, multi-arch
 `linux/amd64,linux/arm64`. No `:latest`. See
 [`docker.md`](docker.md).
 
+### GitHub Release (`.mcpb` bundles)
+
+[`release-mcpb.yml`](../.github/workflows/release-mcpb.yml) builds the Claude
+Desktop one-click bundles on the same `X.Y.Z` tag trigger and attaches them to
+the **GitHub Release** for the tag (creating the Release if it doesn't exist
+yet — PyPI and Docker Hub don't need one, so this workflow owns it).
+
+It's a runner matrix, not multi-arch-in-one-job: PyInstaller freezes the
+running interpreter and can't cross-compile, so each platform builds natively.
+Current targets:
+
+- `darwin-arm64` (macOS, `macos-14`) — Apple Silicon only for now.
+- `win32-x64` (`windows-latest`)
+- `linux-x64` (`ubuntu-latest`)
+
+Each leg runs the same `tag == pyproject.version` gate and `pytest` as the PyPI
+workflow, then calls [`packaging/mcpb/build.sh`](../packaging/mcpb/build.sh),
+which freezes the binary (the `mcpb` dependency group pins PyInstaller), stamps
+the tag into `manifest.json` (the committed file carries a `0.0.0`
+placeholder — nothing to hand-bump at release), and packs
+`portainer-mcp-X.Y.Z-<target>.mcpb`. No repo secrets: it uses the built-in
+`GITHUB_TOKEN` with `contents: write`.
+
+The workflow is deliberately off the PyPI/Docker critical path — a PyInstaller
+failure on one platform won't block the wheel publish.
+
+**The bundles are unsigned.** macOS Gatekeeper and Windows SmartScreen flag
+downloaded unsigned binaries, so the install isn't yet one-click from a
+download — the workaround is in
+[`distribution/claude-desktop.md`](distribution/claude-desktop.md). Code
+signing (Apple Developer ID notarization + Windows Authenticode) and a single
+universal `.mcpb` are tracked follow-ups, not in this workflow.
+
+To iterate locally, run `packaging/mcpb/build.sh <target> <version>` on a
+machine of that platform (it can't cross-build).
+
 ## Dry run on TestPyPI
 
 Before tagging a real release, do a dry run against TestPyPI to confirm the

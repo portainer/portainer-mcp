@@ -14,6 +14,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 COPY README.md LICENSE ./
 COPY src ./src
+# Needed at build time: hatch force-include copies the hygiene skill into the
+# wheel (see pyproject.toml [tool.hatch.build.targets.wheel.force-include]).
+COPY skills ./skills
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable
 
