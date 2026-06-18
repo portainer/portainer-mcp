@@ -111,8 +111,8 @@ Ten files to touch. Listed in roughly the order it's natural to edit them:
 | `pyproject.toml` | `version = "X.Y.0"`. |
 | `uv.lock` | `uv lock` — refreshes the self-entry to match `pyproject`. |
 | `docs/profiles.md` | New per-profile and union numbers in the "Default coverage" paragraph; new orphan table (paste from the script); update the "350+/400+ operations across 40+ tags" lead if it crossed a round number. |
-| `README.md` | `~=X.Y.0` pin in the `claude mcp add` snippet; raw URL tag in the skill curl; new row in the compat matrix (keep prior rows — the matrix is cumulative). |
-| `docs/distribution/claude-desktop.md` | Same pin + skill URL bump as README. Check for additional client docs as `docs/distribution/` grows. |
+| `README.md` | `~=X.Y.0` pin in the `claude mcp add` snippet; new row in the compat matrix (keep prior rows — the matrix is cumulative). |
+| `docs/distribution/claude-desktop.md` | Same `~=X.Y.0` pin in the manual JSON config. Check for additional client docs as `docs/distribution/` grows. (No skill-install snippets to re-pin — the guide is bundled and served via `get_guidance`.) |
 | `skills/portainer-mcp-hygiene/SKILL.md` | Bump the `Skill version:` footer to `X.Y.0`. Issue reports filed via the skill's self-report section cite this footer — a stale value mislabels every report. |
 | `Makefile` | Update the example `VERSION=` in the `specs` comment/help text. |
 | `docs/versioning.md` | If the doc uses the old minor in prose examples (e.g. "2.41.x ↔ 2.41.x"), retarget to the new minor. |
