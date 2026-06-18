@@ -357,6 +357,16 @@ def build_server() -> FastMCP:
     route_maps.append(RouteMap(pattern=r".*", mcp_type=MCPType.EXCLUDE))
 
     guide = _load_guide()
+    if not guide:
+        # The guide is load-bearing — the get_guidance tool and its gate both
+        # depend on it. A missing guide means a broken build (the bundled copy
+        # wasn't packaged) or code running outside both the wheel and the repo
+        # tree. Loud-fail like the other startup invariants rather than ship a
+        # server that silently can't guide the model.
+        raise SystemExit(
+            "hygiene guide not found (neither bundled data/SKILL.md nor the "
+            "repo-source skills/portainer-mcp-hygiene/SKILL.md) — packaging defect"
+        )
 
     mcp = FastMCP.from_openapi(
         openapi_spec=spec,
@@ -372,10 +382,7 @@ def build_server() -> FastMCP:
         logger.info("proxy tools skipped (PORTAINER_NO_PROXY=1)")
     else:
         proxy.register(mcp, client, read_only=read_only)
-    if guide:
-        guidance.register(mcp, guide)
-    else:
-        logger.warning("hygiene guide not found; get_guidance tool not registered")
+    guidance.register(mcp, guide)
     mcp.add_transform(shaping.SelectArgTransform())
 
     # Fail fast at startup rather than silently shipping tools without `select`.
@@ -399,6 +406,12 @@ def build_server() -> FastMCP:
     )
     mcp.add_middleware(shaping.ResponseCapMiddleware(max_chars))
     logger.info("response cap: %d chars", max_chars)
+
+    # Added last so it runs innermost: the logging middleware still records the
+    # gated attempt. get_guidance is guaranteed registered (missing guide
+    # hard-fails above), so the gate is always satisfiable.
+    mcp.add_middleware(guidance.GuidanceGateMiddleware(is_http=transport == "http"))
+    logger.info("guidance gate: enabled (get_guidance required once per session)")
     logger.info(
         "env value redaction: %s",
         "DISABLED (env values exposed)" if redaction.is_expose_enabled() else "enabled",
