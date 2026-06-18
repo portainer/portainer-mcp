@@ -9,6 +9,43 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.42.6] — 2026-06-18
+
+Targets Portainer 2.42.x.
+
+### Added
+
+- **Claude Desktop one-click `.mcpb` bundles.** The server now ships as a
+  self-contained PyInstaller binary bundle (no Python/uv/Node needed on the
+  client), built per-platform (`darwin-arm64`, `win32-x64`, `linux-x64`) on
+  tag push and attached to the GitHub Release. See
+  [#72](https://github.com/portainer/portainer-mcp/pull/72). Bundles are
+  unsigned for now — Gatekeeper/SmartScreen workaround is documented in
+  [`docs/distribution/claude-desktop.md`](docs/distribution/claude-desktop.md).
+- **Bundled hygiene guidance, served on demand via a `get_guidance` tool.**
+  The full `portainer-mcp-hygiene` skill now ships with every install method
+  (uvx, container, `.mcpb`) sourced from the same `SKILL.md`, so it can't
+  drift. A `GuidanceGateMiddleware` requires `get_guidance` once per session
+  (transport-aware session scoping) so the guide reliably lands in context
+  rather than relying on the truncatable `instructions` field. A missing
+  guide is now a hard startup failure, matching the loud-fail-on-misconfig
+  convention.
+
+### Changed
+
+- **Hygiene skill guidance expanded** to cover mutations and typed Kubernetes
+  field shapes, and to report its own gaps (failing `select` examples,
+  redaction/truncation mismatches, missing tools) as scrubbed,
+  consent-gated issues against `portainer/portainer-mcp`. See
+  [#71](https://github.com/portainer/portainer-mcp/pull/71).
+
+### Removed
+
+- **Manual hygiene-skill curl install instructions** (README,
+  `docs/distribution/claude-desktop.md`). The guide is now bundled and served
+  via `get_guidance`, so the curl-install snippets were redundant and
+  drift-prone.
+
 ## [2.42.5] — 2026-06-09
 
 Targets Portainer 2.42.x.
