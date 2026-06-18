@@ -15,3 +15,6 @@ jobs:
           enable-cache: true
       - run: uv sync --frozen
       - run: uv run pytest
+      # Builds sdist + wheel (and the wheel-from-sdist path) so packaging
+      # regressions surface on PRs, not on the tag-push release build.
+      - run: uv build
