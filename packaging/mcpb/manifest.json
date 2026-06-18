@@ -38,14 +38,14 @@
     "portainer_api_key": {
       "type": "string",
       "title": "Portainer API key",
-      "description": "An API key issued from your Portainer account. Stored in the OS keychain.",
+      "description": "An API key issued from your Portainer account.",
       "sensitive": true,
       "required": true
     },
     "portainer_tls_verify": {
       "type": "boolean",
       "title": "Verify TLS certificate",
-      "description": "Uncheck for a Portainer instance using a self-signed or otherwise untrusted certificate.",
+      "description": "Uncheck for a Portainer instance using a self-signed certificate.",
       "default": true,
       "required": false
     },
