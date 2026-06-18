@@ -100,11 +100,10 @@ receive plain `X.Y.Z`.
 4. Move the `[Unreleased]` block in [`../CHANGELOG.md`](../CHANGELOG.md) under
    a new `[X.Y.Z] — YYYY-MM-DD` heading; leave a fresh empty `[Unreleased]`
    block on top.
-5. Bump the pinned tag to the new `X.Y.Z` everywhere the skill install is
-   referenced: the README curl snippet,
-   [`distribution/claude-desktop.md`](distribution/claude-desktop.md), and the
-   `Skill version:` footer in
-   [`../skills/portainer-mcp-hygiene/SKILL.md`](../skills/portainer-mcp-hygiene/SKILL.md).
+5. Bump the `Skill version:` footer in
+   [`../skills/portainer-mcp-hygiene/SKILL.md`](../skills/portainer-mcp-hygiene/SKILL.md)
+   to the new `X.Y.Z`. (The guide is bundled and served via `get_guidance`, so
+   there are no manual-install snippets to re-pin.)
 6. Commit: `Release X.Y.Z`.
 7. Tag and push:
    ```bash
