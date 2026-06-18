@@ -31,6 +31,11 @@ packages = ["src/portainer_mcp"]
 [tool.hatch.build.targets.wheel.force-include]
 "skills/portainer-mcp-hygiene/SKILL.md" = "portainer_mcp/data/SKILL.md"
 
+# The wheel is built from the sdist, so SKILL.md must also ride in the sdist
+# at its original path or the wheel's force-include above can't resolve it.
+[tool.hatch.build.targets.sdist.force-include]
+"skills/portainer-mcp-hygiene/SKILL.md" = "skills/portainer-mcp-hygiene/SKILL.md"
+
 [dependency-groups]
 dev = [
     "pytest>=8",
