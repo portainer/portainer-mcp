@@ -38,6 +38,16 @@ claude mcp add portainer \
 
 For other clients, see
 [`docs/distribution/`](https://github.com/portainer/portainer-mcp/tree/main/docs/distribution).
+
+### Claude Desktop (one-click bundle)
+
+Each [release](https://github.com/portainer/portainer-mcp/releases) ships a
+self-contained `.mcpb` bundle per platform — no `uv` or Python required.
+Download the one for your platform, double-click to install, and enter your
+Portainer URL and API key. See
+[`docs/distribution/claude-desktop.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/distribution/claude-desktop.md)
+(the bundles are not yet code-signed, so it documents a one-time
+Gatekeeper/SmartScreen step).
 Contributions for other client instructions are welcome!
 
 ### Team deployment (container)
@@ -137,18 +147,6 @@ claude mcp add portainer --transport http http://mcp.example.com:17717/mcp \
   --header "Authorization: Bearer <gate-token>" \
   --header "X-Portainer-API-Key: <ptr_user_key>"
 ````
-
-### Hygiene skill (recommended)
-
-This repo ships a Claude Code skill ([`portainer-mcp-hygiene`](https://github.com/portainer/portainer-mcp/blob/main/skills/portainer-mcp-hygiene/SKILL.md)) that helps the model query the MCP efficiently and keep responses within context. Install user-wide, pinned to the same tag as the server:
-
-````bash
-mkdir -p ~/.claude/skills/portainer-mcp-hygiene && \
-  curl -fsSL https://raw.githubusercontent.com/portainer/portainer-mcp/2.42.5/skills/portainer-mcp-hygiene/SKILL.md \
-  -o ~/.claude/skills/portainer-mcp-hygiene/SKILL.md
-````
-
-It is recommended to re-run on each server upgrade so the skill stays in sync.
 
 ## Restricting and expanding the MCP server capabilities
 

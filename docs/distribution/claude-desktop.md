@@ -1,5 +1,33 @@
 # Claude Desktop
 
+There are two ways to install: a **`.mcpb` bundle** (no Python/uv required, set
+up through the Claude Desktop UI) or the **manual JSON config** (requires `uv`
+on `PATH`).
+
+## Option A — `.mcpb` bundle
+
+Each release attaches a self-contained `.mcpb` per platform to its
+[GitHub Release](https://github.com/portainer/portainer-mcp/releases). Download
+the one for your platform and double-click it (or Claude Desktop > Settings >
+Extensions > install), then fill in your Portainer URL and API key — the key is
+stored in your OS keychain.
+
+- `portainer-mcp-X.Y.Z-darwin-arm64.mcpb` — macOS, Apple Silicon
+- `portainer-mcp-X.Y.Z-win32-x64.mcpb` — Windows, x64
+- `portainer-mcp-X.Y.Z-linux-x64.mcpb` — Linux, x64
+
+> **The bundles are not yet code-signed**, so the OS flags the downloaded
+> binary on first run:
+> - **macOS:** "portainer-mcp can't be opened because the developer cannot be
+>   verified." Clear the quarantine flag once, then install:
+>   ```bash
+>   xattr -d com.apple.quarantine ~/Downloads/portainer-mcp-*.mcpb
+>   ```
+> - **Windows:** SmartScreen shows "Windows protected your PC" — click
+>   **More info → Run anyway**.
+
+## Option B — manual JSON config
+
 Claude Desktop > Settings > Developer > Edit Config and choose one of the path below, alternatively you can edit that file directly with your preferred text editor.
 
 * macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -26,18 +54,3 @@ Claude Desktop > Settings > Developer > Edit Config and choose one of the path b
 Restart Claude Desktop after every config change. Logs land in
 `~/Library/Logs/Claude/mcp*.log` (macOS) or `%APPDATA%\Claude\logs\`
 (Windows).
-
-## Recommended: install the hygiene skill
-
-This repo ships a skill
-([`portainer-mcp-hygiene`](https://github.com/portainer/portainer-mcp/blob/main/skills/portainer-mcp-hygiene/SKILL.md))
-that helps the model query the MCP efficiently and keep responses within
-context. Install user-wide, pinned to the same tag as the server:
-
-```bash
-mkdir -p ~/.claude/skills/portainer-mcp-hygiene && \
-  curl -fsSL https://raw.githubusercontent.com/portainer/portainer-mcp/2.42.5/skills/portainer-mcp-hygiene/SKILL.md \
-  -o ~/.claude/skills/portainer-mcp-hygiene/SKILL.md
-```
-
-Re-run on each server upgrade so the skill stays in sync.

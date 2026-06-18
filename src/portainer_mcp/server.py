@@ -47,6 +47,7 @@ import logging
 import os
 import sys
 from importlib.resources import files
+from pathlib import Path
 
 import httpx
 import yaml
@@ -60,6 +61,7 @@ from starlette.middleware import Middleware
 
 from portainer_mcp import (
     auth,
+    guidance,
     http_security,
     passthrough,
     profiles,
@@ -72,7 +74,57 @@ from portainer_mcp import (
 
 SPEC_PATH = files("portainer_mcp") / "data" / "portainer-patched.yaml"
 
+# Single source of truth is skills/portainer-mcp-hygiene/SKILL.md. The wheel
+# (hatch force-include) and the frozen .mcpb binary (PyInstaller datas) ship a
+# copy here; an editable dev checkout has neither, so _load_instructions falls
+# back to the repo source.
+HYGIENE_SKILL = files("portainer_mcp") / "data" / "SKILL.md"
+_DEV_SKILL = (
+    Path(__file__).resolve().parents[2]
+    / "skills"
+    / "portainer-mcp-hygiene"
+    / "SKILL.md"
+)
+
 logger = logging.getLogger("portainer_mcp")
+
+# Short pointer surfaced as MCP server instructions. The full guide can't ride
+# here — clients truncate instructions at ~2KB — so this names get_guidance and
+# carries only the floor the model needs even if it never calls the tool.
+INSTRUCTIONS = (
+    "Portainer MCP server. Its responses are large and several fields are easy "
+    "to misread (e.g. an edge environment's health comes from its heartbeat, "
+    "not its `Status` field), so working without guidance tends to produce "
+    "wrong answers and burned context. Call the `get_guidance` tool once at the "
+    "start of any Portainer task — before interpreting responses or planning "
+    "multi-step changes. It pays for itself immediately: it covers projecting "
+    "responses with `select`, where the heavy fields live, how to read results "
+    "correctly, and how to deploy / scale / delete safely.\n\n"
+    "Core practice regardless: always pass a JMESPath `select` to project large "
+    "responses, and verify mutations out-of-band — Portainer write calls often "
+    "return an empty body on success."
+)
+
+
+def _strip_frontmatter(text: str) -> str:
+    # The SKILL.md YAML frontmatter (name/description/triggers) is skill-runtime
+    # machinery, meaningless as server instructions — keep only the body.
+    if text.startswith("---"):
+        fence = text.find("\n---", 3)
+        if fence != -1:
+            eol = text.find("\n", fence + 4)
+            if eol != -1:
+                return text[eol + 1 :].lstrip()
+    return text.lstrip()
+
+
+def _load_guide() -> str | None:
+    """The full hygiene guide, served on demand by the get_guidance tool."""
+    if HYGIENE_SKILL.is_file():
+        return _strip_frontmatter(HYGIENE_SKILL.read_text(encoding="utf-8"))
+    if _DEV_SKILL.is_file():
+        return _strip_frontmatter(_DEV_SKILL.read_text(encoding="utf-8"))
+    return None
 
 
 def _env_flag(name: str, *, default: bool) -> bool:
@@ -304,6 +356,18 @@ def build_server() -> FastMCP:
         logger.info("profiles tag set (%d): %s", len(allowed_tags), list(allowed_tags))
     route_maps.append(RouteMap(pattern=r".*", mcp_type=MCPType.EXCLUDE))
 
+    guide = _load_guide()
+    if not guide:
+        # The guide is load-bearing — the get_guidance tool and its gate both
+        # depend on it. A missing guide means a broken build (the bundled copy
+        # wasn't packaged) or code running outside both the wheel and the repo
+        # tree. Loud-fail like the other startup invariants rather than ship a
+        # server that silently can't guide the model.
+        raise SystemExit(
+            "hygiene guide not found (neither bundled data/SKILL.md nor the "
+            "repo-source skills/portainer-mcp-hygiene/SKILL.md) — packaging defect"
+        )
+
     mcp = FastMCP.from_openapi(
         openapi_spec=spec,
         client=client,
@@ -312,11 +376,13 @@ def build_server() -> FastMCP:
         mcp_component_fn=_annotate_read_only,
         validate_output=False,
         auth=auth_provider,
+        instructions=INSTRUCTIONS,
     )
     if no_proxy:
         logger.info("proxy tools skipped (PORTAINER_NO_PROXY=1)")
     else:
         proxy.register(mcp, client, read_only=read_only)
+    guidance.register(mcp, guide)
     mcp.add_transform(shaping.SelectArgTransform())
 
     # Fail fast at startup rather than silently shipping tools without `select`.
@@ -340,6 +406,12 @@ def build_server() -> FastMCP:
     )
     mcp.add_middleware(shaping.ResponseCapMiddleware(max_chars))
     logger.info("response cap: %d chars", max_chars)
+
+    # Added last so it runs innermost: the logging middleware still records the
+    # gated attempt. get_guidance is guaranteed registered (missing guide
+    # hard-fails above), so the gate is always satisfiable.
+    mcp.add_middleware(guidance.GuidanceGateMiddleware(is_http=transport == "http"))
+    logger.info("guidance gate: enabled (get_guidance required once per session)")
     logger.info(
         "env value redaction: %s",
         "DISABLED (env values exposed)" if redaction.is_expose_enabled() else "enabled",
