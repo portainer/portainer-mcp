@@ -61,6 +61,7 @@ from starlette.middleware import Middleware
 
 from portainer_mcp import (
     auth,
+    guidance,
     http_security,
     passthrough,
     profiles,
@@ -87,6 +88,23 @@ _DEV_SKILL = (
 
 logger = logging.getLogger("portainer_mcp")
 
+# Short pointer surfaced as MCP server instructions. The full guide can't ride
+# here — clients truncate instructions at ~2KB — so this names get_guidance and
+# carries only the floor the model needs even if it never calls the tool.
+INSTRUCTIONS = (
+    "Portainer MCP server. Its responses are large and several fields are easy "
+    "to misread (e.g. an edge environment's health comes from its heartbeat, "
+    "not its `Status` field), so working without guidance tends to produce "
+    "wrong answers and burned context. Call the `get_guidance` tool once at the "
+    "start of any Portainer task — before interpreting responses or planning "
+    "multi-step changes. It pays for itself immediately: it covers projecting "
+    "responses with `select`, where the heavy fields live, how to read results "
+    "correctly, and how to deploy / scale / delete safely.\n\n"
+    "Core practice regardless: always pass a JMESPath `select` to project large "
+    "responses, and verify mutations out-of-band — Portainer write calls often "
+    "return an empty body on success."
+)
+
 
 def _strip_frontmatter(text: str) -> str:
     # The SKILL.md YAML frontmatter (name/description/triggers) is skill-runtime
@@ -100,8 +118,8 @@ def _strip_frontmatter(text: str) -> str:
     return text.lstrip()
 
 
-def _load_instructions() -> str | None:
-    """The hygiene guidance, surfaced to clients as MCP server instructions."""
+def _load_guide() -> str | None:
+    """The full hygiene guide, served on demand by the get_guidance tool."""
     if HYGIENE_SKILL.is_file():
         return _strip_frontmatter(HYGIENE_SKILL.read_text(encoding="utf-8"))
     if _DEV_SKILL.is_file():
@@ -338,13 +356,7 @@ def build_server() -> FastMCP:
         logger.info("profiles tag set (%d): %s", len(allowed_tags), list(allowed_tags))
     route_maps.append(RouteMap(pattern=r".*", mcp_type=MCPType.EXCLUDE))
 
-    instructions = _load_instructions()
-    logger.info(
-        "server instructions: %s",
-        f"hygiene guidance loaded ({len(instructions)} chars)"
-        if instructions
-        else "none (hygiene skill not found)",
-    )
+    guide = _load_guide()
 
     mcp = FastMCP.from_openapi(
         openapi_spec=spec,
@@ -354,12 +366,16 @@ def build_server() -> FastMCP:
         mcp_component_fn=_annotate_read_only,
         validate_output=False,
         auth=auth_provider,
-        instructions=instructions,
+        instructions=INSTRUCTIONS,
     )
     if no_proxy:
         logger.info("proxy tools skipped (PORTAINER_NO_PROXY=1)")
     else:
         proxy.register(mcp, client, read_only=read_only)
+    if guide:
+        guidance.register(mcp, guide)
+    else:
+        logger.warning("hygiene guide not found; get_guidance tool not registered")
     mcp.add_transform(shaping.SelectArgTransform())
 
     # Fail fast at startup rather than silently shipping tools without `select`.
