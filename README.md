@@ -10,16 +10,27 @@ Match the MCP server's minor version to your Portainer instance's minor — e.g.
 
 ## Getting started
 
-The MCP server can be executed locally via `uvx` or as a container.
+The MCP server supports different deployment scenarios:
+* execute it locally via `uvx`
+* install it as a MCP bundle
+* deploy it as a container
 
-Use the first approach to explore the MCP capabilities locally and deploy it inside your infrastructure as a container for a team based deployment setup.
+Use the `uvx` approach or the MCP bundle to explore the MCP capabilities locally and deploy it inside your infrastructure as a container for a team based deployment setup.
 
 > [!NOTE]
 > Before using the MCP, make sure to generate an API key in Portainer under **My Account → Access tokens** first as both paths need it.
 
+### MCP bundle (one-click install)
+
+The recommended way to test the MCP server locally. Your client must support [MCP bundles](https://github.com/modelcontextprotocol/mcpb):
+
+1. Fetch the self-contained `.mcpb` bundle for your platform from the [latest release](https://github.com/portainer/portainer-mcp/releases/latest)
+2. Double-click to install
+3. Enter your Portainer URL and API key.
+
 ### Single user (stdio via `uvx`)
 
-The recommended way to test the MCP server locally. Runs as a stdio process on your machine and connects directly to the Portainer instance.
+The other way to test the MCP server locally. Runs as a stdio process on your machine and connects directly to the Portainer instance.
 
 > [!NOTE]
 > `uv` must be installed and available on `PATH`.
@@ -38,17 +49,6 @@ claude mcp add portainer \
 
 For other clients, see
 [`docs/distribution/`](https://github.com/portainer/portainer-mcp/tree/main/docs/distribution).
-
-### Claude Desktop (one-click bundle)
-
-Each [release](https://github.com/portainer/portainer-mcp/releases) ships a
-self-contained `.mcpb` bundle per platform — no `uv` or Python required.
-Download the one for your platform, double-click to install, and enter your
-Portainer URL and API key. See
-[`docs/distribution/claude-desktop.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/distribution/claude-desktop.md)
-(the bundles are not yet code-signed, so it documents a one-time
-Gatekeeper/SmartScreen step).
-Contributions for other client instructions are welcome!
 
 ### Team deployment (container)
 
