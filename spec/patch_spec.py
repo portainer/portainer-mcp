@@ -17,38 +17,25 @@ from pathlib import Path
 import yaml
 
 EXCLUDED_OPERATION_IDS = {
-    "SharedGitGet",
-    "SharedGitUpdate",
-    "SharedGitDelete",
     "UpdateKubernetesNamespaceDeprecated",
     "providerInfo",
     "provisionCluster",
 }
 
-# Edge-agent-only callbacks under `/endpoints/{id}/edge/*` that 403 outside
-# an agent context. Tagged with `endpoints` upstream, so they leak into the
-# default profile and surface as tools that can never succeed for a non-agent
-# MCP caller.
-#
-# Two of them have no operationId in the spec (FastMCP names them from
-# `summary` instead), so the existing operationId-based filter can't catch
-# them — match on (method, path) instead.
-EXCLUDED_PATH_METHODS = frozenset(
-    {
-        ("get", "/endpoints/{id}/edge/stacks/{stackId}"),
-        ("get", "/endpoints/{id}/edge/status"),
-        ("post", "/endpoints/{id}/edge/alerts"),
-        ("post", "/endpoints/{id}/edge/jobs/{jobID}/logs"),
-    }
-)
+# Edge-agent-only callbacks under `/endpoints/{id}/edge/*` (heartbeat/status,
+# async poll, alert + chart status, edge stack/job sync). They 403 for any
+# caller that isn't an Edge agent presenting `X-PortainerAgent-EdgeID`, so they
+# can never succeed for an MCP caller. 2.43 gave them a dedicated `edge_agent`
+# tag — before that they were mis-tagged `endpoints` and leaked into the DOCKER
+# profile, and we matched four of them by (method, path). Now we drop every op
+# carrying the tag: it catches all of them (not an arbitrary subset), and one
+# (`EndpointEdgeStackInspect`) also carries `edge_stacks`, so it would otherwise
+# surface in the EDGE profile.
+EXCLUDED_TAGS = frozenset({"edge_agent"})
 
 EXCLUDED_PATH_PREFIXES = ("/websocket",)
 
-ENUM_STRIPS = (
-    ("os.FileMode",),
-    ("policies.PolicyType",),
-    ("v1.Duration", "properties", "time.Duration"),
-)
+ENUM_STRIPS = (("policies.PolicyType",),)
 
 DEFAULT_OUTPUT = (
     Path(__file__).resolve().parents[1]
@@ -75,10 +62,9 @@ def patch(spec: dict) -> dict:
             op = paths[path][method]
             if not isinstance(op, dict):
                 continue
-            if op.get("operationId") in EXCLUDED_OPERATION_IDS:
-                paths[path].pop(method)
-                continue
-            if (method.lower(), path) in EXCLUDED_PATH_METHODS:
+            if op.get("operationId") in EXCLUDED_OPERATION_IDS or (
+                EXCLUDED_TAGS.intersection(op.get("tags") or ())
+            ):
                 paths[path].pop(method)
         if not paths[path]:
             paths.pop(path)

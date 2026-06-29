@@ -24,29 +24,29 @@ def _spec(paths: dict | None = None, schemas: dict | None = None) -> dict:
 def test_excluded_operation_ids_are_removed():
     spec = _spec(
         paths={
-            "/git/{id}": {
-                "get": {"operationId": "SharedGitGet"},
-                "put": {"operationId": "SharedGitUpdate"},
-                "delete": {"operationId": "SharedGitDelete"},
+            "/cloud/{id}": {
+                "get": {"operationId": "providerInfo"},
+                "put": {"operationId": "provisionCluster"},
+                "delete": {"operationId": "UpdateKubernetesNamespaceDeprecated"},
             },
         }
     )
     patch(spec)
     # Path is removed entirely once all its methods drop out.
-    assert "/git/{id}" not in spec["paths"]
+    assert "/cloud/{id}" not in spec["paths"]
 
 
 def test_partial_method_drop_keeps_path():
     spec = _spec(
         paths={
-            "/git/{id}": {
-                "get": {"operationId": "SharedGitGet"},
+            "/cloud/{id}": {
+                "get": {"operationId": "provisionCluster"},
                 "post": {"operationId": "KeepMe"},
             },
         }
     )
     patch(spec)
-    assert spec["paths"]["/git/{id}"] == {"post": {"operationId": "KeepMe"}}
+    assert spec["paths"]["/cloud/{id}"] == {"post": {"operationId": "KeepMe"}}
 
 
 def test_unrelated_operations_are_kept():
@@ -77,42 +77,47 @@ def test_websocket_paths_are_dropped():
     assert set(spec["paths"]) == {"/endpoints"}
 
 
-# --- EXCLUDED_PATH_METHODS (edge-agent-only callbacks) ----------------------
+# --- edge-agent-only callbacks (tag-based) ----------------------------------
 
 
-def test_edge_agent_callbacks_dropped_even_without_operation_id():
-    # Two of the four agent-callback ops have no operationId in the spec —
-    # FastMCP names them from `summary`. The path-method filter catches them.
+def test_edge_agent_callbacks_dropped():
+    # Every op carrying the `edge_agent` tag is an agent-only callback that
+    # 403s for an MCP caller, so the patcher drops it regardless of
+    # operationId. `EndpointEdgeStackInspect` also carries `edge_stacks` (it
+    # would otherwise surface in the EDGE profile) and must still go.
     spec = _spec(
         paths={
             "/endpoints/{id}/edge/stacks/{stackId}": {
-                "get": {"summary": "Inspect an Edge Stack for an Environment(Endpoint)"},
+                "get": {
+                    "operationId": "EndpointEdgeStackInspect",
+                    "tags": ["edge_agent", "edge_stacks"],
+                },
             },
-            "/endpoints/{id}/edge/status": {
-                "get": {"operationId": "EndpointEdgeStatusInspect"},
+            "/endpoints/{id}/edge/async": {
+                "post": {"operationId": "endpointEdgeAsync", "tags": ["edge_agent"]},
             },
-            "/endpoints/{id}/edge/alerts": {
-                "post": {"operationId": "EndpointEdgeAlertsReceive"},
-            },
-            "/endpoints/{id}/edge/jobs/{jobID}/logs": {
-                "post": {"summary": "Update the logs collected from an Edge Job"},
+            # No operationId — still dropped by the tag.
+            "/endpoints/{id}/edge/charts": {
+                "get": {"summary": "Get edge charts", "tags": ["edge_agent"]},
             },
         }
     )
     patch(spec)
-    # All four paths had a single method each; after the drop the path
-    # itself is removed by the empty-path cleanup.
     assert spec["paths"] == {}
 
 
 def test_edge_admin_tools_are_kept():
     # `EdgeStackList` / `EdgeStackInspect` are admin-facing edge tools that
-    # do *not* require the agent header. They share the `edge` / `edge_stacks`
-    # tags with the callbacks but live on different paths — they must survive.
+    # do *not* require the agent header. They carry `edge_stacks` but not
+    # `edge_agent`, so they must survive.
     spec = _spec(
         paths={
-            "/edge_stacks": {"get": {"operationId": "EdgeStackList"}},
-            "/edge_stacks/{id}": {"get": {"operationId": "EdgeStackInspect"}},
+            "/edge_stacks": {
+                "get": {"operationId": "EdgeStackList", "tags": ["edge_stacks"]},
+            },
+            "/edge_stacks/{id}": {
+                "get": {"operationId": "EdgeStackInspect", "tags": ["edge_stacks"]},
+            },
         }
     )
     patch(spec)
@@ -120,52 +125,32 @@ def test_edge_admin_tools_are_kept():
 
 
 def test_path_with_remaining_methods_is_kept():
-    # If a future spec adds a non-agent method to one of the edge paths,
-    # the path must survive — only the targeted method is dropped.
+    # If a path mixes an agent callback with a non-agent method, only the
+    # tagged method is dropped — the path survives.
     spec = _spec(
         paths={
             "/endpoints/{id}/edge/status": {
-                "get": {"operationId": "EndpointEdgeStatusInspect"},
-                "put": {"operationId": "HypotheticalAdminWrite"},
+                "get": {
+                    "operationId": "EndpointEdgeStatusInspect",
+                    "tags": ["edge_agent"],
+                },
+                "put": {"operationId": "HypotheticalAdminWrite", "tags": ["endpoints"]},
             },
         }
     )
     patch(spec)
     assert spec["paths"]["/endpoints/{id}/edge/status"] == {
-        "put": {"operationId": "HypotheticalAdminWrite"},
+        "put": {"operationId": "HypotheticalAdminWrite", "tags": ["endpoints"]},
     }
 
 
 # --- ENUM_STRIPS ------------------------------------------------------------
 
 
-def test_top_level_enum_strip_os_filemode():
-    spec = _spec(schemas={"os.FileMode": {"type": "string", "enum": ["a", "b"]}})
-    patch(spec)
-    assert "enum" not in spec["components"]["schemas"]["os.FileMode"]
-    assert spec["components"]["schemas"]["os.FileMode"]["type"] == "string"
-
-
 def test_top_level_enum_strip_policy_type():
     spec = _spec(schemas={"policies.PolicyType": {"enum": [1, 2, 3]}})
     patch(spec)
     assert spec["components"]["schemas"]["policies.PolicyType"] == {}
-
-
-def test_nested_enum_strip_time_duration():
-    spec = _spec(
-        schemas={
-            "v1.Duration": {
-                "properties": {
-                    "time.Duration": {"type": "string", "enum": ["1s", "1m"]},
-                }
-            }
-        }
-    )
-    patch(spec)
-    node = spec["components"]["schemas"]["v1.Duration"]["properties"]["time.Duration"]
-    assert "enum" not in node
-    assert node["type"] == "string"
 
 
 def test_enum_strip_missing_schema_is_noop():

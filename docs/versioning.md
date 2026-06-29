@@ -3,14 +3,14 @@
 **Major+minor tracks the Portainer API; patch is the MCP server's to spend.**
 
 - Tag format: `<portainer-major>.<portainer-minor>.<mcp-patch>`.
-- Compatibility statement: **"MCP 2.42.x ↔ Portainer 2.42.x"** — minor
+- Compatibility statement: **"MCP 2.43.x ↔ Portainer 2.43.x"** — minor
   granularity.
 - Spec cadence: regenerate `src/portainer_mcp/data/portainer-patched.yaml` against the
   **latest patch** of the targeted Portainer minor (e.g. `make specs
-  VERSION=2.42.1` when 2.42.1 is current).
+  VERSION=2.43.0` when 2.43.0 is current).
 - MCP-internal iterations (shaping fixes, new profiles, transform changes,
-  dep bumps, doc-only changes) burn the patch slot — e.g. `2.42.1` is an
-  MCP-only release still targeting Portainer 2.42.x.
+  dep bumps, doc-only changes) burn the patch slot — e.g. `2.43.1` is an
+  MCP-only release still targeting Portainer 2.43.x.
 
 ## What does *not* bump the minor
 

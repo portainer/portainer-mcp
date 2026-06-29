@@ -39,15 +39,16 @@ when you need them, or switch to `ALL`:
 
 | Count | Tag | Notes |
 |---:|---|---|
+| 15 | `gitops` | GitOps configuration surface. |
 | 15 | `observability` | Container/pod logs, metrics, stats. |
-| 12 | `omni` | Talos Kubernetes cluster management. |
+| 13 | `omni` | Talos Kubernetes cluster management. |
 | 10 | `custom_templates` | User-defined app templates. |
-| 9 | `gitops` | GitOps configuration surface. |
-| 8 | `cloud_credentials` | Cloud provider credentials. |
+| 6 | `cloud_credentials` | Cloud provider credentials. |
 | 6 | `webhooks` | Webhook management. |
 | 4 | `kaas` | Kubernetes-as-a-Service provisioning. |
 | 4 | `useractivity` | Audit log. |
 | 3 | `support` | Support bundles / diagnostics. |
+| 2 | `allowlist` | URL allow list. |
 | 2 | `recommendations` | Recommendation engine. |
 | 2 | `ssl` | Server TLS certificates. |
 | 2 | `templates` | App template library. |

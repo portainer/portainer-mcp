@@ -4,10 +4,10 @@ UPSTREAM_DIR  := spec/upstream
 .PHONY: specs dev
 
 # Refresh src/portainer_mcp/data/portainer-patched.yaml from upstream
-# Usage: make specs VERSION=2.42.0
+# Usage: make specs VERSION=2.43.0
 specs:
 	@if [ -z "$(VERSION)" ]; then \
-		echo "VERSION is required, e.g. make specs VERSION=2.42.0" >&2; \
+		echo "VERSION is required, e.g. make specs VERSION=2.43.0" >&2; \
 		exit 1; \
 	fi
 	@if [ -d $(UPSTREAM_DIR)/.git ]; then \

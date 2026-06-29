@@ -22,7 +22,7 @@ Claude Desktop > Settings > Developer > Edit Config and choose one of the path b
   "mcpServers": {
     "portainer": {
       "command": "uvx",
-      "args": ["--from", "mcp-portainer~=2.42.0", "mcp-portainer"],
+      "args": ["--from", "mcp-portainer~=2.43.0", "mcp-portainer"],
       "env": {
         "PORTAINER_URL": "https://portainer.example.com",
         "PORTAINER_API_KEY": "ptr_xxxxxxxxxxxxxxxx"
