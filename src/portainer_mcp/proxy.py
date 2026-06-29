@@ -37,13 +37,16 @@ def _apply_select(text: str, select: str | None) -> str:
     except json.JSONDecodeError:
         return text  # not JSON (plain text, binary, error page); pass through
 
-    redaction_count = 0
     if not expose:
-        data, redaction_count = redaction.redact_envs(data)
+        data, _ = redaction.redact_envs(data)
     if select:
         data = project(data, select)
 
     out = json.dumps(data)
+    # Count sentinels left in the projected body, not what was redacted
+    # upstream — a `select` that drops every env field must not still claim
+    # values were redacted from a response that no longer contains them.
+    redaction_count = 0 if expose else redaction.count_in(out)
     if redaction_count:
         out = f"{out}\n\n{redaction.hint(redaction_count)}"
     return out

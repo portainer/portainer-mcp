@@ -144,13 +144,17 @@ async def _select_wrapper(
     if isinstance(data, dict) and set(data.keys()) == {"result"}:
         data = data["result"]
 
-    redaction_count = 0
     if not expose:
-        data, redaction_count = redaction.redact_envs(data)
+        data, _ = redaction.redact_envs(data)
     if select:
         data = project(data, select)
 
-    content = [TextContent(type="text", text=json.dumps(data))]
+    body = json.dumps(data)
+    # Count what survived into the projected body, not what was redacted
+    # upstream — otherwise a projection that drops every env field still
+    # reports a non-zero count for values the caller never sees.
+    redaction_count = 0 if expose else redaction.count_in(body)
+    content = [TextContent(type="text", text=body)]
     if redaction_count:
         content.append(
             TextContent(type="text", text=redaction.hint(redaction_count))

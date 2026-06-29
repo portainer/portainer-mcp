@@ -131,6 +131,16 @@ def test_apply_select_no_hint_when_no_env(monkeypatch):
     assert json.loads(out) == {"Id": "abc"}
 
 
+def test_apply_select_no_hint_when_select_drops_redacted_fields():
+    # Env exists upstream and is redacted, but the projection keeps only
+    # non-env fields. The hint must size off the visible body (0 sentinels),
+    # not the upstream redaction count — no "1 env value(s) redacted" tail.
+    text = json.dumps([{"Names": ["/a"], "Config": {"Env": ["FOO=bar"]}}])
+    out = _apply_select(text, "[].Names[0]")
+    assert json.loads(out) == ["/a"]
+    assert "redacted" not in out
+
+
 def test_apply_select_exposes_when_toggle_set(monkeypatch):
     monkeypatch.setenv(EXPOSE_ENV_VAR, "1")
     text = json.dumps({"Config": {"Env": ["FOO=bar"]}})

@@ -105,6 +105,19 @@ async def test_wrapper_redacts_before_select(monkeypatch):
     assert "redacted" in result.content[1].text
 
 
+async def test_wrapper_no_hint_when_select_drops_redacted_fields(monkeypatch):
+    # Env exists upstream and is redacted, but the projection keeps only
+    # non-env fields — the hint count must reflect the visible body (0), not
+    # the upstream redaction count, so no hint TextContent is emitted.
+    _stub_forward(
+        monkeypatch,
+        [{"Name": "a", "Env": [{"name": "DB", "value": "secret"}]}],
+    )
+    result = await shaping._select_wrapper(select="[].{name:Name}")
+    assert json.loads(result.content[0].text) == [{"name": "a"}]
+    assert len(result.content) == 1
+
+
 async def test_wrapper_exposes_when_toggle_set(monkeypatch):
     monkeypatch.setenv(EXPOSE_ENV_VAR, "1")
     payload = {"Env": [{"name": "DB", "value": "secret"}]}

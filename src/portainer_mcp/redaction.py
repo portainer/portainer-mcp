@@ -41,6 +41,18 @@ def hint(count: int) -> str:
     )
 
 
+def count_in(text: str) -> int:
+    """Count redaction sentinels left in a serialized response body.
+
+    Redaction runs on the *full* upstream object before `select` projects it,
+    so `redact_envs`'s own count includes values a projection may then drop.
+    Sizing the hint off the final body instead keeps the reported number equal
+    to what the caller actually receives — no "182 redacted" on a response that
+    contains no env fields at all.
+    """
+    return text.count(SENTINEL)
+
+
 def _walk(node: Any) -> int:
     if isinstance(node, dict):
         count = 0

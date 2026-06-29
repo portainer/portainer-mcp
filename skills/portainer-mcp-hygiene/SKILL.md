@@ -66,9 +66,15 @@ EndpointList(select="[].{name:Name,running:Snapshots[0].RunningContainerCount,to
 EndpointList(select="[].{id:Id,name:Name,type:Type,status:Status}")
 ```
 
-`Status` is the right reachability signal only for *direct* agents — for
-edge environments it stays `0` regardless of health. See *Interpreting
+`Status` is a reachability signal only for *direct* agents. For edge
+environments it doesn't track reachability at all — see *Interpreting
 results, not just shrinking them* below before reading it as up/down.
+
+Two `EndpointList` query params don't surface over MCP: `updateInformation`
+(agent-update availability) and `k8sEnvAdmin` (K8s admin flag). Portainer
+returns their answer in HTTP response *headers* (`X-Update-Available`,
+`X-K8S-Env-Admin`), and this server only ever returns the response *body* —
+so passing them changes nothing you can read. Don't rely on them through the MCP.
 
 **Kubernetes via `kubernetes_proxy` — `metadata.managedFields` and `status` are huge.**
 `metadata.managedFields` alone is routinely 30-70% of an object. The `status` block on Deployments, StatefulSets, Pods, and Nodes is similarly verbose. Project them out unless the user is asking about reconciliation state or controller history:
@@ -79,6 +85,20 @@ kubernetes_proxy(environment_id=N, path="/api/v1/pods", select="items[].{name:me
 
 # Deployment readiness
 kubernetes_proxy(environment_id=N, path="/apis/apps/v1/deployments", select="items[].{name:metadata.name,ns:metadata.namespace,replicas:spec.replicas,ready:status.readyReplicas}")
+```
+
+A caveat on that pod projection: `status.containerStatuses[0].restartCount` —
+and `status.containerStatuses[0].state.waiting.reason` — comes back `null` for
+pods that never started a container, because Pending and many Failed pods have
+an empty `containerStatuses`. That's exactly the unhealthy set you're usually
+chasing, so don't read a `null` restart count as "zero restarts, healthy."
+Lead with `status.phase` and the pod-level `status.reason` (e.g. `Evicted`),
+and treat `restartCount` as extra detail that only exists once a container has
+actually run:
+
+```
+# Pod health, robust for not-yet-running pods
+kubernetes_proxy(environment_id=N, path="/api/v1/pods", select="items[].{name:metadata.name,ns:metadata.namespace,phase:status.phase,reason:status.reason,restarts:status.containerStatuses[0].restartCount,node:spec.nodeName}")
 ```
 
 **`GetAllKubernetes*` tools — full object body per element, in a Portainer-specific shape.**
@@ -119,8 +139,13 @@ highest-frequency misread on this surface:
 **Edge environments — `Status` is not the health signal; `Heartbeat` is.**
 The endpoint `Status` field means up/down only for *direct* agents (`1 = up`,
 `2 = down`). For *edge* agents (`Type` 4 = EdgeAgentOnDocker, 7 =
-EdgeAgentOnKubernetes) `Status` is left at its zero value `0` and never tracks
-reachability — so reading `Status: 0` as "down" is a false alarm. Portainer
+EdgeAgentOnKubernetes) `Status` is not a reachability signal in either
+direction: Portainer sets it to `1` when the edge environment is created and
+again on every check-in, and never flips it to `2` (down) on its own. So a dead
+edge agent that last checked in an hour ago still reads `Status: 1`, and you may
+also see `Status: 0` on an edge env that was provisioned but never completed a
+normal create/check-in path — neither value reflects current health. Don't read
+edge `Status` as up *or* down. Portainer
 judges an edge agent by its **heartbeat**: up if it checked in within
 `2 × interval + 20` seconds (the interval is `EdgeCheckinInterval`, falling
 back to the global Edge check-in setting, for standard agents; the smallest of
