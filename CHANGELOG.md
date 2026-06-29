@@ -9,6 +9,29 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.43.0] — 2026-06-29
+
+Targets Portainer 2.43.x.
+
+### Changed
+
+- **Embedded spec bumped to Portainer EE 2.43.0** (was 2.42.0). Total
+  operations 409 → 412. Default `BASE,DOCKER,KUBERNETES` coverage moves
+  193 → 190 and the five-profile union 334 → 329: upstream resolved a
+  long-standing tagging defect by moving the Edge-agent callbacks
+  (heartbeat/status, async poll, alert + chart status, edge stack/job sync)
+  off the `endpoints` tag onto a new dedicated `edge_agent` tag, so they no
+  longer leak into the DOCKER profile as tools that can never succeed for a
+  non-agent caller. New `allowlist` tag (2 ops, URL allow list) added to the
+  orphan list in [`docs/profiles.md`](docs/profiles.md).
+- **Edge-agent callback exclusion is now tag-based.** `spec/patch_spec.py`
+  drops every operation carrying the new `edge_agent` tag (eight callbacks
+  that 403 for any caller without `X-PortainerAgent-EdgeID`), replacing the
+  previous four-op `(method, path)` matcher — possible because 2.43.0 also
+  gave 15 of 16 previously-unnamed operations an `operationId` (webhooks,
+  endpoint-group create, docker browse-put, edge key generate, the edge
+  callbacks, and the websocket ops).
+
 ## [2.42.6] — 2026-06-18
 
 Targets Portainer 2.42.x.
