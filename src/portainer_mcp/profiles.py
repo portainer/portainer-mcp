@@ -19,8 +19,13 @@ ALL = "ALL"
 
 TAG_PROFILES: dict[str, tuple[str, ...]] = {
     "BASE": ("auth", "system", "status", "settings", "motd"),
-    "DOCKER": ("docker", "endpoints", "stacks"),
-    "KUBERNETES": ("kubernetes", "helm", "endpoints", "stacks"),
+    # `gitops` (source management) travels with `stacks`: since Portainer 2.43
+    # a registered GitOps source is required to deploy a git-backed stack, so
+    # any profile that can deploy stacks needs it too. Also exposed as a
+    # standalone GITOPS profile for source-management-only personas.
+    "DOCKER": ("docker", "endpoints", "stacks", "gitops"),
+    "KUBERNETES": ("kubernetes", "helm", "endpoints", "stacks", "gitops"),
+    "GITOPS": ("gitops",),
     "EDGE": (
         "edge",
         "edge_stacks",
@@ -45,7 +50,7 @@ TAG_PROFILES: dict[str, tuple[str, ...]] = {
     ),
 }
 
-DEFAULT_PROFILES = "BASE,DOCKER,KUBERNETES"
+DEFAULT_PROFILES = "BASE,DOCKER,KUBERNETES,GITOPS"
 
 
 def _split(s: str) -> list[str]:
