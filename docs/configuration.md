@@ -92,7 +92,7 @@ silently downgrades.
 
 | Var | Default | Notes |
 |---|---|---|
-| `PORTAINER_PROFILES` | `BASE,DOCKER,KUBERNETES` | Comma-separated named tag bundles. `ALL` disables the tag filter and exposes every operation. Unknown names will prevent the server from starting. Full list in [profiles.md](profiles.md). |
+| `PORTAINER_PROFILES` | `BASE,DOCKER,KUBERNETES,GITOPS` | Comma-separated named tag bundles. `ALL` disables the tag filter and exposes every operation. Unknown names will prevent the server from starting. Full list in [profiles.md](profiles.md). |
 | `PORTAINER_TAGS_EXTRA` | _empty_ | Escape hatch: comma-separated raw tags appended to the resolved set. Unknown tags log a warning and pass through (they just don't match anything). |
 
 ## Behaviour

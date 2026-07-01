@@ -217,7 +217,7 @@ new proxy tools, shaping changes — all patch. See
 ## Profiles
 
 Spec exposes ~380 operations across 40+ tags; profiles in `profiles.py`
-bundle them. `PORTAINER_PROFILES` (default `BASE,DOCKER,KUBERNETES`)
+bundle them. `PORTAINER_PROFILES` (default `BASE,DOCKER,KUBERNETES,GITOPS`)
 selects which to enable; `PORTAINER_TAGS_EXTRA` appends raw tags as an
 escape hatch. `PORTAINER_PROFILES=ALL` disables the tag filter entirely.
 Unknown profile names fail at startup; unknown extras log a warning and

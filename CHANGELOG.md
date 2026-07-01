@@ -9,6 +9,21 @@ the MCP server.
 
 ## [Unreleased]
 
+### Added
+
+- **New `GITOPS` profile** bundling the `gitops` tag (register/list/test git
+  sources, browse refs — the GitOps *source* management surface).
+
+### Changed
+
+- **`gitops` is now in the default profile set.** Since Portainer 2.43 a
+  registered GitOps source is required to deploy a git-backed stack, so
+  `gitops` now rides along inside both `DOCKER` and `KUBERNETES` (next to
+  `stacks`) and the default `PORTAINER_PROFILES` becomes
+  `BASE,DOCKER,KUBERNETES,GITOPS`. Without it, git-based stack deploys fail
+  for lack of a source. `gitops` is removed from the orphan-tag inventory in
+  [`docs/profiles.md`](docs/profiles.md).
+
 ## [2.43.0] — 2026-06-29
 
 Targets Portainer 2.43.x.

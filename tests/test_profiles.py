@@ -14,15 +14,25 @@ from portainer_mcp import profiles
 
 
 def test_default_profiles_union_dedups_shared_tags():
-    # BASE ∪ DOCKER ∪ KUBERNETES. `endpoints` and `stacks` appear in both
-    # DOCKER and KUBERNETES — this proves the union deduplicates them.
+    # BASE ∪ DOCKER ∪ KUBERNETES ∪ GITOPS. `endpoints`, `stacks`, and `gitops`
+    # each appear in more than one profile — this proves the union dedups them.
     # Exact tag content is intentionally not asserted: that lives in
     # `TAG_PROFILES` and pinning the literal here would just duplicate the data.
     tags = profiles.resolve(profiles.DEFAULT_PROFILES)
     assert tags == tuple(sorted(set(tags)))
     assert tags.count("endpoints") == 1
     assert tags.count("stacks") == 1
-    assert {"auth", "docker", "kubernetes"} <= set(tags)
+    assert tags.count("gitops") == 1
+    assert {"auth", "docker", "kubernetes", "gitops"} <= set(tags)
+
+
+def test_gitops_travels_with_stacks_and_standalone():
+    # Since Portainer 2.43 a GitOps source is required to deploy a git-backed
+    # stack, so `gitops` must accompany `stacks` in any stack-capable profile,
+    # and also stand alone for a source-management-only persona.
+    assert "gitops" in profiles.resolve("DOCKER")
+    assert "gitops" in profiles.resolve("KUBERNETES")
+    assert profiles.resolve("GITOPS") == ("gitops",)
 
 
 def test_all_sentinel_returns_none():
