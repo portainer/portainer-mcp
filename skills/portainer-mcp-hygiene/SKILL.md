@@ -50,6 +50,13 @@ JMESPath syntax notes that matter for these surfaces:
   missing field rather than a broken expression. Quote with double quotes, not
   backslashes (`\"…\"` fails to parse) and not backticks (those denote JSON
   literals).
+- The backslash trap is easy to fall into *by accident*: the `select` string is
+  itself an argument inside a JSON tool call, and escaping the inner quotes a
+  second time sends literal `\"` to the server. The failure signature is a
+  parse error mentioning `Unknown token \`. When you hit it, either resend with
+  plain double quotes (encode the tool-call JSON once, not twice), or sidestep
+  quoting entirely with a function filter — `[?contains(metadata.name,
+  'ingress-nginx')]` uses only single quotes and survives any transport.
 
 ## Where the noise lives
 
@@ -248,6 +255,40 @@ The exception is non-JSON endpoints (see above) — there, ignore the `select` s
 Most of this skill is about reading; the same care applies when you *change* things. The Portainer mutation tools have a few habits worth planning around.
 
 **Success is usually silent — verify out-of-band.** Create/update/delete tools tend to return nothing useful: `CreateKubernetesNamespace` returns an empty body, and `StackCreateKubernetesFile` / `StackDelete` return `{"Output":""}` on success. An empty response is *not* proof of success — it's indistinguishable from a swallowed error. After any mutation, confirm with a read: list the resource or fetch it and check its status. Don't report "done" off a non-error alone.
+
+**For a deployed K8s app, the strongest verification is a request through the
+service proxy.** A pod in `Running` phase proves the container started, not
+that the app answers. The Kubernetes API's service proxy lets you hit an
+endpoint inside the cluster with no external network reach:
+
+```
+kubernetes_proxy(environment_id=N,
+                 path="/api/v1/namespaces/{ns}/services/{name}:{port}/proxy/healthz")
+```
+
+A `200` (or the expected body) from the app's health/route is end-to-end proof
+the deploy worked. The response is whatever the app returns — often non-JSON,
+so `select` may not apply (see *Non-JSON endpoints*).
+
+**A mutation call with no body fields can be rejected with `400 … EOF`.** If
+every body field of a write tool is optional and you supply none, the server
+receives *no request body at all*, and some Portainer handlers refuse to decode
+that — the signature is `Invalid request payload` with details `EOF`. The
+canonical case is `StackGitRedeploy`, where a bare redeploy ("pull the
+configured ref and re-apply") conceptually needs no arguments: pass one
+harmless body field to make the request well-formed, e.g. `Prune: false`.
+Read that error as "send at least one body field", not as a broken tool.
+
+**`StackCreateKubernetesGit` — the inline `Repository*` fields work but are
+the legacy path.** Most of its schema (`RepositoryURL`,
+`RepositoryReferenceName`, `RepositoryAuthentication`, …) is marked
+*Deprecated: use SourceID instead*. Both paths function: passing an inline
+`RepositoryURL` auto-creates a git Source and the stack references it via
+`SourceID`. Prefer `SourceID` when a Source for that repo already exists
+(list via the GitOps tools); use the inline fields when deploying from a repo
+Portainer hasn't seen — that's what they're for, deprecated or not. Don't send
+both: when `SourceID` is set, the inline URL and authentication fields are
+ignored.
 
 **When a name-based call misbehaves, fall back to id.** Some `…ByName` convenience tools need parameters you can't supply through the MCP and will reject the call. The reliable pattern is `list → act-by-id`: resolve the object first (`StackList` with a `{id,name,type}` projection), then act on the numeric id (`StackDelete`). Reach for this whenever a name-based mutation errors on something you can't satisfy.
 

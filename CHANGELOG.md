@@ -13,6 +13,18 @@ the MCP server.
 
 - **New `GITOPS` profile** bundling the `gitops` tag (register/list/test git
   sources, browse refs — the GitOps *source* management surface).
+- **JMESPath errors now diagnose double-escaped quotes.** When a `select`
+  expression fails to parse and contains literal `\"` (the JSON-in-JSON
+  double-escaping models fall into), the error names the cause and suggests
+  plain double quotes or a `contains(...)` filter instead of the lexer's
+  opaque `Unknown token \`.
+- **Hygiene guide: four field-tested additions** from agent usage reports —
+  the backslash-escaping trap and its `contains()` workaround; the
+  `400 … EOF` rejection when a write call sends zero body fields (e.g. a
+  bare `StackGitRedeploy` — pass `Prune: false`); verifying a K8s deploy
+  end-to-end via the service-proxy path; and which `StackCreateKubernetesGit`
+  fields are the blessed path (`SourceID`) vs the still-functional deprecated
+  inline `Repository*` fields.
 
 ### Changed
 

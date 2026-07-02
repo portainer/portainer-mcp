@@ -58,7 +58,20 @@ def project(data: Any, select: str) -> Any:
     try:
         return jmespath.search(select, data)
     except jmespath.exceptions.JMESPathError as exc:
-        raise ValueError(f"invalid JMESPath expression {select!r}: {exc}") from exc
+        # Models nesting the expression inside a JSON tool call routinely
+        # double-escape quoted identifiers, so literal \" reaches the lexer
+        # and fails with an opaque "Unknown token \". Name the fix.
+        hint = ""
+        if '\\"' in select:
+            hint = (
+                " (the expression contains literal backslash-escaped quotes; "
+                "send plain double quotes around dotted keys, or avoid "
+                "quoting entirely with a function filter such as "
+                "[?contains(metadata.name, 'foo')])"
+            )
+        raise ValueError(
+            f"invalid JMESPath expression {select!r}: {exc}{hint}"
+        ) from exc
 
 
 class ResponseCapMiddleware(Middleware):

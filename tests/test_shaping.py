@@ -36,6 +36,13 @@ def test_project_raises_value_error_on_invalid_expression():
         project({}, "foo[")
 
 
+def test_project_hints_on_backslash_escaped_quotes():
+    # Double-escaped quoted identifiers (JSON-in-JSON) reach the lexer as
+    # literal \" — the error must name the fix, not just "Unknown token \".
+    with pytest.raises(ValueError, match="backslash-escaped quotes"):
+        project({}, 'Labels.\\"com.docker.compose.project\\"')
+
+
 # --- ResponseCapMiddleware --------------------------------------------------
 
 
