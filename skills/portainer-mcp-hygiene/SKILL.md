@@ -263,12 +263,18 @@ endpoint inside the cluster with no external network reach:
 
 ```
 kubernetes_proxy(environment_id=N,
-                 path="/api/v1/namespaces/{ns}/services/{name}:{port}/proxy/healthz")
+                 path="/api/v1/namespaces/{ns}/services/{name}:{port}/proxy/{route}")
 ```
 
-A `200` (or the expected body) from the app's health/route is end-to-end proof
-the deploy worked. The response is whatever the app returns — often non-JSON,
-so `select` may not apply (see *Non-JSON endpoints*).
+Aim that request at a **representative functional endpoint** — one that
+exercises the app's real logic — not at `/healthz`. A health route is the
+thing most likely to keep returning `200` while the app is broken: it usually
+doesn't touch the code path that failed, so a green health check tells you the
+process is listening, not that the release works (a health-only check will
+happily declare a fully-broken deploy green). A good response from a real
+endpoint is strong end-to-end evidence; a health check alone is necessary, not
+sufficient. The response is whatever the app returns — often non-JSON, so
+`select` may not apply (see *Non-JSON endpoints*).
 
 **A mutation call with no body fields can be rejected with `400 … EOF`.** If
 every body field of a write tool is optional and you supply none, the server
@@ -278,6 +284,20 @@ canonical case is `StackGitRedeploy`, where a bare redeploy ("pull the
 configured ref and re-apply") conceptually needs no arguments: pass one
 harmless body field to make the request well-formed, e.g. `Prune: false`.
 Read that error as "send at least one body field", not as a broken tool.
+
+**`StackUpdateGit` changes the Git *settings*, not the running deployment —
+and its response looks like it already redeployed.** Repointing a ref or
+toggling AutoUpdate with `StackUpdateGit` writes the new Git config and returns
+a full, populated `stackResponse` — but it doesn't pull or re-apply on its own.
+The returned `GitConfig.ReferenceName` shows your *new* target while
+`GitConfig.ConfigHash` and `CurrentDeploymentInfo` still describe the *old*
+commit: an internally inconsistent object that reads as a coherent post-state
+if you trust it at face value. This is a nastier cousin of the silent-success
+trap above — the payload isn't empty, so "no error" plus "populated body"
+tempts you to report the upgrade as live when nothing rolled out. To actually
+apply the change, follow with `StackGitRedeploy`, then verify out-of-band that
+`CurrentDeploymentInfo` (and `ConfigHash`) advanced to the new ref — don't read
+the running state off the `StackUpdateGit` response.
 
 **`StackCreateKubernetesGit` — the inline `Repository*` fields work but are
 the legacy path.** Most of its schema (`RepositoryURL`,
