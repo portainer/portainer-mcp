@@ -9,6 +9,10 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.43.1] — 2026-07-02
+
+Targets Portainer 2.43.x.
+
 ### Added
 
 - **New `GITOPS` profile** bundling the `gitops` tag (register/list/test git

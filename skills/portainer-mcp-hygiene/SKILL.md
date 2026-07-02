@@ -373,4 +373,4 @@ contradicts an explicit claim in this file, is reportable.
 
 ---
 
-Skill version: 2.43.0 (matches the `mcp-portainer` release tag this file shipped with).
+Skill version: 2.43.1 (matches the `mcp-portainer` release tag this file shipped with).
