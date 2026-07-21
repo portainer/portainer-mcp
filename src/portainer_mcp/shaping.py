@@ -77,14 +77,15 @@ def project(data: Any, select: str) -> Any:
 class ResponseCapMiddleware(Middleware):
     """Truncate oversized tool results with a hint to narrow `select`.
 
-    Applied uniformly to every tool. When truncation fires, the
-    `structured_content` field is also cleared so the model can't read
-    around the cap by inspecting the structured copy of the same payload.
+    Applied uniformly to every tool except `exempt` ones. When truncation
+    fires, the `structured_content` field is also cleared so the model can't
+    read around the cap by inspecting the structured copy of the same payload.
     """
 
-    def __init__(self, max_chars: int) -> None:
+    def __init__(self, max_chars: int, exempt: frozenset[str] = frozenset()) -> None:
         super().__init__()
         self.max_chars = max_chars
+        self._exempt = exempt
 
     async def on_call_tool(
         self,
@@ -92,6 +93,8 @@ class ResponseCapMiddleware(Middleware):
         call_next: CallNext,
     ) -> ToolResult:
         result = await call_next(context)
+        if context.message.name in self._exempt:
+            return result
         truncated = False
         for item in result.content:
             text = getattr(item, "text", None)

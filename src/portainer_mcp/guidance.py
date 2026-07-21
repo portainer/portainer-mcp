@@ -8,6 +8,7 @@ progressive disclosure rebuilt inside MCP.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import time
@@ -19,7 +20,7 @@ from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent, ToolAnnotations
 from pydantic import Field
 
-from portainer_mcp import passthrough
+from portainer_mcp import passthrough, request_context
 from portainer_mcp.shaping import SELECT_DESCRIPTION
 
 logger = logging.getLogger("portainer_mcp")
@@ -81,8 +82,8 @@ def register(mcp: FastMCP, guide: str) -> None:
     logger.info("guidance tool registered (%d chars)", len(guide))
 
 
-def _toll_notice(guide: str, tool: str | None) -> ToolResult:
-    target = f"`{tool}`" if tool else "your original call"
+def _toll_notice(guide: str, tool: str) -> ToolResult:
+    target = f"`{tool}`"
     return ToolResult(
         content=[
             TextContent(
@@ -120,17 +121,30 @@ class GuidanceGateMiddleware(Middleware):
     "a new conversation". A long active task is never interrupted mid-flow.
     """
 
-    def __init__(self, guide: str, *, ttl: float) -> None:
+    def __init__(self, guide: str, *, ttl: float, is_http: bool = False) -> None:
         super().__init__()
         self._guide = guide
         self._ttl = ttl
+        self._is_http = is_http
         self._last_seen: dict[str, float] = {}
+        self._warned_keyless = False
 
     def _caller_key(self) -> str:
         # Over HTTP the verifier guarantees the per-user key header is present
         # before any tool dispatch; no key means no HTTP request, i.e. stdio.
         key = passthrough.key_from_request()
-        return passthrough.digest(key) if key else _STDIO_KEY
+        if key:
+            return passthrough.digest(key)
+        if self._is_http and not self._warned_keyless:
+            # Reachable only if a FastMCP refactor breaks get_http_request()
+            # inside the dispatch task (see request_context.py) — callers
+            # would silently share one guidance bucket, so say it out loud.
+            logger.warning(
+                "guidance gate: HTTP tool call carries no per-user key in the "
+                "request context; all callers are sharing one guidance bucket"
+            )
+            self._warned_keyless = True
+        return _STDIO_KEY
 
     async def on_call_tool(
         self,
@@ -139,7 +153,7 @@ class GuidanceGateMiddleware(Middleware):
     ) -> ToolResult:
         now = time.monotonic()
         caller = self._caller_key()
-        tool = getattr(context.message, "name", None)
+        tool = context.message.name
         last = self._last_seen.get(caller)
         if tool == GUIDANCE_TOOL_NAME or (last is not None and now - last < self._ttl):
             self._last_seen[caller] = now
@@ -148,6 +162,15 @@ class GuidanceGateMiddleware(Middleware):
         # Marked before the retry arrives: the guide is in the caller's context
         # from this very response, so there is nothing left to verify.
         self._last_seen[caller] = now
+        # The outer request log records this call as a normal success; without
+        # this record a bounced mutation would be indistinguishable from an
+        # executed one in the audit trail. Context fields only — never the key.
+        logger.info(
+            json.dumps(
+                {"event": "guidance_bounce", "tool": tool}
+                | request_context.snapshot()
+            )
+        )
         return _toll_notice(self._guide, tool)
 
     def _prune(self, now: float) -> None:

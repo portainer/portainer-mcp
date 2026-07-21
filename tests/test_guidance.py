@@ -182,6 +182,51 @@ async def test_expired_callers_pruned_on_bounce(monkeypatch, clock):
     assert passthrough.digest("ptr_key_A") not in mw._last_seen
 
 
+async def test_raw_key_never_stored(monkeypatch, clock):
+    _set_caller(monkeypatch, "ptr_key_A")
+    mw = _mw()
+
+    await _run(mw, "EndpointList")
+    assert "ptr_key_A" not in mw._last_seen
+    assert passthrough.digest("ptr_key_A") in mw._last_seen
+
+
+async def test_bounce_emits_structured_record_without_key(monkeypatch, clock, caplog):
+    # The request log records a bounced call as a normal success; this record
+    # is what lets an operator tell a short-circuited mutation from an
+    # executed one. It must carry the tool but never the caller's key.
+    _set_caller(monkeypatch, "ptr_key_A")
+    mw = _mw()
+
+    with caplog.at_level("INFO", logger="portainer_mcp"):
+        await _run(mw, "StackDelete")
+
+    records = [r.message for r in caplog.records if "guidance_bounce" in r.message]
+    assert len(records) == 1
+    assert '"tool": "StackDelete"' in records[0]
+    assert "ptr_key_A" not in records[0]
+
+
+# --- degraded request context ---------------------------------------------
+
+
+async def test_http_without_key_warns_once_and_shares_bucket(monkeypatch, clock, caplog):
+    # Reachable only if get_http_request() stops resolving inside the dispatch
+    # task (a FastMCP refactor risk): callers collapse into one bucket, which
+    # must be loud rather than silent.
+    _set_caller(monkeypatch, None)
+    mw = guidance.GuidanceGateMiddleware(GUIDE, ttl=TTL, is_http=True)
+
+    with caplog.at_level("WARNING", logger="portainer_mcp"):
+        passed, _ = await _run(mw, "EndpointList")
+        assert not passed
+        passed, _ = await _run(mw, "StackList")
+        assert passed
+
+    warnings = [r for r in caplog.records if "no per-user key" in r.message]
+    assert len(warnings) == 1
+
+
 # --- resolve_ttl --------------------------------------------------------------
 
 

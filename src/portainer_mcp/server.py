@@ -409,17 +409,28 @@ def build_server() -> FastMCP:
     if _env_flag(guidance.DISABLE_ENV_VAR, default=False):
         logger.info("guidance gate: DISABLED (%s)", guidance.DISABLE_ENV_VAR)
     else:
-        ttl = guidance.resolve_ttl()
-        mcp.add_middleware(guidance.GuidanceGateMiddleware(guide, ttl=ttl))
+        guidance_ttl = guidance.resolve_ttl()
+        mcp.add_middleware(
+            guidance.GuidanceGateMiddleware(
+                guide, ttl=guidance_ttl, is_http=transport == "http"
+            )
+        )
         logger.info(
-            "guidance gate: enabled (guide delivered in-band, idle ttl=%ds)", ttl
+            "guidance gate: enabled (guide delivered in-band, idle ttl=%ds)",
+            guidance_ttl,
         )
 
     max_chars = int(
         os.environ.get("PORTAINER_MAX_RESPONSE_CHARS")
         or shaping.DEFAULT_MAX_RESPONSE_CHARS
     )
-    mcp.add_middleware(shaping.ResponseCapMiddleware(max_chars))
+    # get_guidance is exempt: it serves the full guide, and `select` — the
+    # cap's escape hatch — is a no-op there, so truncation would be a dead end.
+    mcp.add_middleware(
+        shaping.ResponseCapMiddleware(
+            max_chars, exempt=frozenset({guidance.GUIDANCE_TOOL_NAME})
+        )
+    )
     logger.info("response cap: %d chars", max_chars)
 
     logger.info(
