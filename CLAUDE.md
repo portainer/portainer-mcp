@@ -81,6 +81,27 @@ Key things to internalise before changing code:
   (min 32 chars, ASCII printable, no whitespace) — loud-fail like the
   unknown-profile check. Don't relax this for "convenience"; the strict
   rule eliminates the make-dev-no-token footgun.
+- **Auth posture is an enum: gate token XOR trust-proxy.** `auth_posture.
+  resolve()` (mirrors `tls.resolve_posture`) runs before the verifier is
+  built. `PORTAINER_MCP_TRUST_PROXY_AUTH=1` serves identity-aware proxies
+  that own `Authorization` (issue #76, Pomerium MCP mode): the bearer value
+  is ignored (`auth.TrustedProxyVerifier`; `_EnsureBearerMiddleware` injects
+  a placeholder when the proxy strips the header, because the SDK 401s
+  header-less requests before `verify_token`) and the gate compare is
+  replaced by per-request proxy attestation. Two shapes, because uvicorn
+  rewrites `scope["client"]` from XFF for trusted peers so socket-peer and
+  forwarded-header trust are mutually exclusive signals: *inherited*
+  (requires `TRUST_PROXY_TLS=1`; attestation is `scheme == "https"`, which
+  only a `FORWARDED_ALLOW_IPS` peer can produce since no cert is held) and
+  *socket peer* (`PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` + server-terminated
+  TLS; resolve() emits `proxy_headers: False` so the peer stays raw).
+  Hard-fails: both postures declared, neither, trust + plaintext opt-out,
+  wildcard in the effective allowlist, `TRUSTED_PROXY_AUTH_IPS` combined
+  with `TRUST_PROXY_TLS`/`FORWARDED_ALLOW_IPS`, missing `ALLOWED_HOSTS` on
+  a non-loopback bind. The per-user `X-Portainer-API-Key` floor is
+  unchanged — trust-proxy drops the gate, never authentication. New audit
+  outcomes `untrusted_scheme` / `untrusted_peer`; records carry
+  `auth_posture: "trust_proxy"`.
 - **HTTP is per-user passthrough, not a shared upstream key.** Over HTTP
   the verifier is `auth.PassthroughVerifier` (subclass of
   `StaticBearerVerifier`), and `PORTAINER_API_KEY` is *not* loaded — it's

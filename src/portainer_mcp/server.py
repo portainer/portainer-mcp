@@ -19,9 +19,18 @@ and refuses to boot if PORTAINER_API_KEY is set. Tunables:
 - PORTAINER_MCP_HTTP_HOST — bind host when transport=http (default 127.0.0.1).
 - PORTAINER_MCP_HTTP_PORT — bind port when transport=http (default 17717).
 - PORTAINER_MCP_AUTH_TOKEN — shared bearer gate secret. Required when
-  transport=http; ignored for stdio. Over HTTP it admits the request; the
-  caller's own Portainer key (X-Portainer-API-Key header) is then validated
-  and forwarded upstream as X-API-KEY.
+  transport=http (unless PORTAINER_MCP_TRUST_PROXY_AUTH=1); ignored for
+  stdio. Over HTTP it admits the request; the caller's own Portainer key
+  (X-Portainer-API-Key header) is then validated and forwarded upstream
+  as X-API-KEY.
+- PORTAINER_MCP_TRUST_PROXY_AUTH=1 — trust an identity-aware proxy that owns
+  the Authorization header (e.g. Pomerium in MCP server mode): the gate-token
+  compare is replaced by per-request proxy attestation. Mutually exclusive
+  with PORTAINER_MCP_AUTH_TOKEN; see auth_posture.py for the fail matrix.
+- PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS — socket-peer allowlist backing
+  TRUST_PROXY_AUTH when this server terminates TLS itself. Behind a
+  TLS-terminating proxy leave it unset — the FORWARDED_ALLOW_IPS attestation
+  is inherited.
 - PORTAINER_MCP_AUTH_CACHE_TTL — seconds to cache a validated per-user key
   (default 60, positive results only, 0 disables). HTTP only.
 - PORTAINER_MCP_ALLOWED_HOSTS — comma-separated `Host` allowlist for
@@ -61,6 +70,7 @@ from starlette.middleware import Middleware
 
 from portainer_mcp import (
     auth,
+    auth_posture,
     guidance,
     http_security,
     passthrough,
@@ -169,6 +179,10 @@ def _resolve_log_format() -> str:
             f"PORTAINER_MCP_LOG_FORMAT must be 'text' or 'json' (got {raw!r})"
         )
     return raw
+
+
+def _resolve_bind_host() -> str:
+    return os.environ.get("PORTAINER_MCP_HTTP_HOST") or "127.0.0.1"
 
 
 def _resolve_transport() -> str:
@@ -308,7 +322,7 @@ def build_server() -> FastMCP:
                 "the HTTP transport forwards each client's own key from the "
                 "X-Portainer-API-Key header — remove PORTAINER_API_KEY"
             )
-        token = auth.require_token(os.environ.get(auth.ENV_VAR))
+        posture = auth_posture.resolve(_resolve_bind_host())
         ttl = passthrough.resolve_ttl()
         cache = passthrough.ValidationCache(ttl)
         # No baked X-API-KEY: the per-request hook injects the caller's own key.
@@ -318,12 +332,24 @@ def build_server() -> FastMCP:
             timeout=30,
             event_hooks={"request": [passthrough.inject_api_key]},
         )
-        auth_provider = auth.PassthroughVerifier(token, client, cache)
-        logger.info(
-            "HTTP auth: per-user passthrough (gate %s, validation cache ttl=%ds)",
-            auth.fingerprint(token),
-            ttl,
-        )
+        if posture.mode == "trust_proxy":
+            auth.mark_trust_proxy_auth()
+            auth_provider = auth.TrustedProxyVerifier(
+                client, cache, posture.peer_matcher
+            )
+            logger.info(
+                "HTTP auth: trust-proxy passthrough (%s, validation cache ttl=%ds)",
+                posture.description,
+                ttl,
+            )
+        else:
+            token = auth.require_token(os.environ.get(auth.ENV_VAR))
+            auth_provider = auth.PassthroughVerifier(token, client, cache)
+            logger.info(
+                "HTTP auth: per-user passthrough (gate %s, validation cache ttl=%ds)",
+                auth.fingerprint(token),
+                ttl,
+            )
     else:
         client = httpx.AsyncClient(
             base_url=base,
@@ -425,7 +451,7 @@ def main() -> None:
     if transport == "stdio":
         server.run(show_banner=False)
         return
-    host = os.environ.get("PORTAINER_MCP_HTTP_HOST") or "127.0.0.1"
+    host = _resolve_bind_host()
     port = int(os.environ.get("PORTAINER_MCP_HTTP_PORT") or 17717)
     settings = http_security.build_settings(
         hosts=os.environ.get(http_security.ALLOWED_HOSTS_ENV),
@@ -438,6 +464,11 @@ def main() -> None:
     warning = http_security.misconfig_warning(host, settings)
     if warning is not None:
         logger.warning(warning)
+
+    # Resolved a second time (build_server validated it before wiring the
+    # verifier); here it contributes its uvicorn kwargs — the socket-peer
+    # shape disables proxy-header rewriting so scope["client"] stays raw.
+    auth_post = auth_posture.resolve(host)
 
     posture = tls.resolve_posture(host)
     for line in posture.warnings:
@@ -468,7 +499,11 @@ def main() -> None:
         # Uvicorn calls logging.config.dictConfig at server start, which
         # would overwrite the handlers we attached to uvicorn.* loggers.
         # Skip it so a single formatter owns every record.
-        uvicorn_config={"log_config": None, **posture.uvicorn_kwargs},
+        uvicorn_config={
+            "log_config": None,
+            **posture.uvicorn_kwargs,
+            **auth_post.uvicorn_kwargs,
+        },
     )
 
 
