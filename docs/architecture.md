@@ -146,9 +146,12 @@ the proxy's forwarded headers" are mutually exclusive signals:
    `PORTAINER_MCP_TRUST_PROXY_TLS=1` + `FORWARDED_ALLOW_IPS`; no extra
    variable. The attestation is `scheme == "https"`: uvicorn sets it only
    from a trusted peer's `X-Forwarded-Proto`, and this shape holds no cert,
-   so a direct connection can never present it. A wildcard
-   `FORWARDED_ALLOW_IPS='*'` is a startup error here — inheritance turns
-   that list into the auth boundary.
+   so a direct connection can never present it. Because "holds no cert" is
+   load-bearing, `TLS_CERT` set alongside this shape is a startup error —
+   a server-held cert would let every direct TLS connection self-attest.
+   A wildcard in `FORWARDED_ALLOW_IPS` (`*` or a zero-prefix network like
+   `0.0.0.0/0`) is likewise a startup error here — inheritance turns that
+   list into the auth boundary.
 2. **Socket peer** (server-terminated TLS, end-to-end encrypted):
    `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS=<ip/cidr,…>` names the proxy
    directly; `resolve()` returns `proxy_headers: False` so uvicorn never
@@ -161,7 +164,9 @@ the proxy's forwarded headers" are mutually exclusive signals:
 Degenerate combinations all hard-fail: gate token + trust flag (ambiguous),
 trust flag + plaintext opt-out (the per-user key would be the only credential
 and it must not cross plaintext), trust flag without
-`PORTAINER_MCP_ALLOWED_HOSTS` on a non-loopback bind. Failed attestation
+`PORTAINER_MCP_ALLOWED_HOSTS` on a non-loopback bind, and
+`TRUSTED_PROXY_AUTH_IPS` without the trust flag (silently dead security
+config). Failed attestation
 audits as `untrusted_peer` / `untrusted_scheme` (per-request, uncached), and
 every audit record under this posture carries `auth_posture: "trust_proxy"`.
 The per-user `X-Portainer-API-Key` floor is untouched in both postures —

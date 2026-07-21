@@ -64,6 +64,15 @@ def test_gate_mode_ignores_token_value(clean_env):
     assert auth_posture.resolve("0.0.0.0").mode == "gate"
 
 
+def test_gate_mode_rejects_dangling_peer_allowlist(clean_env):
+    # A peer allowlist without the trust flag would be silently dead security
+    # config — loud-fail like every other half-configured posture.
+    clean_env.setenv(auth.ENV_VAR, "x" * 64)
+    clean_env.setenv(auth_posture.PEER_IPS_ENV, "10.0.0.5")
+    with pytest.raises(SystemExit, match="silently ignored"):
+        auth_posture.resolve("0.0.0.0")
+
+
 # --- mutual exclusion ---------------------------------------------------------
 
 
@@ -123,11 +132,26 @@ def test_inherited_shape_requires_forwarded_ips(clean_env):
         auth_posture.resolve("0.0.0.0")
 
 
-@pytest.mark.parametrize("forwarded", ["*", "10.0.0.5,*", " * "])
+@pytest.mark.parametrize(
+    "forwarded",
+    ["*", "10.0.0.5,*", " * ", "0.0.0.0/0", "::/0", "10.0.0.5,0.0.0.0/0"],
+)
 def test_inherited_shape_rejects_wildcard_forwarded_ips(clean_env, forwarded):
+    # Both the literal '*' and zero-prefix networks admit every peer once the
+    # list becomes the auth boundary.
     _inherited_env(clean_env)
     clean_env.setenv(tls.FORWARDED_IPS_ENV, forwarded)
     with pytest.raises(SystemExit, match="wildcard"):
+        auth_posture.resolve("0.0.0.0")
+
+
+def test_inherited_shape_rejects_server_held_cert(clean_env):
+    # With a server-held cert, every direct TLS connection presents
+    # scheme=https and the inherited attestation attests nothing.
+    _inherited_env(clean_env)
+    clean_env.setenv(tls.CERT_ENV, "/tls/cert.pem")
+    clean_env.setenv(tls.KEY_ENV, "/tls/key.pem")
+    with pytest.raises(SystemExit, match="attestation is void"):
         auth_posture.resolve("0.0.0.0")
 
 
@@ -201,9 +225,25 @@ def test_peer_matcher_non_ip_peer_never_matches():
     assert not matcher.matches("proxy.internal")
 
 
+def test_peer_matcher_unmaps_ipv4_mapped_ipv6_peers():
+    # A dual-stack bind surfaces IPv4 peers as ::ffff:a.b.c.d — they must
+    # match their IPv4 allowlist entry.
+    matcher = auth_posture.PeerMatcher("10.0.0.5")
+    assert matcher.matches("::ffff:10.0.0.5")
+    assert not matcher.matches("::ffff:10.0.0.6")
+
+
 def test_peer_matcher_rejects_wildcard():
     with pytest.raises(SystemExit, match="must not contain '\\*'"):
         auth_posture.PeerMatcher("10.0.0.5,*")
+
+
+@pytest.mark.parametrize("entry", ["0.0.0.0/0", "::/0", "10.0.0.5/0"])
+def test_peer_matcher_rejects_zero_prefix_networks(entry):
+    # Wildcards in CIDR spelling ("10.0.0.5/0" normalizes to 0.0.0.0/0 under
+    # strict=False) must stop the boot like the literal '*'.
+    with pytest.raises(SystemExit, match="zero-prefix"):
+        auth_posture.PeerMatcher(entry)
 
 
 def test_peer_matcher_rejects_garbage_entry():

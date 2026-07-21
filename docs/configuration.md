@@ -63,8 +63,10 @@ Combinations that refuse to boot, by design:
 
 - `PORTAINER_MCP_AUTH_TOKEN` together with `PORTAINER_MCP_TRUST_PROXY_AUTH=1` — ambiguous posture.
 - `PORTAINER_MCP_TRUST_PROXY_AUTH=1` with `PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP=1` — the per-user key becomes the only credential the server sees; it must never cross the wire in plaintext.
-- A wildcard (`*`) anywhere in the effective peer allowlist — it is the auth boundary in this posture.
+- A wildcard anywhere in the effective peer allowlist — `*` or a zero-prefix network (`0.0.0.0/0`, `::/0`) — it is the auth boundary in this posture.
+- The inherited shape with `PORTAINER_MCP_TLS_CERT` also set — a server-held cert lets every direct TLS connection present `https`, voiding the attestation; use `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` instead.
 - `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` together with `PORTAINER_MCP_TRUST_PROXY_TLS`/`PORTAINER_MCP_FORWARDED_ALLOW_IPS` — the `X-Forwarded-For` rewrite would corrupt the socket-peer signal; behind a TLS-terminating proxy use inheritance instead.
+- `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` without `PORTAINER_MCP_TRUST_PROXY_AUTH=1` — the allowlist would be silently dead config.
 - `PORTAINER_MCP_TRUST_PROXY_AUTH=1` on a non-loopback bind without `PORTAINER_MCP_ALLOWED_HOSTS` set to the proxy-fronted hostname.
 
 > [!IMPORTANT]

@@ -21,7 +21,9 @@ the MCP server.
   `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` socket-peer allowlist when the
   server terminates TLS itself. Exactly one auth posture must be declared
   (gate token XOR trust-proxy); every degenerate combination — both, neither,
-  trust + plaintext opt-out, wildcard allowlists — refuses to boot, and the
+  trust + plaintext opt-out, wildcard allowlists (`*` or zero-prefix CIDRs),
+  a server-held cert alongside the inherited shape, a peer allowlist without
+  the trust flag — refuses to boot, and the
   per-user `X-Portainer-API-Key` validation floor is unchanged. New audit
   outcomes `untrusted_scheme` / `untrusted_peer`; audit records under this
   posture carry `auth_posture: "trust_proxy"`.

@@ -28,10 +28,12 @@ from `PORTAINER_MCP_FORWARDED_ALLOW_IPS` — so "check the socket peer" and
     directly and uvicorn's proxy-header rewrite is disabled so
     `scope["client"]` stays the raw transport peer.
 
-Whichever shape, `*` is a startup error — a wildcard peer allowlist would
-admit any host that can reach the bind address — and the per-user
-`X-Portainer-API-Key` validation floor is untouched: trust-proxy auth drops
-the gate, never authentication.
+Whichever shape, a wildcard peer allowlist (`*` or a zero-prefix network
+like `0.0.0.0/0`) is a startup error — it would admit any host that can
+reach the bind address — and the inherited shape refuses a server-held TLS
+cert (it would let every direct connection present `https` and void the
+attestation). The per-user `X-Portainer-API-Key` validation floor is
+untouched: trust-proxy auth drops the gate, never authentication.
 """
 
 from __future__ import annotations
@@ -47,6 +49,19 @@ TRUST_PROXY_AUTH_ENV = "PORTAINER_MCP_TRUST_PROXY_AUTH"
 PEER_IPS_ENV = "PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS"
 
 
+def _admits_any_peer(entry: str) -> bool:
+    """True for allowlist spellings that admit every peer: the literal `*`
+    and zero-prefix networks (`0.0.0.0/0`, `::/0`), which are wildcards in
+    CIDR clothing.
+    """
+    if entry == "*":
+        return True
+    try:
+        return ipaddress.ip_network(entry, strict=False).prefixlen == 0
+    except ValueError:
+        return False
+
+
 class PeerMatcher:
     """Validated IP/CIDR allowlist matched against the socket peer.
 
@@ -56,7 +71,7 @@ class PeerMatcher:
     """
 
     def __init__(self, raw: str) -> None:
-        entries = [e.strip() for e in raw.split(",") if e.strip()]
+        entries = http_security._split_csv(raw)
         if not entries:
             raise SystemExit(f"{PEER_IPS_ENV} is set but empty")
         self._networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
@@ -69,18 +84,30 @@ class PeerMatcher:
                     f"subnet."
                 )
             try:
-                self._networks.append(ipaddress.ip_network(entry, strict=False))
+                network = ipaddress.ip_network(entry, strict=False)
             except ValueError:
                 raise SystemExit(
                     f"{PEER_IPS_ENV} entry {entry!r} is not an IP address or "
                     f"CIDR network"
                 )
+            if network.prefixlen == 0:
+                raise SystemExit(
+                    f"{PEER_IPS_ENV} entry {entry!r} is a zero-prefix network "
+                    f"— a wildcard in CIDR spelling, admitting any host that "
+                    f"can reach the bind address. Pin the proxy's IP or subnet."
+                )
+            self._networks.append(network)
 
     def matches(self, host: str) -> bool:
         try:
             ip = ipaddress.ip_address(host)
         except ValueError:
             return False
+        # A dual-stack bind surfaces IPv4 peers as IPv4-mapped IPv6
+        # (::ffff:10.0.0.5), which is version-strict-unequal to any IPv4
+        # network — unmap so IPv4 allowlist entries match.
+        if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+            ip = ip.ipv4_mapped
         return any(ip in net for net in self._networks)
 
 
@@ -104,8 +131,16 @@ def resolve(bind_host: str) -> AuthPosture:
     ambiguous or degenerate combination, so no flag combination boots an
     ungated server.
     """
-    trust = tls._flag(TRUST_PROXY_AUTH_ENV)
+    trust = tls.flag(TRUST_PROXY_AUTH_ENV)
+    peer_ips = os.environ.get(PEER_IPS_ENV)
     if not trust:
+        if peer_ips:
+            raise SystemExit(
+                f"{PEER_IPS_ENV} is set but {TRUST_PROXY_AUTH_ENV} is not — "
+                f"the allowlist would be silently ignored under the gate-token "
+                f"posture. Set {TRUST_PROXY_AUTH_ENV}=1 or remove "
+                f"{PEER_IPS_ENV}."
+            )
         # Gate mode. A missing token still hard-fails, in auth.require_token —
         # its error names this posture as the alternative.
         return AuthPosture("gate", None, {}, "shared gate token")
@@ -116,7 +151,7 @@ def resolve(bind_host: str) -> AuthPosture:
             f"auth posture. The gate token cannot survive a proxy that owns "
             f"the Authorization header; declare exactly one."
         )
-    if tls._flag(tls.ALLOW_PLAINTEXT_ENV):
+    if tls.flag(tls.ALLOW_PLAINTEXT_ENV):
         raise SystemExit(
             f"{TRUST_PROXY_AUTH_ENV}=1 makes each caller's X-Portainer-API-Key "
             f"the only credential this server sees — it must never cross the "
@@ -130,8 +165,7 @@ def resolve(bind_host: str) -> AuthPosture:
             f"localhost defaults would 421-reject every proxied request)."
         )
 
-    peer_ips = os.environ.get(PEER_IPS_ENV)
-    trust_proxy_tls = tls._flag(tls.TRUST_PROXY_ENV)
+    trust_proxy_tls = tls.flag(tls.TRUST_PROXY_ENV)
     forwarded = os.environ.get(tls.FORWARDED_IPS_ENV)
 
     if peer_ips:
@@ -171,16 +205,26 @@ def resolve(bind_host: str) -> AuthPosture:
     if not forwarded:
         # tls.resolve_posture repeats this check, but it runs after the
         # verifier is built — fail at the earliest read.
+        raise SystemExit(tls.TRUST_PROXY_REQUIRES_IPS)
+    if any(_admits_any_peer(e) for e in http_security._split_csv(forwarded)):
         raise SystemExit(
-            f"{tls.TRUST_PROXY_ENV}=1 requires {tls.FORWARDED_IPS_ENV}="
-            f"<proxy ip/subnet>"
+            f"a wildcard (or zero-prefix network like 0.0.0.0/0) in "
+            f"{tls.FORWARDED_IPS_ENV} cannot back {TRUST_PROXY_AUTH_ENV}=1 — "
+            f"the inherited allowlist becomes the auth boundary, and it would "
+            f"admit any peer that can reach the bind address. Pin the proxy's "
+            f"IP or subnet."
         )
-    if any(e.strip() == "*" for e in forwarded.split(",")):
+    if os.environ.get(tls.CERT_ENV):
+        # The inherited attestation only means "came through the proxy"
+        # because no cert is held: uvicorn can then set scheme=https solely
+        # from a trusted peer's X-Forwarded-Proto. A server-held cert makes
+        # every direct TLS connection present https and the attestation
+        # attests nothing.
         raise SystemExit(
-            f"{tls.FORWARDED_IPS_ENV}='*' cannot back {TRUST_PROXY_AUTH_ENV}=1 "
-            f"— the inherited allowlist becomes the auth boundary, and a "
-            f"wildcard would admit any peer that can reach the bind address. "
-            f"Pin the proxy's IP or subnet."
+            f"{tls.CERT_ENV} is set: this server terminates TLS itself, so "
+            f"any direct connection presents scheme=https and the inherited "
+            f"proxy attestation is void. Use {PEER_IPS_ENV}=<proxy ip/cidr> "
+            f"(socket-peer shape) instead of {tls.TRUST_PROXY_ENV}=1."
         )
     return AuthPosture(
         "trust_proxy",

@@ -229,16 +229,21 @@ def _request(
     )
 
 
-def _verifier(handler=None) -> auth.PassthroughVerifier:
+def _mock_client(handler=None) -> httpx.AsyncClient:
     if handler is None:
 
         def handler(request: httpx.Request) -> httpx.Response:
             return httpx.Response(200, json=ALICE)
 
-    client = httpx.AsyncClient(
+    return httpx.AsyncClient(
         base_url="http://portainer/api", transport=httpx.MockTransport(handler)
     )
-    return auth.PassthroughVerifier(GATE, client, passthrough.ValidationCache(ttl=60))
+
+
+def _verifier(handler=None) -> auth.PassthroughVerifier:
+    return auth.PassthroughVerifier(
+        GATE, _mock_client(handler), passthrough.ValidationCache(ttl=60)
+    )
 
 
 async def test_passthrough_rejects_gate_mismatch():
@@ -309,17 +314,9 @@ async def test_passthrough_ok_fires_only_on_validation_not_cache_hits(caplog):
 
 
 def _trusted_verifier(peers: str | None = None, handler=None):
-    if handler is None:
-
-        def handler(request: httpx.Request) -> httpx.Response:
-            return httpx.Response(200, json=ALICE)
-
-    client = httpx.AsyncClient(
-        base_url="http://portainer/api", transport=httpx.MockTransport(handler)
-    )
     matcher = auth_posture.PeerMatcher(peers) if peers else None
     return auth.TrustedProxyVerifier(
-        client, passthrough.ValidationCache(ttl=60), matcher
+        _mock_client(handler), passthrough.ValidationCache(ttl=60), matcher
     )
 
 
@@ -429,13 +426,9 @@ def test_trusted_proxy_full_stack_issue_76_scenario():
     from starlette.routing import Route
     from starlette.testclient import TestClient
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json=ALICE)
-
-    client = httpx.AsyncClient(
-        base_url="http://portainer/api", transport=httpx.MockTransport(handler)
+    verifier = auth.TrustedProxyVerifier(
+        _mock_client(), passthrough.ValidationCache(ttl=60)
     )
-    verifier = auth.TrustedProxyVerifier(client, passthrough.ValidationCache(ttl=60))
 
     async def endpoint(request):
         return PlainTextResponse(

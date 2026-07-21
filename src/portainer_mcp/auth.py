@@ -14,6 +14,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+import secrets
 from typing import TYPE_CHECKING
 
 import httpx
@@ -278,8 +279,10 @@ class TrustedProxyVerifier(PassthroughVerifier):
         peer_matcher: PeerMatcher | None = None,
     ) -> None:
         # The parent's expected-gate compare is never reached (verify_token
-        # is overridden); the placeholder just satisfies its constructor.
-        super().__init__(_PROXY_PLACEHOLDER, client, cache)
+        # is overridden). Satisfy its constructor with a per-process random
+        # nonce, not the public placeholder — so no knowable string could
+        # ever match if a refactor re-routed through the parent path.
+        super().__init__(secrets.token_hex(32), client, cache)
         self._peers = peer_matcher
 
     def get_middleware(self) -> list:

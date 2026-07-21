@@ -96,9 +96,13 @@ Key things to internalise before changing code:
   *socket peer* (`PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` + server-terminated
   TLS; resolve() emits `proxy_headers: False` so the peer stays raw).
   Hard-fails: both postures declared, neither, trust + plaintext opt-out,
-  wildcard in the effective allowlist, `TRUSTED_PROXY_AUTH_IPS` combined
-  with `TRUST_PROXY_TLS`/`FORWARDED_ALLOW_IPS`, missing `ALLOWED_HOSTS` on
-  a non-loopback bind. The per-user `X-Portainer-API-Key` floor is
+  wildcard in the effective allowlist (`*` or zero-prefix CIDR like
+  `0.0.0.0/0`), `TLS_CERT` alongside the inherited shape (a server-held
+  cert lets any direct connection present https, voiding the attestation),
+  `TRUSTED_PROXY_AUTH_IPS` combined with `TRUST_PROXY_TLS`/
+  `FORWARDED_ALLOW_IPS` or set without the trust flag, missing
+  `ALLOWED_HOSTS` on a non-loopback bind. `PeerMatcher` unmaps IPv4-mapped
+  IPv6 peers (dual-stack binds). The per-user `X-Portainer-API-Key` floor is
   unchanged — trust-proxy drops the gate, never authentication. New audit
   outcomes `untrusted_scheme` / `untrusted_peer`; records carry
   `auth_posture: "trust_proxy"`.

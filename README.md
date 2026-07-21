@@ -150,7 +150,7 @@ claude mcp add portainer --transport http http://mcp.example.com:17717/mcp \
 
 #### Option D - Identity-aware proxy (MCP OAuth)
 
-If your users authenticate through an identity-aware proxy that speaks the MCP OAuth flow (e.g. [Pomerium in MCP server mode](https://www.pomerium.com/docs/capabilities/mcp)), the proxy mints its own access token and **owns** the `Authorization` header — a static gate token can't survive the hop. Declare the trust-proxy auth posture instead of `PORTAINER_MCP_AUTH_TOKEN`:
+If your users authenticate through an identity-aware proxy that speaks the MCP OAuth flow (such as [Pomerium in MCP server mode](https://www.pomerium.com/docs/capabilities/mcp)), the proxy mints its own access token and **owns** the `Authorization` header. Declare the trust-proxy auth posture instead of `PORTAINER_MCP_AUTH_TOKEN`:
 
 > [!NOTE]
 > Same rules as Option B: don't publish the container port (only the proxy may reach it), and make sure the proxy forwards the original `Host` and `X-Forwarded-Proto: https` headers.
