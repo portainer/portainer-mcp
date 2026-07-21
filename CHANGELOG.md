@@ -9,6 +9,24 @@ the MCP server.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Guidance gate no longer locks out bridges that re-initialize per request**
+  ([#75](https://github.com/portainer/portainer-mcp/issues/75)). Over HTTP the
+  gate keys on `Mcp-Session-Id`; a stateless bridge (e.g. a Cloudflare-worker
+  OAuth proxy) that performs a fresh MCP handshake on every call presents a
+  new id each time, so `get_guidance` could never unlock the session the
+  retry arrived in and every tool call bounced forever. The gate now detects
+  that pattern per caller (scoped by the SHA-256 of the per-user
+  `X-Portainer-API-Key` the HTTP transport already requires): on the third
+  distinct fresh session within a five-minute window *following* a successful
+  `get_guidance` (i.e. after two bounced round-trips), the caller is admitted
+  ungated with a WARNING naming the likely cause; the flag expires after an
+  hour so a false positive self-heals. Session-preserving clients are
+  unaffected — fetching guidance in the same session that was bounced clears
+  the counter, so per-session gating semantics (including a second concurrent
+  conversation by the same user) are unchanged for them.
+
 ## [2.43.1] — 2026-07-02
 
 Targets Portainer 2.43.x.
