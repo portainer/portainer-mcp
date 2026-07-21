@@ -104,6 +104,8 @@ silently downgrades.
 | `PORTAINER_TLS_VERIFY` | `1` | When falsy, skips TLS verification on the upstream Portainer client. |
 | `PORTAINER_MAX_RESPONSE_CHARS` | `50000` | Tool-response cap. Sized to fire before Claude Code's MCP output cap so the truncation hint (which names `select` with examples) reaches the model. |
 | `PORTAINER_EXPOSE_ENV_VALUES` | `0` | When truthy, env values in stack / container / Kubernetes responses are returned as-is. Default redacts them to `[REDACTED]` and appends a one-line summary naming this variable. Redaction runs *before* `select`, so a JMESPath projection lands on the sentinel rather than the real value. |
+| `PORTAINER_MCP_GUIDANCE_TTL` | `1800` | Idle seconds before the guidance toll booth re-delivers the operating guide. The first tool call from a caller (per-user API key over HTTP, the process over stdio) is answered with the guide itself plus a retry instruction instead of being executed; the window slides with activity, so only an idle gap — a new conversation, in practice — triggers re-delivery. Must be > 0. |
+| `PORTAINER_MCP_DISABLE_GUIDANCE_GATE` | `0` | When truthy, disables in-band guide delivery entirely — no tool call is ever bounced. The `get_guidance` tool stays available on demand. If you disable the gate, it is recommended to install the [hygiene skill](../skills/portainer-mcp-hygiene/SKILL.md) manually on each client so the operating guidance still reaches the model. |
 
 ## Logging
 
