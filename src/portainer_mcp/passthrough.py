@@ -78,7 +78,7 @@ def resolve_ttl() -> int:
     return ttl
 
 
-def _digest(key: str) -> str:
+def digest(key: str) -> str:
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
 
@@ -101,19 +101,19 @@ class ValidationCache:
     def get(self, key: str) -> Identity | None:
         if self._ttl == 0:
             return None
-        entry = self._entries.get(_digest(key))
+        entry = self._entries.get(digest(key))
         if entry is None:
             return None
         expiry, identity = entry
         if time.monotonic() >= expiry:
-            self._entries.pop(_digest(key), None)
+            self._entries.pop(digest(key), None)
             return None
         return identity
 
     def put(self, key: str, identity: Identity) -> None:
         if self._ttl == 0:
             return
-        self._entries[_digest(key)] = (time.monotonic() + self._ttl, identity)
+        self._entries[digest(key)] = (time.monotonic() + self._ttl, identity)
 
 
 def _parse_identity(response: httpx.Response) -> Identity:

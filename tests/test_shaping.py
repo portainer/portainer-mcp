@@ -8,6 +8,7 @@ Covers the pure-data layers: `project()` and `ResponseCapMiddleware`.
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 
 import pytest
 from fastmcp.tools.tool import ToolResult
@@ -53,11 +54,14 @@ def _result(text: str, structured: dict | None = None) -> ToolResult:
     )
 
 
-async def _run(middleware: ResponseCapMiddleware, result: ToolResult) -> ToolResult:
+async def _run(
+    middleware: ResponseCapMiddleware, result: ToolResult, tool: str = "EndpointList"
+) -> ToolResult:
     async def call_next(_ctx):
         return result
 
-    return await middleware.on_call_tool(context=None, call_next=call_next)
+    context = SimpleNamespace(message=SimpleNamespace(name=tool))
+    return await middleware.on_call_tool(context=context, call_next=call_next)
 
 
 async def test_cap_passes_through_when_under_limit():
@@ -76,6 +80,14 @@ async def test_cap_truncates_and_clears_structured():
     assert "truncated: response was 50 chars" in text
     assert "capped at 10" in text
     assert out.structured_content is None
+
+
+async def test_cap_skips_exempt_tool():
+    # get_guidance is wired exempt: `select` is a no-op there, so a truncated
+    # guide would leave the caller no way to retrieve the rest.
+    middleware = ResponseCapMiddleware(max_chars=10, exempt=frozenset({"get_guidance"}))
+    out = await _run(middleware, _result("x" * 50), tool="get_guidance")
+    assert out.content[0].text == "x" * 50
 
 
 # --- _select_wrapper redaction ---------------------------------------------

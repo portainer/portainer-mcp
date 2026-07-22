@@ -10,6 +10,10 @@ and refuses to boot if PORTAINER_API_KEY is set. Tunables:
 - PORTAINER_READ_ONLY=1 — strict: registers GET/HEAD operations only.
 - PORTAINER_NO_PROXY=1 — skip `docker_proxy` / `kubernetes_proxy` registration.
 - PORTAINER_TLS_VERIFY=0 — skip TLS verification (self-signed certs).
+- PORTAINER_MCP_GUIDANCE_TTL — idle seconds before the guidance toll booth
+  re-delivers the operating guide to a caller (default 1800).
+- PORTAINER_MCP_DISABLE_GUIDANCE_GATE=1 — disable in-band guide delivery
+  entirely (get_guidance stays available on demand).
 - PORTAINER_MCP_LOG_LEVEL — log level (default INFO; DEBUG, WARNING, ERROR, CRITICAL).
 - PORTAINER_MCP_LOG_FORMAT — text (default) or json. json emits a single
   per-line JSON envelope and hoists fields from records whose message is
@@ -426,18 +430,35 @@ def build_server() -> FastMCP:
     )
     logger.info("structured request logging: enabled")
 
+    # Inside logging (bounced attempts are recorded) but outside the response
+    # cap: the bounce carries the full guide, which must never be truncated.
+    if _env_flag(guidance.DISABLE_ENV_VAR, default=False):
+        logger.info("guidance gate: DISABLED (%s)", guidance.DISABLE_ENV_VAR)
+    else:
+        guidance_ttl = guidance.resolve_ttl()
+        mcp.add_middleware(
+            guidance.GuidanceGateMiddleware(
+                guide, ttl=guidance_ttl, is_http=transport == "http"
+            )
+        )
+        logger.info(
+            "guidance gate: enabled (guide delivered in-band, idle ttl=%ds)",
+            guidance_ttl,
+        )
+
     max_chars = int(
         os.environ.get("PORTAINER_MAX_RESPONSE_CHARS")
         or shaping.DEFAULT_MAX_RESPONSE_CHARS
     )
-    mcp.add_middleware(shaping.ResponseCapMiddleware(max_chars))
+    # get_guidance is exempt: it serves the full guide, and `select` — the
+    # cap's escape hatch — is a no-op there, so truncation would be a dead end.
+    mcp.add_middleware(
+        shaping.ResponseCapMiddleware(
+            max_chars, exempt=frozenset({guidance.GUIDANCE_TOOL_NAME})
+        )
+    )
     logger.info("response cap: %d chars", max_chars)
 
-    # Added last so it runs innermost: the logging middleware still records the
-    # gated attempt. get_guidance is guaranteed registered (missing guide
-    # hard-fails above), so the gate is always satisfiable.
-    mcp.add_middleware(guidance.GuidanceGateMiddleware(is_http=transport == "http"))
-    logger.info("guidance gate: enabled (get_guidance required once per session)")
     logger.info(
         "env value redaction: %s",
         "DISABLED (env values exposed)" if redaction.is_expose_enabled() else "enabled",

@@ -18,6 +18,9 @@ data/portainer-patched.yaml ──► FastMCP.from_openapi ──► tag filter 
                                                   redact_envs (before projection)
                                                                       │
                                                                       ▼
+                                          GuidanceGateMiddleware (toll booth, per call)
+                                                                      │
+                                                                      ▼
                                                   ResponseCapMiddleware (per call)
                                                                       │
                                                                       ▼
@@ -317,6 +320,36 @@ proxy tools (`_apply_select`) — call `redact_envs` before applying the
 JMESPath. Non-JSON proxy bodies (Docker logs / stats / error pages)
 pass through unchanged: the walker is field-name driven and has
 nothing to match.
+
+`get_guidance` is exempt from the cap: it serves the full operating
+guide, and `select` — the cap's escape hatch — is a no-op there, so a
+truncated guide would be a dead end.
+
+### Guidance gate — `guidance.py`
+
+The full hygiene guide is too large for the MCP `instructions` field
+(clients truncate it at ~2KB), so it's served by a `get_guidance` tool —
+and delivered proactively by `GuidanceGateMiddleware`, a *toll booth*:
+the first tool call from a caller whose idle window has lapsed is
+answered with the guide itself plus a retry instruction (the tool is not
+executed), and the caller is marked guided immediately. Delivery is the
+proof, so nothing is correlated across requests and no lockout state
+exists.
+
+Callers are keyed on the authenticated principal — the SHA-256 digest of
+the per-user `X-Portainer-API-Key` over HTTP, a process-wide sentinel
+over stdio — and never on `Mcp-Session-Id`: clients and bridges mint a
+fresh session id per request (SEP-2567), which is what permanently
+locked out callers under the old session-keyed gate (#75). The window
+slides with activity (`PORTAINER_MCP_GUIDANCE_TTL`, default 1800s), so
+re-delivery lands on the next conversation, not mid-task.
+`PORTAINER_MCP_DISABLE_GUIDANCE_GATE=1` disables enforcement.
+
+Middleware order is load-bearing: the gate sits *inside* the structured
+request log (a bounced attempt is still recorded — it also emits its own
+`guidance_bounce` record, since the request log shows the call as a
+normal success) but *outside* `ResponseCapMiddleware` (the bounce
+carries the full guide and must never be truncated).
 
 ## Why this shape
 

@@ -9,6 +9,25 @@ the MCP server.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Guidance gate no longer keys on `Mcp-Session-Id` — clients behind
+  session-churning bridges are never locked out** (#75). The gate is now a
+  *toll booth*: the first tool call from a caller whose idle window has
+  lapsed is answered with the operating guide itself (plus a retry
+  instruction) instead of a "call `get_guidance` and retry" bounce, and the
+  caller is marked guided immediately — delivery is the proof, so nothing
+  needs to be correlated across requests and there is no lockout state.
+  Callers are identified by the authenticated principal (the per-user
+  API-key digest over HTTP, the process over stdio), the scoping SEP-2567
+  recommends now that major clients mint a fresh session id per tool call.
+  The window slides with activity (`PORTAINER_MCP_GUIDANCE_TTL`, default
+  1800s), so re-delivery happens on the next conversation, not mid-task —
+  including over stdio, where the old gate fired only once per process
+  lifetime. `PORTAINER_MCP_DISABLE_GUIDANCE_GATE=1` disables enforcement
+  entirely (install the hygiene skill manually on clients in that case);
+  `get_guidance` remains available on demand.
+
 ### Added
 
 - **Trust-proxy auth posture** (`PORTAINER_MCP_TRUST_PROXY_AUTH=1`) for
