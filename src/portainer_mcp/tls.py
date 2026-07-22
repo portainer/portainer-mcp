@@ -46,11 +46,22 @@ FORWARDED_IPS_ENV = "PORTAINER_MCP_FORWARDED_ALLOW_IPS"
 ALLOW_PLAINTEXT_ENV = "PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP"
 
 
-# Mirrors server.py's `_env_flag`; not shared because `server` imports this
-# module, so importing back would be circular.
-def _flag(name: str) -> bool:
+# Mirrors server.py's `_env_flag` (not importable from there — `server`
+# imports this module, so importing back would be circular). Public because
+# `auth_posture` shares it.
+def flag(name: str) -> bool:
     raw = os.environ.get(name)
     return raw is not None and raw not in {"0", "false", "False"}
+
+
+# Raised from two resolvers (`resolve_posture` here, `auth_posture.resolve`
+# earlier in boot) — one constant so the same misconfiguration can't produce
+# two divergent messages.
+TRUST_PROXY_REQUIRES_IPS = (
+    f"{TRUST_PROXY_ENV}=1 requires {FORWARDED_IPS_ENV}=<proxy ip/subnet> "
+    f"so the runtime scheme check only trusts X-Forwarded-Proto from "
+    f"the proxy"
+)
 
 
 class Posture(NamedTuple):
@@ -110,9 +121,9 @@ def resolve_posture(bind_host: str) -> Posture:
     """
     cert = os.environ.get(CERT_ENV)
     key = os.environ.get(KEY_ENV)
-    trust_proxy = _flag(TRUST_PROXY_ENV)
+    trust_proxy = flag(TRUST_PROXY_ENV)
     forwarded_ips = os.environ.get(FORWARDED_IPS_ENV)
-    allow_plaintext = _flag(ALLOW_PLAINTEXT_ENV)
+    allow_plaintext = flag(ALLOW_PLAINTEXT_ENV)
     bind_is_loopback = bind_host in LOOPBACK_BINDS
 
     uvicorn_kwargs: dict[str, str] = {}
@@ -137,11 +148,7 @@ def resolve_posture(bind_host: str) -> Posture:
             )
 
     if trust_proxy and not forwarded_ips:
-        raise SystemExit(
-            f"{TRUST_PROXY_ENV}=1 requires {FORWARDED_IPS_ENV}=<proxy ip/subnet> "
-            f"so the runtime scheme check only trusts X-Forwarded-Proto from "
-            f"the proxy"
-        )
+        raise SystemExit(TRUST_PROXY_REQUIRES_IPS)
     if forwarded_ips:
         uvicorn_kwargs["forwarded_allow_ips"] = forwarded_ips
 

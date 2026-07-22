@@ -86,8 +86,9 @@ stdio-only credential). Two layered checks run on every request, both inside
    it (min 32 chars, ASCII printable, no whitespace, loud-fail on any defect),
    and the verifier constant-time-compares the request's `Authorization: Bearer`
    against it (`hmac.compare_digest`). A miss returns `None` → FastMCP renders
-   401 + `WWW-Authenticate`. The gate is mandatory (no opt-out) and stops
-   credential-less floods at a cheap local 401 before they reach Portainer.
+   401 + `WWW-Authenticate`. The gate stops credential-less floods at a cheap
+   local 401 before they reach Portainer. It has exactly one alternative — the
+   trust-proxy auth posture below — and never a silent opt-out.
 2. **Per-user validation.** The caller's own Portainer key rides in a separate
    `X-Portainer-API-Key` header. The verifier validates it against
    `GET /users/me?noEndpointAuthorizations=true` (`passthrough.validate`) and
@@ -121,6 +122,60 @@ window), not every admitted request; cache hits admit silently. The failure
 outcomes `mismatch` / `no_user_key` / `invalid_user_key` are uncached and fire
 on every failing request. The attempted gate-token bytes and the per-user key
 are **never** logged (regression-tested).
+
+### Auth posture — `auth_posture.py`
+
+An identity-aware proxy that performs the MCP OAuth flow (e.g. Pomerium in
+MCP server mode) mints its own access token and *owns* the `Authorization`
+header on the upstream request — a static gate token cannot survive that hop
+([#76](https://github.com/portainer/portainer-mcp/issues/76)). `resolve()`
+runs at startup (mirroring `tls.resolve_posture`) and requires **exactly one**
+auth posture; both or neither refuse to boot:
+
+- **Gate token** (default) — `PORTAINER_MCP_AUTH_TOKEN`, the flow above.
+- **Trust-proxy auth** — `PORTAINER_MCP_TRUST_PROXY_AUTH=1`. The bearer value
+  is ignored entirely (`TrustedProxyVerifier`; a small pre-auth middleware
+  injects a placeholder when the proxy strips `Authorization` outright, since
+  the SDK's bearer backend 401s header-less requests before `verify_token`).
+  What replaces the gate compare is per-request proof the request transited
+  the proxy, in one of two shapes.
+
+The two shapes exist because uvicorn's proxy-header middleware rewrites
+`scope["client"]` from `X-Forwarded-For` for connections arriving from
+`PORTAINER_MCP_FORWARDED_ALLOW_IPS` — so "check the socket peer" and "trust
+the proxy's forwarded headers" are mutually exclusive signals:
+
+1. **Inherited** (TLS-terminating proxy, the common shape): requires
+   `PORTAINER_MCP_TRUST_PROXY_TLS=1` + `FORWARDED_ALLOW_IPS`; no extra
+   variable. The attestation is `scheme == "https"`: uvicorn sets it only
+   from a trusted peer's `X-Forwarded-Proto`, and this shape holds no cert,
+   so a direct connection can never present it. Because "holds no cert" is
+   load-bearing, `TLS_CERT` set alongside this shape is a startup error —
+   a server-held cert would let every direct TLS connection self-attest.
+   A wildcard in `FORWARDED_ALLOW_IPS` (`*` or a zero-prefix network like
+   `0.0.0.0/0`) is likewise a startup error here — inheritance turns that
+   list into the auth boundary.
+2. **Socket peer** (server-terminated TLS, end-to-end encrypted):
+   `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS=<ip/cidr,…>` names the proxy
+   directly; `resolve()` returns `proxy_headers: False` so uvicorn never
+   rewrites the peer, and the verifier checks `scope["client"]` against the
+   allowlist (`PeerMatcher`; wildcard and non-IP entries hard-fail).
+   Incompatible with `TRUST_PROXY_TLS`/`FORWARDED_ALLOW_IPS` (the rewrite
+   would corrupt the peer signal) and requires `TLS_CERT`/`_TLS_KEY` on a
+   non-loopback bind.
+
+Degenerate combinations all hard-fail: gate token + trust flag (ambiguous),
+trust flag + plaintext opt-out (the per-user key would be the only credential
+and it must not cross plaintext), trust flag without
+`PORTAINER_MCP_ALLOWED_HOSTS` on a non-loopback bind, and
+`TRUSTED_PROXY_AUTH_IPS` without the trust flag (silently dead security
+config). Failed attestation
+audits as `untrusted_peer` / `untrusted_scheme` (per-request, uncached), and
+every audit record under this posture carries `auth_posture: "trust_proxy"`.
+The per-user `X-Portainer-API-Key` floor is untouched in both postures —
+trust-proxy auth drops the *gate*, never authentication — and IP/scheme
+attestation is weaker than a secret in flat container networks: the operator
+owns keeping the proxy the only workload that can reach the bind address.
 
 ### HTTP security — `http_security.py`
 
