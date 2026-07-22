@@ -9,6 +9,10 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.43.2] — 2026-07-22
+
+Targets Portainer 2.43.x.
+
 ### Fixed
 
 - **Guidance gate no longer keys on `Mcp-Session-Id` — clients behind
