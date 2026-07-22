@@ -9,6 +9,25 @@ the MCP server.
 
 ## [Unreleased]
 
+### Added
+
+- **Trust-proxy auth posture** (`PORTAINER_MCP_TRUST_PROXY_AUTH=1`) for
+  deployments behind an identity-aware proxy that owns the `Authorization`
+  header (e.g. Pomerium in MCP server mode) —
+  [#76](https://github.com/portainer/portainer-mcp/issues/76). The gate-token
+  compare is replaced by per-request proxy attestation: inherited from the
+  `PORTAINER_MCP_TRUST_PROXY_TLS` + `PORTAINER_MCP_FORWARDED_ALLOW_IPS`
+  declaration behind a TLS-terminating proxy, or an explicit
+  `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` socket-peer allowlist when the
+  server terminates TLS itself. Exactly one auth posture must be declared
+  (gate token XOR trust-proxy); every degenerate combination — both, neither,
+  trust + plaintext opt-out, wildcard allowlists (`*` or zero-prefix CIDRs),
+  a server-held cert alongside the inherited shape, a peer allowlist without
+  the trust flag — refuses to boot, and the
+  per-user `X-Portainer-API-Key` validation floor is unchanged. New audit
+  outcomes `untrusted_scheme` / `untrusted_peer`; audit records under this
+  posture carry `auth_posture: "trust_proxy"`.
+
 ## [2.43.1] — 2026-07-02
 
 Targets Portainer 2.43.x.

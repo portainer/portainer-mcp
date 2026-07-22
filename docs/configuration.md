@@ -21,7 +21,9 @@ The server will not start if `PORTAINER_URL` is missing, if `PORTAINER_API_KEY` 
 | `PORTAINER_MCP_TRANSPORT` | `stdio` | `stdio` or `http`. The container image overrides to `http`. |
 | `PORTAINER_MCP_HTTP_HOST` | `127.0.0.1` | Bind address when `transport=http`. Container image overrides to `0.0.0.0` so it's reachable from outside the container. |
 | `PORTAINER_MCP_HTTP_PORT` | `17717` | Bind port when `transport=http`. |
-| `PORTAINER_MCP_AUTH_TOKEN` | _required for http_ | Shared bearer **gate** secret. ≥32 ASCII-printable characters, no whitespace. Generate with `openssl rand -hex 32`. Ignored under stdio. Admits the request; the caller's own Portainer key is then validated and forwarded (see below). |
+| `PORTAINER_MCP_AUTH_TOKEN` | _required for http_ | Shared bearer **gate** secret. ≥32 ASCII-printable characters, no whitespace. Generate with `openssl rand -hex 32`. Ignored under stdio. Admits the request; the caller's own Portainer key is then validated and forwarded (see below). The one alternative is the [trust-proxy auth posture](#auth-posture-identity-aware-proxies); setting both refuses to boot. |
+| `PORTAINER_MCP_TRUST_PROXY_AUTH` | `0` | Replace the gate-token compare with per-request **proxy attestation**, for identity-aware proxies that own the `Authorization` header (e.g. Pomerium in MCP server mode). See [Auth posture](#auth-posture-identity-aware-proxies). |
+| `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` | _unset_ | Socket-peer allowlist (IPs/CIDRs) backing `PORTAINER_MCP_TRUST_PROXY_AUTH` when **this server terminates TLS itself**. Behind a TLS-terminating proxy leave it unset — the `PORTAINER_MCP_FORWARDED_ALLOW_IPS` attestation is inherited. `*` refuses to boot. |
 | `PORTAINER_MCP_AUTH_CACHE_TTL` | `60` | Seconds to cache a validated per-user key. Positive results only; `0` disables caching (validate every request). HTTP only. |
 
 The stdio transport ignores everything in this section except `PORTAINER_MCP_TRANSPORT` itself.
@@ -43,6 +45,32 @@ claude mcp add portainer --transport http http://mcp.example.com:17717/mcp \
 
 A missing/invalid gate token **or** missing/invalid per-user key returns 401 — there is no fallback to a shared key. This gives each user Portainer's own RBAC and per-user attribution in both Portainer's audit log and the MCP audit log.
 
+### Auth posture (identity-aware proxies)
+
+Exactly **one** auth posture must be declared under HTTP — the server refuses to boot with both or neither:
+
+1. **Gate token** (default) — `PORTAINER_MCP_AUTH_TOKEN`, as above.
+2. **Trust-proxy auth** — `PORTAINER_MCP_TRUST_PROXY_AUTH=1`, for deployments behind an identity-aware proxy that performs the MCP OAuth flow itself (Pomerium in MCP server mode, and similar). Such proxies mint their own access token and **own** the `Authorization` header on the upstream request, so a static gate token cannot survive the hop. Under this posture the `Authorization` value is ignored (never compared, never logged) and the gate is replaced by per-request proof that the request came through the proxy. The per-user `X-Portainer-API-Key` validation is unchanged — it remains the credential that actually authenticates each caller (the proxy can inject it, or each client supplies its own).
+
+The proxy attestation takes one of two shapes:
+
+| Your TLS posture | What to set | How the request is attested |
+|---|---|---|
+| TLS-terminating proxy (`PORTAINER_MCP_TRUST_PROXY_TLS=1` + `PORTAINER_MCP_FORWARDED_ALLOW_IPS`) | Just `PORTAINER_MCP_TRUST_PROXY_AUTH=1` — the peer allowlist is **inherited** from `PORTAINER_MCP_FORWARDED_ALLOW_IPS` | Request scheme must be `https`, which uvicorn only sets from an allowlisted peer's `X-Forwarded-Proto` — and this shape holds no cert, so a direct connection can never present it |
+| Server-terminated TLS (`PORTAINER_MCP_TLS_CERT`/`_TLS_KEY`) | `PORTAINER_MCP_TRUST_PROXY_AUTH=1` + `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS=<proxy ip/cidr>` | The **socket peer** must be in the allowlist (uvicorn's `X-Forwarded-*` rewriting is disabled in this shape so the peer stays observable) |
+
+Combinations that refuse to boot, by design:
+
+- `PORTAINER_MCP_AUTH_TOKEN` together with `PORTAINER_MCP_TRUST_PROXY_AUTH=1` — ambiguous posture.
+- `PORTAINER_MCP_TRUST_PROXY_AUTH=1` with `PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP=1` — the per-user key becomes the only credential the server sees; it must never cross the wire in plaintext.
+- A wildcard anywhere in the effective peer allowlist — `*` or a zero-prefix network (`0.0.0.0/0`, `::/0`) — it is the auth boundary in this posture.
+- The inherited shape with `PORTAINER_MCP_TLS_CERT` also set — a server-held cert lets every direct TLS connection present `https`, voiding the attestation; use `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` instead.
+- `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` together with `PORTAINER_MCP_TRUST_PROXY_TLS`/`PORTAINER_MCP_FORWARDED_ALLOW_IPS` — the `X-Forwarded-For` rewrite would corrupt the socket-peer signal; behind a TLS-terminating proxy use inheritance instead.
+- `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` without `PORTAINER_MCP_TRUST_PROXY_AUTH=1` — the allowlist would be silently dead config.
+- `PORTAINER_MCP_TRUST_PROXY_AUTH=1` on a non-loopback bind without `PORTAINER_MCP_ALLOWED_HOSTS` set to the proxy-fronted hostname.
+
+> [!IMPORTANT]
+> IP/scheme attestation is weaker than a shared secret on a flat network: any workload that can reach the bind address from an allowlisted IP skips the gate. Keep the proxy the **only** thing that can reach the container (don't publish its port; keep the allowlisted subnet free of untrusted workloads). The floor still holds — every request must carry a valid Portainer API key — so a bypass admits only what that caller's own Portainer RBAC allows, but it does skip the proxy's own authorization policy.
 
 ## Hardening (HTTP transport only)
 
@@ -124,7 +152,7 @@ Audit and structured-request records both carry the same per-request context fie
 distinguishes Claude Code / Inspector / custom scripts), and `session_id` (the MCP `Mcp-Session-Id` assigned at `initialize` —
 absent on the `initialize` request itself, present on every subsequent request in the session). With a single shared gate bearer the audit deliberately omits `token_fp` since it would be a constant; failed attempts likewise carry no token content, and the per-user `X-Portainer-API-Key` is never logged.
 
-The audit `outcome` is one of `ok`, `mismatch` (wrong gate token), `no_user_key` (gate passed but no `X-Portainer-API-Key`), or `invalid_user_key` (key rejected by `/users/me` or Portainer unreachable). A successful `ok` — and every matching structured-request record — is attributed with the validated Portainer identity: `portainer_user_id`, `portainer_username`. This is the per-user attribution the passthrough model buys; the key that resolves to that identity is never recorded. Structured-request records for a `tools/call` also carry the `tool` name (the `method` field alone is just `tools/call`).
+The audit `outcome` is one of `ok`, `mismatch` (wrong gate token), `no_user_key` (gate passed but no `X-Portainer-API-Key`), or `invalid_user_key` (key rejected by `/users/me` or Portainer unreachable). Under the trust-proxy auth posture, `mismatch` is replaced by `untrusted_scheme` (request didn't transit the attested TLS-terminating proxy) or `untrusted_peer` (socket peer not in `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS`; the record carries the rejected `peer`), and every audit record additionally carries `auth_posture: "trust_proxy"`. A successful `ok` — and every matching structured-request record — is attributed with the validated Portainer identity: `portainer_user_id`, `portainer_username`. This is the per-user attribution the passthrough model buys; the key that resolves to that identity is never recorded. Structured-request records for a `tools/call` also carry the `tool` name (the `method` field alone is just `tools/call`).
 
 ### Audit & traceability
 
