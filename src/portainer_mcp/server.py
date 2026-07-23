@@ -10,6 +10,9 @@ and refuses to boot if PORTAINER_API_KEY is set. Tunables:
 - PORTAINER_READ_ONLY=1 — strict: registers GET/HEAD operations only.
 - PORTAINER_NO_PROXY=1 — skip `docker_proxy` / `kubernetes_proxy` registration.
 - PORTAINER_TLS_VERIFY=0 — skip TLS verification (self-signed certs).
+- PORTAINER_TIMEOUT — upstream Portainer HTTP timeout in seconds (default
+  120; connect is capped at 10s). Both transports. Keep it below the MCP
+  client's own per-tool timeout so timeout errors reach the model.
 - PORTAINER_MCP_GUIDANCE_TTL — idle seconds before the guidance toll booth
   re-delivers the operating guide to a caller (default 1800).
 - PORTAINER_MCP_DISABLE_GUIDANCE_GATE=1 — disable in-band guide delivery
@@ -83,6 +86,7 @@ from portainer_mcp import (
     redaction,
     request_context,
     shaping,
+    timeouts,
     tls,
 )
 
@@ -313,6 +317,13 @@ def build_server() -> FastMCP:
     transport = _resolve_transport()
     base = os.environ["PORTAINER_URL"].rstrip("/") + "/api"
     verify = _env_flag("PORTAINER_TLS_VERIFY", default=True)
+    upstream_timeout = timeouts.resolve()
+    logger.info(
+        "upstream timeout: %gs (connect %gs) — override via %s",
+        upstream_timeout.read,
+        upstream_timeout.connect,
+        timeouts.ENV_VAR,
+    )
 
     auth_provider = None
     cache: passthrough.ValidationCache | None = None
@@ -333,7 +344,7 @@ def build_server() -> FastMCP:
         client = httpx.AsyncClient(
             base_url=base,
             verify=verify,
-            timeout=30,
+            timeout=upstream_timeout,
             event_hooks={"request": [passthrough.inject_api_key]},
         )
         if posture.mode == "trust_proxy":
@@ -359,7 +370,7 @@ def build_server() -> FastMCP:
             base_url=base,
             headers={passthrough.UPSTREAM_KEY_HEADER: os.environ["PORTAINER_API_KEY"]},
             verify=verify,
-            timeout=30,
+            timeout=upstream_timeout,
         )
     with SPEC_PATH.open() as f:
         spec = yaml.safe_load(f)
@@ -458,6 +469,11 @@ def build_server() -> FastMCP:
         )
     )
     logger.info("response cap: %d chars", max_chars)
+
+    # Innermost, so it rewrites the timeout before the logging middleware
+    # records the error — the request log then carries the actionable
+    # message, not FastMCP's stock "please retry".
+    mcp.add_middleware(timeouts.TimeoutHintMiddleware(upstream_timeout.read))
 
     logger.info(
         "env value redaction: %s",

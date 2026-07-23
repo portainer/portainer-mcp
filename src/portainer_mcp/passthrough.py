@@ -39,8 +39,9 @@ DEFAULT_CACHE_TTL = 60
 # id/username/role, and skips the heavy per-environment authorization map.
 _VALIDATE_PATH = "/users/me"
 _VALIDATE_PARAMS = {"noEndpointAuthorizations": "true"}
-# Shorter than the shared client's 30s default: this runs inside the per-request
-# auth path, so a slow/down Portainer must not stall every cache-miss for 30s.
+# Deliberately short, overriding the shared client's PORTAINER_TIMEOUT
+# (default 120s): this runs inside the per-request auth path, so a slow/down
+# Portainer must not stall every cache-miss for the full upstream allowance.
 _VALIDATE_TIMEOUT = 10
 
 
