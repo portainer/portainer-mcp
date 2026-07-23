@@ -9,6 +9,30 @@ the MCP server.
 
 ## [Unreleased]
 
+### Added
+
+- **Configurable upstream timeout** (`PORTAINER_TIMEOUT`, seconds) —
+  [#80](https://github.com/portainer/portainer-mcp/issues/80). The upstream
+  Portainer HTTP timeout was hardcoded at 30s, routinely too short for
+  stack creation (Portainer deploys synchronously — the request holds open
+  through image pull and compose up). The default rises to **120s**, the
+  connect phase stays capped at 10s so an unreachable Portainer still
+  fails fast, and the knob applies to both transports. Non-numeric or
+  non-positive values refuse to boot; the resolved posture is logged at
+  startup.
+
+### Changed
+
+- **Post-send timeouts now say the write may have succeeded** (#80). A
+  request that times out after reaching Portainer is ambiguous, not failed
+  — Portainer keeps processing, which is how two timed-out stack creates
+  left two stack records behind in #80. FastMCP's stock error ("please
+  retry") invites exactly the duplicate-creating reflex, so
+  `ReadTimeout`/`WriteTimeout` errors are rewritten to name the ambiguity,
+  instruct the model to verify current state (e.g. `StackList`) before
+  retrying, and point at `PORTAINER_TIMEOUT`. Connect-phase timeouts are
+  left untouched — the request never reached Portainer.
+
 ## [2.43.2] — 2026-07-22
 
 Targets Portainer 2.43.x.
