@@ -9,6 +9,10 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.43.3] — 2026-07-23
+
+Targets Portainer 2.43.x.
+
 ### Added
 
 - **Configurable upstream timeout** (`PORTAINER_TIMEOUT`, seconds) —
