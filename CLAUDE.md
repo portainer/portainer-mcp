@@ -53,6 +53,15 @@ Key things to internalise before changing code:
   `_has_select` skip re-wrapping them). After registration, `build_server`
   asserts every tool exposes `select` and raises at startup if any are
   missing — keep that invariant.
+- **The tool catalog has a context budget.** `tool_catalog_chars()` measures
+  the serialized `tools/list` payload; `build_server` logs it at startup and
+  `tests/test_catalog.py` fails the build above `MAX_CATALOG_CHARS`. This is
+  the fixed cost every client pays on every request, so anything repeated
+  per-tool is multiplied by 200+ — `SELECT_DESCRIPTION` is deliberately terse
+  for this reason, with the worked examples living in the hygiene guide and
+  the truncation hint instead. When the budget trips, shrink the catalog
+  (narrower profiles, shorter descriptions); raise the constant only with a
+  note on what grew.
 - **Response cap sits below Claude Code's MCP output cap.** Default
   `PORTAINER_MAX_RESPONSE_CHARS=50_000` is sized so our truncation hint
   (which names `select` with examples) reaches the model before Claude

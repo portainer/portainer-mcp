@@ -62,6 +62,7 @@ import json
 import logging
 import os
 import sys
+from collections.abc import Sequence
 from importlib.resources import files
 from pathlib import Path
 
@@ -162,6 +163,38 @@ def _annotate_read_only(route: HTTPRoute, component: Tool) -> None:
         component.annotations = ToolAnnotations(
             readOnlyHint=route.method.upper() in _READ_ONLY_METHODS
         )
+
+
+def tool_catalog_chars(tools: Sequence[Tool]) -> int:
+    """Serialized size of the tool catalog, in characters.
+
+    This is the fixed context cost every client pays on *every* request,
+    before a single byte of Portainer data is fetched — and the one number
+    that regresses silently: a widened profile, a longer parameter
+    description repeated across 200+ generated tools, or an upstream spec
+    that grew all move it without failing anything. Logged at startup and
+    budgeted in the test suite for that reason.
+
+    Approximates rather than captures the wire payload (field naming and
+    ordering belong to the MCP SDK). It's a budget metric — consistency
+    between runs matters, exactness doesn't. Reported in chars to match
+    PORTAINER_MAX_RESPONSE_CHARS, the server's other size knob.
+    """
+    return sum(
+        len(
+            json.dumps(
+                {
+                    "name": tool.name,
+                    "description": tool.description or "",
+                    "inputSchema": tool.parameters,
+                    "annotations": tool.annotations.model_dump(exclude_none=True)
+                    if tool.annotations
+                    else None,
+                }
+            )
+        )
+        for tool in tools
+    )
 
 
 def _spec_tags(spec: dict) -> set[str]:
@@ -434,7 +467,11 @@ def build_server() -> FastMCP:
             f"SelectArgTransform did not reach {len(missing)} tool(s): "
             f"{missing[:5]}{'...' if len(missing) > 5 else ''}"
         )
-    logger.info("`select` arg present on all %d tools", len(tools))
+    logger.info(
+        "tool catalog: %d tools, `select` on all of them, ~%s chars per tools/list",
+        len(tools),
+        f"{tool_catalog_chars(tools):,}",
+    )
 
     mcp.add_middleware(
         _ContextualStructuredLogging(include_payload_length=True, cache=cache)
