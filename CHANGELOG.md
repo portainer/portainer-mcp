@@ -9,6 +9,31 @@ the MCP server.
 
 ## [Unreleased]
 
+### Added
+
+- **The tool catalog is measured and budgeted.** `tool_catalog_chars()`
+  sizes the serialized `tools/list` payload; `build_server` logs it at
+  startup and `tests/test_catalog.py` fails the build when the default
+  profile set exceeds `MAX_CATALOG_CHARS`. The catalog is the fixed context
+  cost every client pays on *every* request, before a byte of Portainer
+  data is fetched — and the one number that regresses silently when a
+  profile widens, a per-tool description grows, or the upstream spec does.
+
+### Changed
+
+- **`select`'s parameter description trimmed — the tool catalog shrinks
+  by 21%.** The description is repeated verbatim on all 205 generated
+  tools, so its length is multiplied across the whole payload: at 337
+  chars it was 69,085 chars, 27% of the entire `tools/list` response. Now
+  73 chars, taking the default catalog from 259,156 to 205,036 chars
+  (roughly 13–22k tokens saved per request). The worked examples,
+  non-JSON caveats and per-tool field names already live in the hygiene
+  guide that the guidance gate delivers before the first tool call, and
+  the truncation hint carries its own examples. The one retained example
+  isn't there to teach JMESPath — it encodes the two facts a model can't
+  infer: the response envelope is already unwrapped (`[]`, not
+  `result[]`), and Portainer fields are PascalCase.
+
 ## [2.43.3] — 2026-07-23
 
 Targets Portainer 2.43.x.

@@ -44,12 +44,17 @@ logger = logging.getLogger("portainer_mcp")
 # PORTAINER_MAX_RESPONSE_CHARS.
 DEFAULT_MAX_RESPONSE_CHARS = 50_000
 
+# Repeated verbatim on every one of the 200+ generated tools, so its length is
+# multiplied across the whole tools/list payload the client pays for on every
+# request. Trim the prose, not the example: models already know JMESPath, but
+# the example is what carries the two server-specific facts they can't infer —
+# that the response envelope is already unwrapped (`[]`, not `result[]`) and
+# that Portainer fields are PascalCase. Everything else — worked examples,
+# non-JSON caveats, per-tool field names — lives in the hygiene guide, which
+# the guidance gate delivers before the first tool call; a model that skipped
+# `select` anyway gets corrected by ResponseCapMiddleware's truncation hint.
 SELECT_DESCRIPTION = (
-    "Optional JMESPath expression to project the response server-side. "
-    "Use it on noisy endpoints to drop fields you don't need — e.g. "
-    "`[].{id:Id,name:Name,type:Type}` for a list of environments, or "
-    "`{kind:Kind,name:metadata.name,phase:status.phase}` for a single K8s object. "
-    "Omit to receive the full response (subject to the global size cap)."
+    "JMESPath projection to shrink the response — e.g. `[].{id:Id,name:Name}`."
 )
 
 
