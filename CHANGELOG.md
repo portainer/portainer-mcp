@@ -9,6 +9,23 @@ the MCP server.
 
 ## [Unreleased]
 
+### Security
+
+- **Dependency bumps clearing all open Dependabot alerts** (15 alerts, 8
+  packages, lockfile-only — no constraint changes): mcp 1.27.1 → 1.28.1
+  (session-to-principal binding, Host/Origin validation on the WebSocket
+  transport, task-handler isolation), starlette 1.2.0 → 1.3.1 (urlencoded
+  form-limit DoS, hostname poisoning), cryptography 48.0.0 → 48.0.1
+  (patched OpenSSL in wheels), python-multipart 0.0.29 → 0.0.31
+  (querystring-parsing DoS, parameter smuggling), pyjwt 2.12.1 → 2.13.0
+  (JWK-as-HMAC-secret confusion), joserfc 1.6.5 → 1.6.8 (empty HMAC key
+  accepted, payload-size-limit bypass), pydantic-settings 2.14.1 → 2.14.2
+  (secrets_dir symlink traversal), setuptools 82.0.1 → 83.0.0 (MANIFEST.in
+  exclusion bypass). Combines Dependabot PRs #83–#90 into one lockfile
+  update; the mcp SDK's new session binding is behaviourally inert here
+  (the verifiers report a constant principal), and its WebSocket /
+  experimental-tasks deprecations touch nothing this server uses.
+
 ## [2.43.3] — 2026-07-23
 
 Targets Portainer 2.43.x.
