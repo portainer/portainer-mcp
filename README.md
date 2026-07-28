@@ -1,5 +1,7 @@
 # Portainer MCP
 
+[![MCP Toplist](https://mcptoplist.com/badge/glama%2Fportainer%2Fportainer-mcp.svg)](https://mcptoplist.com/server/glama%2Fportainer%2Fportainer-mcp)
+
 Official MCP server for Portainer, generated from the Portainer OpenAPI spec via [FastMCP](https://github.com/PrefectHQ/fastmcp).
 
 ## Overview
