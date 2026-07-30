@@ -6,7 +6,7 @@ Official MCP server for Portainer, generated from the Portainer OpenAPI spec via
 
 This MCP server exposes the Portainer REST API as MCP tools: list and inspect environments, manage GitOps workflows, troubleshoot Docker and Kubernetes resources. It also supports proxying requests to the underlying Docker and K8s APIs of each environment.
 
-Match the MCP server's minor version to your Portainer instance's minor — e.g. MCP server 2.43.x with Portainer 2.43.x. See [Version compatibility](#version-compatibility) for details.
+Match the MCP server's minor version to your Portainer instance's minor — e.g. MCP server 2.44.x with Portainer 2.44.x. See [Version compatibility](#version-compatibility) for details.
 
 ## Getting started
 
@@ -44,7 +44,7 @@ Register with Claude Code:
 claude mcp add portainer \
   -e PORTAINER_URL=https://portainer.example.com \
   -e PORTAINER_API_KEY=ptr_xxxxxxxxxxxxxxxx \
-  -- uvx --from "mcp-portainer~=2.43.0" mcp-portainer
+  -- uvx --from "mcp-portainer~=2.44.0" mcp-portainer
 ````
 
 For other clients, see
@@ -82,7 +82,7 @@ docker run -d --name portainer-mcp -p 17717:17717 \
 	-e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com:17717 \
 	-e PORTAINER_MCP_TLS_CERT=/tls/cert.pem \
 	-e PORTAINER_MCP_TLS_KEY=/tls/key.pem \
-	portainer/portainer-mcp:2.43
+	portainer/portainer-mcp:2.44
 ````
 
 Then connect your client:
@@ -112,7 +112,7 @@ docker run -d --name portainer-mcp \
 	-e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com \
 	-e PORTAINER_MCP_TRUST_PROXY_TLS=1 \
 	-e PORTAINER_MCP_FORWARDED_ALLOW_IPS=172.18.0.0/16 \
-	portainer/portainer-mcp:2.43
+	portainer/portainer-mcp:2.44
 ````
 
 Then connect your client:
@@ -137,7 +137,7 @@ docker run -d --name portainer-mcp -p 17717:17717 \
 	-e PORTAINER_MCP_AUTH_TOKEN="$TOKEN" \
 	-e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com:17717 \
 	-e PORTAINER_MCP_DANGEROUSLY_ALLOW_PLAINTEXT_HTTP=1 \
-	portainer/portainer-mcp:2.43
+	portainer/portainer-mcp:2.44
 ````
 
 Then connect your client:
@@ -164,7 +164,7 @@ docker run -d --name portainer-mcp \
 	-e PORTAINER_MCP_ALLOWED_HOSTS=mcp.example.com \
 	-e PORTAINER_MCP_TRUST_PROXY_TLS=1 \
 	-e PORTAINER_MCP_FORWARDED_ALLOW_IPS=172.18.0.0/16 \
-	portainer/portainer-mcp:2.43
+	portainer/portainer-mcp:2.44
 ````
 
 No gate token is configured: the request is admitted by proxy attestation (it must arrive from `PORTAINER_MCP_FORWARDED_ALLOW_IPS` — inherited as the trust boundary, `*` refuses to boot) and by the caller's validated Portainer key. If the MCP server terminates TLS itself instead of the proxy, set `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS=<proxy ip/cidr>` in place of the two `TRUST_PROXY_TLS`/`FORWARDED_ALLOW_IPS` lines. See [`docs/configuration.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/configuration.md#auth-posture-identity-aware-proxies) for the full posture rules.
@@ -186,6 +186,7 @@ For restricting or expanding this set of capabilities, see [`docs/profiles.md`](
 
 | Server version | Portainer (CE / EE) |
 | -------------- | ------------------- |
+| `2.44.x`       | `2.44.x`            |
 | `2.43.x`       | `2.43.x`            |
 | `2.42.x`       | `2.42.x`            |
 | `2.41.x`       | `2.41.x`            |
