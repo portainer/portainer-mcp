@@ -40,12 +40,12 @@ when you need them, or switch to `ALL`:
 
 | Count | Tag | Notes |
 |---:|---|---|
-| 15 | `observability` | Container/pod logs, metrics, stats. |
+| 18 | `observability` | Container/pod logs, metrics, stats. |
 | 13 | `omni` | Talos Kubernetes cluster management. |
+| 11 | `cloud_credentials` | Cloud provider credentials. |
 | 10 | `custom_templates` | User-defined app templates. |
-| 6 | `cloud_credentials` | Cloud provider credentials. |
 | 6 | `webhooks` | Webhook management. |
-| 4 | `kaas` | Kubernetes-as-a-Service provisioning. |
+| 5 | `addons` | Cluster addon management (new in Portainer 2.44). |
 | 4 | `useractivity` | Audit log. |
 | 3 | `support` | Support bundles / diagnostics. |
 | 2 | `allowlist` | URL allow list. |
@@ -53,6 +53,7 @@ when you need them, or switch to `ALL`:
 | 2 | `ssl` | Server TLS certificates. |
 | 2 | `templates` | App template library. |
 | 1 | `auto_updates` | Auto-update configuration. |
+| 1 | `kaas` | Kubernetes-as-a-Service provisioning. |
 | 1 | `upload` | File upload endpoint. |
 
 ## Examples

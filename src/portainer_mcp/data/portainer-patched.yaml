@@ -34,8 +34,241 @@ info:
     \ repository was created.\n\nExample encoded value:\n\n```\neyJyZWdpc3RyeUlkIjoxfQ==\n\
     ```\n"
   title: PortainerEE API
-  version: 2.43.0
+  version: 2.44.0
 paths:
+  /addons:
+    get:
+      description: 'List the addons the calling user may open. Administrators receive
+
+        every catalog addon together with its persisted record (enabled
+
+        state, chart version and access policies); other users receive
+
+        only the addons the gateway would let them access, without the
+
+        record.
+
+        Pass view=switcher for the lightweight app-switcher listing: only
+
+        the installed, enabled addons the caller may launch, without the
+
+        record, available versions or health probe.
+
+        **Access policy**: authenticated'
+      operationId: AddonList
+      parameters:
+      - description: Response view. 'switcher' returns the lightweight app-switcher
+          listing.
+        in: query
+        name: view
+        schema:
+          type: string
+          enum:
+          - switcher
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addons.addonListResponse'
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: List addons
+      tags:
+      - addons
+  /addons/{id}:
+    delete:
+      description: 'Uninstall an addon''s Helm release from the local Kubernetes
+
+        environment. The addon record is returned in the uninstalling
+
+        state; the uninstall runs in the background and the record is
+
+        removed once it completes. Uninstalling an addon that is not
+
+        installed is a no-op. An in-flight install or upgrade can be
+
+        uninstalled; only an uninstall already in progress is rejected
+
+        with 409 unless force=true is set, which is the recovery path for
+
+        an addon stuck by a restart.
+
+        **Access policy**: administrator'
+      operationId: AddonUninstall
+      parameters:
+      - description: Addon identifier (e.g. portal-template)
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      - description: Uninstall even while an operation is in progress (recovery)
+        in: query
+        name: force
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Uninstall accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addons.addonLifecycleResponse'
+        '204':
+          description: Addon is not installed; nothing to do
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Addon not found in the addon catalog
+        '409':
+          description: An uninstall for this addon is already in progress
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Uninstall an addon
+      tags:
+      - addons
+    get:
+      description: 'Retrieve a single addon the calling user may open. Administrators
+
+        receive the catalog metadata together with the persisted record
+
+        (enabled state, chart version and access policies); other users
+
+        receive only the catalog metadata, and a 404 if the gateway
+
+        would not let them access the addon.
+
+        **Access policy**: authenticated'
+      operationId: AddonDetail
+      parameters:
+      - description: Addon identifier (e.g. portal-template)
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addons.addonListItem'
+        '404':
+          description: Addon not found, or not accessible to the calling user
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Inspect an addon
+      tags:
+      - addons
+    post:
+      description: 'Install a catalog addon as a Helm release on the local Kubernetes
+
+        environment, or upgrade it when already installed. The addon record
+
+        is returned immediately in the installing state for a fresh install
+
+        or the upgrading state for an already-installed addon; the operation
+
+        runs in the background and its progress is reflected in the record''s status.
+
+        **Access policy**: administrator'
+      operationId: AddonInstall
+      parameters:
+      - description: Addon identifier (e.g. portal-template)
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addons.installPayload'
+        description: Install options
+      responses:
+        '200':
+          description: Upgrade of an already-installed addon accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addons.addonLifecycleResponse'
+        '201':
+          description: Install accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addons.addonLifecycleResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Addon not found in the addon catalog
+        '409':
+          description: An operation for this add-on is already in progress
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Install or upgrade an addon
+      tags:
+      - addons
+  /addons/{id}/access:
+    put:
+      description: 'Enable or disable an addon and configure which users and teams
+        may access it.
+
+        **Access policy**: administrator'
+      operationId: AddonAccessUpdate
+      parameters:
+      - description: Addon identifier (e.g. portal-template)
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addons.addonAccessUpdatePayload'
+        description: Addon access configuration
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addons.addonAccessResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: Addon not found in the addon catalog
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Update an addon's access configuration
+      tags:
+      - addons
   /allowlist/{id}:
     get:
       description: 'Retrieve the list of allowed URLs for outbound proxy requests.
@@ -578,70 +811,6 @@ paths:
       summary: Fetch the status of the last scheduled backup run
       tags:
       - backup
-  /cloud/amazon/provision:
-    post:
-      description: 'Provision a new KaaS cluster and create an environment.
-
-        **Access policy**: administrator'
-      operationId: provisionClusterAmazon
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/providers.AmazonProvisionPayload'
-        description: KaaS cluster provisioning details
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/portaineree.Endpoint'
-        '400':
-          description: Invalid request
-        '500':
-          description: Server error
-        '503':
-          description: Missing configuration
-      security:
-      - ApiKeyAuth: []
-      - jwt: []
-      summary: Provision a new Amazon EKS and create an environment
-      tags:
-      - kaas
-  /cloud/azure/provision:
-    post:
-      description: 'Provision a new KaaS cluster and create an environment.
-
-        **Access policy**: administrator'
-      operationId: provisionClusterAzure
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/providers.AzureProvisionPayload'
-        description: KaaS cluster provisioning details
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/portaineree.Endpoint'
-        '400':
-          description: Invalid request
-        '500':
-          description: Server error
-        '503':
-          description: Missing configuration
-      security:
-      - ApiKeyAuth: []
-      - jwt: []
-      summary: Provision a new Microsoft Azure cluster and create an environment
-      tags:
-      - kaas
   /cloud/credentials:
     get:
       description: 'getAll cloud credential
@@ -811,38 +980,141 @@ paths:
       summary: Upgrade the cluster to the next stable kubernetes version.
       tags:
       - kaas
-  /cloud/gke/provision:
-    post:
-      description: 'Provision a new KaaS cluster and create an environment.
+  /cloud/gitcredentials:
+    get:
+      description: 'Get shared git credentials
 
-        **Access policy**: administrator'
-      operationId: provisionClusterGKE
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/providers.GKEProvisionPayload'
-        description: KaaS cluster provisioning details
-        required: true
+        **Access policy**: authenticated'
+      operationId: SharedGitGetAll
       responses:
         '200':
           description: Success
           content:
-            application/json:
+            '*/*':
               schema:
-                $ref: '#/components/schemas/portaineree.Endpoint'
-        '400':
-          description: Invalid request
+                items:
+                  $ref: '#/components/schemas/git.shadowedGitCredential'
+                type: array
+        '401':
+          description: Unauthorized
         '500':
           description: Server error
-        '503':
-          description: Missing configuration
       security:
       - ApiKeyAuth: []
-      - jwt: []
-      summary: Provision a new Google Kubernetes (GKE) cluster and create an environment
+        jwt: []
+      summary: Get Shared Git Credentials
       tags:
-      - kaas
+      - cloud_credentials
+    post:
+      description: 'Create a shared git credential
+
+        **Access policy**: Administrator only.'
+      operationId: SharedGitCreate
+      responses:
+        '201':
+          description: Success
+        '400':
+          description: Invalid request payload
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Create Shared Git Credential
+      tags:
+      - cloud_credentials
+  /cloud/gitcredentials/{id}:
+    delete:
+      description: 'Delete a shared git credential
+
+        **Access policy**: Administrator only.'
+      operationId: SharedGitDelete
+      parameters:
+      - description: Git credential identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request payload
+        '401':
+          description: Unauthorized
+        '403':
+          description: Permission denied
+        '409':
+          description: The credential is used by one or more GitOps sources
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Delete Shared Git Credential
+      tags:
+      - cloud_credentials
+    get:
+      description: 'Get a shared git credential
+
+        **Access policy**: authenticated'
+      operationId: SharedGitGet
+      parameters:
+      - description: Git credential identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid request payload
+        '401':
+          description: Unauthorized
+        '403':
+          description: Permission denied
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get a Shared Git Credential
+      tags:
+      - cloud_credentials
+    put:
+      description: 'Update a shared git credential
+
+        **Access policy**: Administrator only.'
+      operationId: SharedGitUpdate
+      parameters:
+      - description: Git credential identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid request payload
+        '401':
+          description: Unauthorized
+        '403':
+          description: Permission denied
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Update a Shared Git Credential
+      tags:
+      - cloud_credentials
   /custom_templates:
     get:
       description: 'List available custom templates.
@@ -4763,14 +5035,17 @@ paths:
         '204':
           description: Success - Access permissions were successfully updated
         '400':
-          description: Invalid request payload, such as missing required fields or
-            fields not meeting validation criteria.
+          description: Invalid request payload (such as missing required fields or
+            fields not meeting validation criteria).
         '403':
           description: Permission denied - the user is authenticated but does not
             have the necessary permissions to access the requested resource or perform
             the specified operation. Check your user roles and permissions.
         '404':
           description: Unable to find an environment with the specified identifier.
+        '409':
+          description: Namespace access is managed by an applied RBAC policy and cannot
+            be updated manually.
         '500':
           description: Server error occurred while attempting to update namespace
             access permissions.
@@ -5313,6 +5588,15 @@ paths:
           - git
           - helm
           - oci
+      - description: Filter by source IDs
+        in: query
+        name: ids
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: integer
       responses:
         '200':
           description: OK
@@ -5369,7 +5653,7 @@ paths:
       - gitops
     get:
       description: 'Returns a single GitOps source with its connection settings and
-        linked workflows.
+        access rules.
 
         **Access policy**: authenticated'
       operationId: GitOpsSourceGet
@@ -5526,6 +5810,43 @@ paths:
       summary: Test the connection of a stored source
       tags:
       - gitops
+  /gitops/sources/{id}/workflows:
+    get:
+      description: 'Returns the workflows (stacks or edge stacks) currently deployed
+        from this source.
+
+        **Access policy**: authenticated'
+      operationId: GitOpsSourceWorkflowsList
+      parameters:
+      - description: Source identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/sources.Workflow'
+                type: array
+        '400':
+          description: Invalid request
+        '403':
+          description: Access denied
+        '404':
+          description: Source not found
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: List the workflows using a GitOps source
+      tags:
+      - gitops
   /gitops/sources/git:
     post:
       description: 'Creates a new GitOps source backed by a Git repository.
@@ -5618,28 +5939,35 @@ paths:
       - gitops
   /gitops/workflows:
     get:
-      description: 'Returns a unified list of all stacks and edge stacks that have
-        GitOps (GitConfig) configured.
+      description: 'Returns a list of GitOps workflows, each with its aggregated status
+        and the artifacts it contains.
 
         **Access policy**: authenticated'
       operationId: GitOpsWorkflowsList
       parameters:
-      - description: Search term (matches name or repository URL)
+      - description: Search term (matches workflow name)
         in: query
         name: search
         schema:
           type: string
-      - description: 'Sort field: name | type | status | platform | creationDate |
-          lastSyncDate'
+      - description: Sort field
         in: query
         name: sort
         schema:
           type: string
-      - description: 'Sort order: asc or desc'
+          enum:
+          - name
+          - status
+          - creationDate
+          - lastSyncDate
+      - description: Sort order
         in: query
         name: order
         schema:
           type: string
+          enum:
+          - asc
+          - desc
       - description: Pagination start index
         in: query
         name: start
@@ -5659,21 +5987,34 @@ paths:
           type: array
           items:
             type: integer
-      - description: 'Filter by status: healthy | syncing | error | paused | unknown'
+      - description: Filter by status
         in: query
         name: status
         schema:
           type: string
-      - description: 'Filter by type: stack | edgeStack'
+          enum:
+          - healthy
+          - syncing
+          - error
+          - paused
+          - unknown
+      - description: Keep workflows that have at least one artifact of this type
         in: query
         name: type
         schema:
           type: string
-      - description: 'Filter by platform: dockerStandalone | dockerSwarm | kubernetes'
+          enum:
+          - stack
+          - edgeStack
+      - description: Keep workflows that have at least one artifact on this platform
         in: query
         name: platform
         schema:
           type: string
+          enum:
+          - dockerStandalone
+          - dockerSwarm
+          - kubernetes
       responses:
         '200':
           description: OK
@@ -5683,12 +6024,142 @@ paths:
                 items:
                   $ref: '#/components/schemas/workflows.Workflow'
                 type: array
+        '400':
+          description: Invalid request
         '500':
           description: Server error
       security:
       - ApiKeyAuth: []
       - jwt: []
       summary: List all GitOps workflows
+      tags:
+      - gitops
+    post:
+      description: 'Create a new workflow.
+
+        **Access policy**: administrator'
+      operationId: WorkflowCreate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/workflows.createPayload'
+        description: Workflow details
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/portainer.Workflow'
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Create a new workflow
+      tags:
+      - gitops
+  /gitops/workflows/{id}:
+    get:
+      description: 'Returns the detail view of a single GitOps workflow, with one
+        entry per backing
+
+        stack or edge stack artifact.
+
+        **Access policy**: authenticated'
+      operationId: GitOpsWorkflowGet
+      parameters:
+      - description: Workflow identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workflows.Workflow'
+        '400':
+          description: Invalid request
+        '404':
+          description: Workflow not found
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Get a GitOps workflow by ID
+      tags:
+      - gitops
+  /gitops/workflows/{id}/destroy:
+    delete:
+      description: 'Tears down each of the workflow''s artifacts then deletes the
+        workflow record.
+
+        **Access policy**: authenticated'
+      operationId: GitOpsWorkflowDestroy
+      parameters:
+      - description: Workflow identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request
+        '403':
+          description: Permission denied
+        '404':
+          description: Workflow not found
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Destroy a GitOps workflow
+      tags:
+      - gitops
+  /gitops/workflows/{id}/detach:
+    delete:
+      description: 'Removes the workflow but leaves its deployed stack/edge-stack
+        running,
+
+        unlinked from GitOps.
+
+        **Access policy**: authenticated'
+      operationId: GitOpsWorkflowDetach
+      parameters:
+      - description: Workflow identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid request
+        '403':
+          description: Permission denied
+        '404':
+          description: Workflow not found
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+      - jwt: []
+      summary: Detach a GitOps workflow
       tags:
       - gitops
   /gitops/workflows/summary:
@@ -6799,6 +7270,47 @@ paths:
       summary: Gets kubernetes events
       tags:
       - kubernetes
+  /kubernetes/{id}/gpu:
+    get:
+      description: 'Returns GPU resource summary, per-node GPU details, and GPU-requesting
+        workloads.
+
+        **Access policy**: authenticated'
+      operationId: GetKubernetesGPUInfo
+      parameters:
+      - description: Environment(Endpoint) identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.K8sGPUInfo'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized access - the user is not authenticated or does
+            not have the necessary permissions. Ensure that you have provided a valid
+            API key or JWT token, and that you have the required permissions.
+        '403':
+          description: Permission denied - the user is authenticated but does not
+            have the necessary permissions to access the requested resource or perform
+            the specified operation. Check your user roles and permissions.
+        '404':
+          description: Unable to find an environment with the specified identifier.
+        '500':
+          description: Server error occurred while attempting to retrieve GPU information.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Get GPU visibility information for a Kubernetes cluster.
+      tags:
+      - kubernetes
   /kubernetes/{id}/ingresscontrollers:
     get:
       description: 'Get a list of ingress controllers for the given environment. If
@@ -7373,7 +7885,7 @@ paths:
       - kubernetes
   /kubernetes/{id}/namespaces:
     delete:
-      description: 'Delete a kubernetes namespace within the given environment.
+      description: 'Delete one or more kubernetes namespaces within the given environment.
 
         **Access policy**: Authenticated user.'
       operationId: DeleteKubernetesNamespace
@@ -7384,6 +7896,15 @@ paths:
         required: true
         schema:
           type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                type: string
+              type: array
+        description: List of namespace names to delete
+        required: true
       responses:
         '200':
           description: Success
@@ -7401,7 +7922,7 @@ paths:
       security:
       - ApiKeyAuth: []
         jwt: []
-      summary: Delete a kubernetes namespace
+      summary: Delete kubernetes namespaces
       tags:
       - kubernetes
     get:
@@ -7423,14 +7944,12 @@ paths:
           of the Namespace information. Default is false
         in: query
         name: withResourceQuota
-        required: true
         schema:
           type: boolean
       - description: When set to true, include the unhealthy events information as
           part of the Namespace information. Default is false
         in: query
         name: withUnhealthyEvents
-        required: true
         schema:
           type: boolean
       responses:
@@ -7489,7 +8008,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/portainer.K8sNamespaceInfo'
+                $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_http_handler_kubernetes.KubernetesCreateNamespaceResponse'
         '400':
           description: Invalid request payload, such as missing required fields or
             fields not meeting validation criteria.
@@ -7535,7 +8054,6 @@ paths:
           of the Namespace information. Default is false
         in: query
         name: withResourceQuota
-        required: true
         schema:
           type: boolean
       responses:
@@ -10899,6 +11417,225 @@ paths:
       summary: Delete an alert silence
       tags:
       - observability
+  /observability/environments/{id}:
+    get:
+      description: 'Report whether observability is enabled for the environment, which
+        provider serves it, and the non-secret connection details.
+
+        **Access policy**: authenticated'
+      operationId: EnvironmentObservabilityDiscovery
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/observability.environmentObservabilityResponse'
+        '400':
+          description: Invalid request
+        '403':
+          description: Permission denied
+        '404':
+          description: Environment not found
+        '500':
+          description: Server error
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Discover the observability provider for an environment
+      tags:
+      - observability
+  /observability/environments/{id}/logs:
+    get:
+      description: 'Returns a normalized log stream from the environment''s observability
+
+        provider (OneUptime), scoped to an optional namespace and optionally a workload
+
+        or pod, over a time range. When namespace is omitted, cluster-wide logs are
+
+        returned; this requires admin, edge-admin, or cluster-wide namespace access.
+
+        **Access policy**: authenticated'
+      operationId: ObservabilityEnvironmentLogs
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: Namespace to scope logs to; omit for cluster-wide logs
+        in: query
+        name: namespace
+        schema:
+          type: string
+      - description: Workload kind (Deployment, StatefulSet, DaemonSet, Pod)
+        in: query
+        name: kind
+        schema:
+          type: string
+      - description: Workload or pod name
+        in: query
+        name: name
+        schema:
+          type: string
+      - description: Free-text search over the log message
+        in: query
+        name: search
+        schema:
+          type: string
+      - description: Severity filter (repeatable); trace, debug, info, warn, error,
+          or fatal. Multiple values must form a contiguous range
+        in: query
+        name: severity
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      - description: Range start (Unix seconds or RFC3339)
+        in: query
+        name: from
+        required: true
+        schema:
+          type: string
+      - description: Range end (Unix seconds or RFC3339). The range from-to must not
+          exceed 31 days
+        in: query
+        name: to
+        required: true
+        schema:
+          type: string
+      - description: Number of entries to skip (paging)
+        in: query
+        name: skip
+        schema:
+          type: integer
+      - description: Maximum number of entries to return
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/observability.logsResponse'
+        '400':
+          description: Invalid request
+        '403':
+          description: Permission denied
+        '404':
+          description: Environment not found
+        '500':
+          description: Server error
+        '503':
+          description: Observability not enabled for this environment
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Query resource-scoped logs for an environment
+      tags:
+      - observability
+  /observability/environments/{id}/metrics:
+    get:
+      description: 'Returns aggregated metrics from the environment''s observability
+
+        provider (OneUptime), scoped to a namespace and optionally a workload
+
+        or pod, over a time range.
+
+        **Access policy**: authenticated'
+      operationId: ObservabilityEnvironmentMetrics
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: Namespace. Omit to aggregate across every namespace; mutually
+          exclusive with groupBy
+        in: query
+        name: namespace
+        schema:
+          type: string
+      - description: 'Group by: namespace (returns one series per namespace, mutually
+          exclusive with namespace)'
+        in: query
+        name: groupBy
+        schema:
+          type: string
+      - description: Workload kind (Deployment, StatefulSet, DaemonSet, Pod)
+        in: query
+        name: kind
+        schema:
+          type: string
+      - description: Workload or pod name
+        in: query
+        name: name
+        schema:
+          type: string
+      - description: 'Metric name: cpu | memory | filesystem | network_rx | network_tx
+          | heartbeat'
+        in: query
+        name: metric
+        required: true
+        schema:
+          type: string
+      - description: 'Aggregation type: Avg | Max | Min | Sum | Count | P50 | P90
+          | P95 | P99'
+        in: query
+        name: aggregation
+        required: true
+        schema:
+          type: string
+      - description: Range start (Unix seconds or RFC3339)
+        in: query
+        name: from
+        required: true
+        schema:
+          type: string
+      - description: Range end (Unix seconds or RFC3339). The range from-to must not
+          exceed 31 days
+        in: query
+        name: to
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oneuptime.MetricsAggregateResponse'
+        '400':
+          description: Invalid request
+        '403':
+          description: Permission denied
+        '404':
+          description: Environment not found
+        '500':
+          description: Server error
+        '503':
+          description: Observability not enabled for this environment
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Query resource-scoped metrics for an environment
+      tags:
+      - observability
   /omni/{credentialID}/cluster/{name}:
     get:
       description: 'Retrieve details of an Omni cluster by name.
@@ -11590,6 +12327,8 @@ paths:
                 $ref: '#/components/schemas/policies.testObservabilityConnectionResponse'
         '400':
           description: Invalid payload
+        '404':
+          description: Policy not found
         '500':
           description: Server error
       summary: Test OneUptime connection
@@ -13143,7 +13882,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/portaineree.Stack'
+                $ref: '#/components/schemas/stacks.createKubernetesStackResponse'
         '400':
           description: Invalid request
         '409':
@@ -13184,7 +13923,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/portaineree.Stack'
+                $ref: '#/components/schemas/stacks.createKubernetesStackResponse'
         '400':
           description: Invalid request
         '500':
@@ -13223,7 +13962,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/portaineree.Stack'
+                $ref: '#/components/schemas/stacks.createKubernetesStackResponse'
         '400':
           description: Invalid request
         '500':
@@ -13872,9 +14611,9 @@ paths:
   /team_memberships:
     get:
       description: 'List team memberships. Access is only available to administrators
-        and team leaders.
+        and team leaders. Team leaders only see memberships of teams they lead.
 
-        **Access policy**: administrator'
+        **Access policy**: administrator or team leader'
       operationId: TeamMembershipList
       responses:
         '200':
@@ -13899,9 +14638,9 @@ paths:
       - team_memberships
     post:
       description: 'Create a new team memberships. Access is only available to administrators
-        leaders of the associated team.
+        or leaders of the associated team.
 
-        **Access policy**: administrator'
+        **Access policy**: administrator or leaders of the associated team'
       operationId: TeamMembershipCreate
       requestBody:
         content:
@@ -13934,9 +14673,9 @@ paths:
   /team_memberships/{id}:
     delete:
       description: 'Remove a team membership. Access is only available to administrators
-        leaders of the associated team.
+        or leaders of the associated team.
 
-        **Access policy**: administrator'
+        **Access policy**: administrator or leaders of the associated team'
       operationId: TeamMembershipDelete
       parameters:
       - description: TeamMembership identifier
@@ -14310,7 +15049,9 @@ paths:
     get:
       description: '**Access policy**: authenticated
 
-        Either `repo` or `registryId` parameter is required (but not both)'
+        Either `repo` or `registryId` parameter is required (but not both),
+
+        unless `chart` is a self-contained "oci://host/path" reference.'
       operationId: HelmShow
       parameters:
       - description: Helm repository URL (required if registryId not provided)
@@ -15316,7 +16057,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/portaineree.User'
+                $ref: '#/components/schemas/users.CurrentUserInspectResponse'
         '400':
           description: Invalid request
         '403':
@@ -15718,6 +16459,9 @@ tags:
 - description: View and update SSL settings
   name: ssl
   x-displayName: SSL
+- description: Manage addons
+  name: addons
+  x-displayName: Addons
 x-tagGroups:
 - name: Access Control
   tags:
@@ -15731,6 +16475,7 @@ x-tagGroups:
   - users
 - name: Administration
   tags:
+  - addons
   - auto_updates
   - backup
   - ldap
@@ -15850,6 +16595,230 @@ components:
       name: Authorization
       type: apiKey
   schemas:
+    addon.HealthStatus:
+      enum:
+      - unknown
+      - healthy
+      - unhealthy
+      type: string
+      x-enum-varnames:
+      - AddonHealthUnknown
+      - AddonHealthHealthy
+      - AddonHealthUnhealthy
+    addon.LifecycleStatus:
+      enum:
+      - installing
+      - upgrading
+      - installed
+      - failed
+      - unknown
+      - uninstalling
+      type: string
+      x-enum-varnames:
+      - AddonStatusInstalling
+      - AddonStatusUpgrading
+      - AddonStatusInstalled
+      - AddonStatusFailed
+      - AddonStatusUnknown
+      - AddonStatusUninstalling
+    addons.addonAccessResponse:
+      properties:
+        enabled:
+          type: boolean
+        id:
+          type: string
+        teamAccessPolicies:
+          $ref: '#/components/schemas/portainer.TeamAccessPolicies'
+        userAccessPolicies:
+          $ref: '#/components/schemas/portainer.UserAccessPolicies'
+      type: object
+    addons.addonAccessUpdatePayload:
+      properties:
+        enabled:
+          description: Enable or disable the addon; omit to leave the stored value
+            unchanged
+          example: true
+          type: boolean
+        teamAccessPolicies:
+          allOf:
+          - $ref: '#/components/schemas/portainer.TeamAccessPolicies'
+          description: 'Teams granted access to the addon; omit to leave the stored
+            policies
+
+            unchanged, send an empty object to revoke all team grants'
+        userAccessPolicies:
+          allOf:
+          - $ref: '#/components/schemas/portainer.UserAccessPolicies'
+          description: 'Users granted access to the addon; omit to leave the stored
+            policies
+
+            unchanged, send an empty object to revoke all user grants'
+      type: object
+    addons.addonLifecycleResponse:
+      properties:
+        chartVersion:
+          type: string
+        enabled:
+          type: boolean
+        id:
+          type: string
+        lifecycleStatus:
+          $ref: '#/components/schemas/addon.LifecycleStatus'
+        lifecycleStatusMessage:
+          type: string
+      type: object
+    addons.addonListItem:
+      properties:
+        description:
+          type: string
+        displayName:
+          type: string
+        enabled:
+          description: Enabled reports whether the addon is enabled (installed and
+            switched on).
+          type: boolean
+        healthMessage:
+          description: 'HealthMessage explains an "unhealthy" result (the HTTP status
+            the probe
+
+            got, or why the endpoint could not be reached). Empty otherwise.'
+          type: string
+        healthStatus:
+          allOf:
+          - $ref: '#/components/schemas/addon.HealthStatus'
+          description: 'HealthStatus is whether the running addon is actually working,
+            observed
+
+            live from an HTTP probe of the addon''s service each time this endpoint
+            is
+
+            called (never persisted). It is orthogonal to LifecycleStatus: an addon
+
+            can be "installed" yet unhealthy, or "upgrading" while still serving the
+
+            previous version. "unknown" means an operation is in progress so the addon
+
+            is not probed; the field is empty for an addon with no live release. Like
+
+            LifecycleStatus, it is visible to every user who can see the addon.'
+        icon:
+          type: string
+        id:
+          example: portal-template
+          type: string
+        lifecycleStatus:
+          allOf:
+          - $ref: '#/components/schemas/addon.LifecycleStatus'
+          description: 'LifecycleStatus is the addon''s Helm release lifecycle state:
+            installing,
+
+            upgrading, installed, failed or uninstalling. It reports what Portainer''s
+
+            install/upgrade/uninstall operations have done, and is visible to every
+
+            user who can see the addon (not just admins, unlike Record). It is empty
+
+            when the addon has no record, i.e. it was never installed.
+
+
+            It is NOT a health status. Whether the running addon actually works (pods
+
+            ready, endpoint responding) is a separate field added later, because the
+
+            two are independent: an addon can be "installed" but unhealthy, or
+
+            "upgrading" while still serving healthy traffic on the previous version.'
+        lifecycleStatusMessage:
+          description: 'LifecycleStatusMessage explains a failure: why a fresh install
+            failed, or
+
+            (when LifecycleStatus is "installed") that the last upgrade failed and
+            was
+
+            rolled back to the version still running. Empty on a clean install/upgrade.'
+          type: string
+        path:
+          type: string
+        record:
+          allOf:
+          - $ref: '#/components/schemas/addons.addonRecord'
+          description: 'Record is admin-only: absent from the JSON response for non-admin
+            users.'
+        shortDescription:
+          description: 'ShortDescription is a one-line tagline for space-constrained
+            UI (the app
+
+            switcher); Description is the full summary shown in management views.'
+          type: string
+      type: object
+    addons.addonListResponse:
+      properties:
+        addons:
+          items:
+            $ref: '#/components/schemas/addons.addonListItem'
+          type: array
+      type: object
+    addons.addonRecord:
+      properties:
+        availableVersions:
+          description: 'AvailableVersions lists the stable chart versions published
+            for the addon,
+
+            ordered latest-first (the head is the newest). Empty (and omitted) when
+            the
+
+            lookup could not run; see VersionCheckError.'
+          items:
+            type: string
+          type: array
+        chartVersion:
+          description: 'ChartVersion is the currently installed chart version, from
+            the persisted
+
+            record (kept current by the install/upgrade lifecycle).'
+          type: string
+        helmChartRepository:
+          description: 'HelmChartRepository is the catalog''s OCI chart reference.
+            The install
+
+            wizard shows it as the chart source and uses it to fetch the chart''s
+
+            default values through the generic Helm API (GET /templates/helm/values).'
+          example: oci://ghcr.io/portainer/charts/portal-template
+          type: string
+        teamAccessPolicies:
+          $ref: '#/components/schemas/portainer.TeamAccessPolicies'
+        upgradeAvailable:
+          description: 'UpgradeAvailable is true when a version newer than the installed
+            ChartVersion
+
+            is available.'
+          type: boolean
+        userAccessPolicies:
+          $ref: '#/components/schemas/portainer.UserAccessPolicies'
+        versionCheckError:
+          description: 'VersionCheckError explains why available-version information
+            is absent, so a
+
+            degraded lookup (e.g. the registry is unreachable, or external requests
+            are
+
+            disabled) is surfaced rather than silently reported as "no upgrade".'
+          type: string
+      type: object
+    addons.installPayload:
+      properties:
+        values:
+          additionalProperties: {}
+          description: Helm value overrides merged over the server-side per-addon
+            defaults.
+          type: object
+        version:
+          description: Chart version to install; omit to resolve the latest published
+            version.
+          example: 1.2.3
+          type: string
+      type: object
     allowlist.allowListUpdatePayload:
       properties:
         Entries:
@@ -17727,6 +18696,31 @@ components:
         Permissions:
           type: integer
       type: object
+    git.shadowedGitCredential:
+      properties:
+        authorizationType:
+          allOf:
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
+          description: Shadow to include the AuthType even if it's empty
+          example: 0
+        creationDate:
+          example: 1587399600
+          type: integer
+        id:
+          example: 1
+          type: integer
+        name:
+          type: string
+        password:
+          type: string
+        provider:
+          allOf:
+          - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
+          description: Shadow to include Provider even if it's empty
+          example: 0
+        username:
+          type: string
+      type: object
     github_com_portainer_portainer-ee_api_docker_images.Status:
       enum:
       - processing
@@ -17752,11 +18746,14 @@ components:
     github_com_portainer_portainer-ee_api_git_types.GitAuthentication:
       properties:
         AuthorizationType:
+          $ref: '#/components/schemas/gittypes'
+        GitCredentialID:
+          example: 0
           type: integer
         Password:
           type: string
         Provider:
-          type: integer
+          $ref: '#/components/schemas/gittypes'
         Username:
           type: string
       type: object
@@ -18396,6 +19393,11 @@ components:
         CreationDate:
           description: StatusArray    map[EndpointID][]EdgeStackStatus `json:"StatusArray"`
           type: integer
+        CurrentDeploymentInfo:
+          allOf:
+          - $ref: '#/components/schemas/portainer.StackDeploymentInfo'
+          description: CurrentDeploymentInfo records the git repository state at the
+            time of the last actual deployment
         DeployerOptions:
           allOf:
           - $ref: '#/components/schemas/portaineree.EdgeStackDeployerOptions'
@@ -18693,6 +19695,60 @@ components:
         UserAccessPolicies:
           $ref: '#/components/schemas/portainer.UserAccessPolicies'
       type: object
+    github_com_portainer_portainer-ee_api_http_handler_kubernetes.KubernetesCreateNamespaceResponse:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object.
+
+            Servers should convert recognized schemas to the latest internal value,
+            and
+
+            may reject unrecognized values.
+
+            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+
+            +optional'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents.
+
+            Servers may infer this from the endpoint the client submits requests to.
+
+            Cannot be updated.
+
+            In CamelCase.
+
+            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+
+            +optional'
+          type: string
+        metadata:
+          allOf:
+          - $ref: '#/components/schemas/v1.ObjectMeta'
+          description: 'Standard object''s metadata.
+
+            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+
+            +optional'
+        spec:
+          allOf:
+          - $ref: '#/components/schemas/v1.NamespaceSpec'
+          description: 'Spec defines the behavior of the Namespace.
+
+            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+            +optional'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/v1.NamespaceStatus'
+          description: 'Status describes the current status of a Namespace.
+
+            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+            +optional'
+      type: object
     github_com_portainer_portainer-ee_api_http_handler_kubernetes.KubernetesNodeResponse:
       properties:
         apiVersion:
@@ -18825,6 +19881,20 @@ components:
       type: object
     github_com_portainer_portainer-ee_api_http_handler_system.systemInfoResponse:
       properties:
+        addonsAvailable:
+          description: 'AddonsAvailable reports whether the addon lifecycle can be
+            used on this
+
+            deployment. Addons require Portainer itself to be running on Kubernetes
+            and
+
+            are not supported in FIPS mode; this mirrors the gates that govern whether
+
+            the lifecycle routes exist, and lets the UI show a clear message when
+            they
+
+            don''t.'
+          type: boolean
         agents:
           type: integer
         edgeAgents:
@@ -18864,12 +19934,26 @@ components:
     github_com_portainer_portainer_api_git_types.GitAuthentication:
       properties:
         AuthorizationType:
+          $ref: '#/components/schemas/gittypes'
+        GitCredentialID:
+          example: 0
           type: integer
         Password:
           type: string
         Provider:
-          type: integer
+          $ref: '#/components/schemas/gittypes'
         Username:
+          type: string
+      type: object
+    github_com_portainer_portainer_api_git_types.GitSource:
+      properties:
+        Authentication:
+          $ref: '#/components/schemas/github_com_portainer_portainer_api_git_types.GitAuthentication'
+        TLSSkipVerify:
+          example: false
+          type: boolean
+        URL:
+          example: https://github.com/portainer/portainer.git
           type: string
       type: object
     github_com_portainer_portainer_api_git_types.RepoConfig:
@@ -19187,6 +20271,14 @@ components:
           description: 'Deprecated: use SourceID instead'
           type: string
       type: object
+    gittypes:
+      enum:
+      - 0
+      - 1
+      type: integer
+      x-enum-varnames:
+      - GitCredentialAuthType_Basic
+      - GitCredentialAuthType_Token
     helm.gitHelmDryRunPayload:
       properties:
         helmChartPath:
@@ -19303,6 +20395,111 @@ components:
       - ConditionTrue
       - ConditionFalse
       - ConditionUnknown
+    k8s_io_api_core_v1.HTTPHeader:
+      properties:
+        name:
+          description: 'The header field name.
+
+            This will be canonicalized upon output, so case-variant names will be
+            understood as the same header.'
+          type: string
+        value:
+          description: The header field value
+          type: string
+      type: object
+    k8s_io_api_core_v1.LocalObjectReference:
+      properties:
+        name:
+          description: 'Name of the referent.
+
+            This field is effectively required, but due to backwards compatibility
+            is
+
+            allowed to be empty. Instances of this type with an empty value here are
+
+            almost certainly wrong.
+
+            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+
+            +optional
+
+            +default=""
+
+            +kubebuilder:default=""
+
+            TODO: Drop `kubebuilder:default` when controller-gen doesn''t need it
+            https://github.com/kubernetes-sigs/kubebuilder/issues/3896.'
+          type: string
+      type: object
+    k8s_io_api_core_v1.ObjectReference:
+      properties:
+        apiVersion:
+          description: 'API version of the referent.
+
+            +optional'
+          type: string
+        fieldPath:
+          description: 'If referring to a piece of an object instead of an entire
+            object, this string
+
+            should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+
+            For example, if the object reference is to a container within a pod, this
+            would take on a value like:
+
+            "spec.containers{name}" (where "name" refers to the name of the container
+            that triggered
+
+            the event) or if no container name is specified "spec.containers[2]" (container
+            with
+
+            index 2 in this pod). This syntax is chosen only to have some well-defined
+            way of
+
+            referencing a part of an object.
+
+            TODO: this design is not final and this field is subject to change in
+            the future.
+
+            +optional'
+          type: string
+        kind:
+          description: 'Kind of the referent.
+
+            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+
+            +optional'
+          type: string
+        name:
+          description: 'Name of the referent.
+
+            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+
+            +optional'
+          type: string
+        namespace:
+          description: 'Namespace of the referent.
+
+            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+
+            +optional'
+          type: string
+        resourceVersion:
+          description: 'Specific resourceVersion to which this reference is made,
+            if any.
+
+            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+
+            +optional'
+          type: string
+        uid:
+          description: 'UID of the referent.
+
+            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+
+            +optional'
+          type: string
+      type: object
     k8s_io_api_core_v1.ResourceClaim:
       properties:
         name:
@@ -19631,7 +20828,7 @@ components:
         capacity:
           $ref: '#/components/schemas/v1.ResourceList'
         claimRef:
-          $ref: '#/components/schemas/v1.ObjectReference'
+          $ref: '#/components/schemas/k8s_io_api_core_v1.ObjectReference'
         creationDate:
           type: string
         csi:
@@ -19710,7 +20907,7 @@ components:
           type: string
         imagePullSecrets:
           items:
-            $ref: '#/components/schemas/v1.LocalObjectReference'
+            $ref: '#/components/schemas/k8s_io_api_core_v1.LocalObjectReference'
           type: array
         isSystem:
           type: boolean
@@ -20270,6 +21467,101 @@ components:
         volumesCount:
           type: integer
       type: object
+    models.K8sGPUInfo:
+      properties:
+        Nodes:
+          items:
+            $ref: '#/components/schemas/models.K8sGPUNode'
+          type: array
+        Summary:
+          $ref: '#/components/schemas/models.K8sGPUSummary'
+        Workloads:
+          items:
+            $ref: '#/components/schemas/models.K8sGPUWorkload'
+          type: array
+      type: object
+    models.K8sGPUNode:
+      properties:
+        Allocatable:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+        Allocated:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+        Capacity:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+        Name:
+          type: string
+        Status:
+          $ref: '#/components/schemas/models.K8sGPUNodeStatus'
+        StatusReason:
+          type: string
+      type: object
+    models.K8sGPUNodeStatus:
+      enum:
+      - Ready
+      - Degraded
+      - Not Available
+      type: string
+      x-enum-varnames:
+      - K8sGPUNodeStatusReady
+      - K8sGPUNodeStatusDegraded
+      - K8sGPUNodeStatusNotAvailable
+    models.K8sGPUSummary:
+      properties:
+        DegradedCount:
+          type: integer
+        DevicePluginDetected:
+          type: boolean
+        GPUNodeCount:
+          type: integer
+        OperatorDetected:
+          type: boolean
+        TotalAllocatable:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+        TotalAllocated:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+        TotalCapacity:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+      type: object
+    models.K8sGPUWorkload:
+      properties:
+        GPURequests:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+        Namespace:
+          type: string
+        NodeName:
+          type: string
+        OwnerKind:
+          type: string
+        OwnerName:
+          type: string
+        PodName:
+          type: string
+        PodPhase:
+          type: string
+        SchedulingIssue:
+          type: string
+      type: object
     models.K8sIngressController:
       properties:
         Availability:
@@ -20407,7 +21699,7 @@ components:
         capacity:
           $ref: '#/components/schemas/v1.ResourceList'
         claimRef:
-          $ref: '#/components/schemas/v1.ObjectReference'
+          $ref: '#/components/schemas/k8s_io_api_core_v1.ObjectReference'
         creationDate:
           type: string
         csi:
@@ -21084,6 +22376,49 @@ components:
       - alertManagerURL
       - silence
       type: object
+    observability.environmentObservabilityResponse:
+      properties:
+        clusterId:
+          description: 'ClusterID is OneUptime''s internal cluster identifier, used
+            by the
+
+            frontend to build deep links into the OneUptime dashboard. Omitted
+
+            when the cluster could not be resolved.'
+          type: string
+        clusterName:
+          type: string
+        enabled:
+          type: boolean
+        projectId:
+          type: string
+        provider:
+          type: string
+        url:
+          type: string
+      type: object
+    observability.logEntry:
+      properties:
+        labels:
+          additionalProperties:
+            type: string
+          type: object
+        message:
+          type: string
+        severity:
+          type: string
+        source:
+          type: string
+        time:
+          type: string
+      type: object
+    observability.logsResponse:
+      properties:
+        logs:
+          items:
+            $ref: '#/components/schemas/observability.logEntry'
+          type: array
+      type: object
     omni.clusterData:
       properties:
         metadata:
@@ -21340,6 +22675,14 @@ components:
           $ref: '#/components/schemas/portaineree.OmniControlPlane'
         worker:
           $ref: '#/components/schemas/portaineree.OmniWorker'
+      type: object
+    oneuptime.MetricsAggregateResponse:
+      properties:
+        data:
+          items:
+            additionalProperties: {}
+            type: object
+          type: array
       type: object
     platform.ContainerPlatform:
       enum:
@@ -21736,6 +23079,8 @@ components:
           - change-confirmation
           - cleanup-docker
           - observability-k8s
+          - network-security-k8s
+          - pod-security-standards-k8s
         UpdatedAt:
           type: string
       required:
@@ -21788,6 +23133,8 @@ components:
           - change-confirmation
           - cleanup-docker
           - observability-k8s
+          - network-security-k8s
+          - pod-security-standards-k8s
         UpdatedAt:
           type: string
       required:
@@ -21854,6 +23201,8 @@ components:
       - SetupDocker
       - RegistryDocker
       - ObservabilityK8s
+      - PodSecurityStandardsK8s
+      - NetworkSecurityK8s
     policies.conflictInfo:
       properties:
         environmentCount:
@@ -21960,9 +23309,16 @@ components:
       properties:
         apiKey:
           type: string
+        autoProvisionIngestionKey:
+          description: 'AutoProvisionIngestionKey when true additionally checks that
+            the key has
+
+            CreateTelemetryIngestionKey permission required to auto-provision ingestion
+            keys.'
+          type: boolean
         autoRotateKey:
           description: AutoRotateKey when true additionally checks that the key has
-            CreateProjectApiKey permission.
+            rotation permissions.
           type: boolean
         oneUptimeURL:
           type: string
@@ -22070,9 +23426,17 @@ components:
         path:
           example: portainer.yaml
           type: string
+        pathError:
+          type: string
+        pathStatus:
+          $ref: '#/components/schemas/portainer.SourceStatus'
         ref:
           example: refs/heads/main
           type: string
+        refError:
+          type: string
+        refStatus:
+          $ref: '#/components/schemas/portainer.SourceStatus'
         sourceId:
           type: integer
       type: object
@@ -22103,7 +23467,12 @@ components:
           example: false
           type: boolean
         Interval:
-          description: Auto update interval
+          description: 'Auto update interval
+
+            Deprecated: polling interval now lives on the associated Source (Source.Interval).
+
+            Kept for DB backwards-compatibility only; new code must not read or write
+            this field.'
           example: 1m30s
           type: string
         JobID:
@@ -22816,6 +24185,8 @@ components:
       type: object
     portainer.KubernetesFlags:
       properties:
+        GPUOperator:
+          type: boolean
         IsServerIngressClassDetected:
           type: boolean
         IsServerMetricsDetected:
@@ -22849,6 +24220,8 @@ components:
           type: string
         DiagnosticsData:
           $ref: '#/components/schemas/portainer.DiagnosticsData'
+        GPUNodeCount:
+          type: integer
         KubernetesVersion:
           type: string
         NodeCount:
@@ -22859,6 +24232,11 @@ components:
           type: integer
         TotalCPU:
           type: integer
+        TotalGPU:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
         TotalMemory:
           type: integer
       required:
@@ -23413,12 +24791,15 @@ components:
         administratorsOnly:
           type: boolean
         git:
-          $ref: '#/components/schemas/github_com_portainer_portainer_api_git_types.RepoConfig'
+          $ref: '#/components/schemas/github_com_portainer_portainer_api_git_types.GitSource'
         helm:
           $ref: '#/components/schemas/portainer.HelmConfig'
         id:
           example: 1
           type: integer
+        interval:
+          example: 5m
+          type: string
         lastSync:
           example: 1587399600
           type: integer
@@ -23431,6 +24812,10 @@ components:
           type: boolean
         registry:
           $ref: '#/components/schemas/portainer.Registry'
+        status:
+          $ref: '#/components/schemas/portainer.SourceStatus'
+        statusError:
+          type: string
         teamAccesses:
           items:
             type: integer
@@ -23444,6 +24829,16 @@ components:
             type: integer
           type: array
       type: object
+    portainer.SourceStatus:
+      enum:
+      - 0
+      - 1
+      - 2
+      type: integer
+      x-enum-varnames:
+      - SourceStatusUnknown
+      - SourceStatusHealthy
+      - SourceStatusError
     portainer.SourceType:
       enum:
       - 0
@@ -23600,6 +24995,11 @@ components:
       type: object
     portainer.Team:
       properties:
+        DenyPortainerAccess:
+          description: Whether members of this team are denied access to Portainer
+            itself (EE only)
+          example: false
+          type: boolean
         Id:
           description: Team Identifier
           example: 1
@@ -23898,10 +25298,20 @@ components:
       x-enum-varnames:
       - _
       - ServiceWebhook
-    portaineree.AdditionalFunctionality:
+    portainer.Workflow:
       properties:
-        Observability:
-          type: boolean
+        artifacts:
+          items:
+            $ref: '#/components/schemas/portainer.Artifact'
+          type: array
+        id:
+          example: 1
+          type: integer
+        name:
+          example: my-workflow
+          type: string
+      type: object
+    portaineree.AdditionalFunctionality:
       type: object
     portaineree.AlertRuleCategory:
       enum:
@@ -24647,6 +26057,11 @@ components:
         CreationDate:
           description: StatusArray    map[EndpointID][]EdgeStackStatus `json:"StatusArray"`
           type: integer
+        CurrentDeploymentInfo:
+          allOf:
+          - $ref: '#/components/schemas/portainer.StackDeploymentInfo'
+          description: CurrentDeploymentInfo records the git repository state at the
+            time of the last actual deployment
         DeployerOptions:
           allOf:
           - $ref: '#/components/schemas/portaineree.EdgeStackDeployerOptions'
@@ -25059,7 +26474,11 @@ components:
           $ref: '#/components/schemas/portaineree.AppliedPolicy'
         dockerSetupPolicy:
           $ref: '#/components/schemas/portaineree.AppliedPolicy'
+        k8sNetworkSecurityPolicy:
+          $ref: '#/components/schemas/portaineree.AppliedPolicy'
         k8sObservabilityPolicy:
+          $ref: '#/components/schemas/portaineree.AppliedPolicy'
+        k8sPodSecurityStandardsPolicy:
           $ref: '#/components/schemas/portaineree.AppliedPolicy'
         k8sRBACPolicy:
           $ref: '#/components/schemas/portaineree.AppliedPolicy'
@@ -25105,13 +26524,6 @@ components:
       type: object
     portaineree.ExperimentalFeatures:
       type: object
-    portaineree.GithubRegistryData:
-      properties:
-        OrganisationName:
-          type: string
-        UseOrganisation:
-          type: boolean
-      type: object
     portaineree.GlobalDeploymentOptions:
       properties:
         hideAddWithForm:
@@ -25144,6 +26556,8 @@ components:
     portaineree.KubernetesConfiguration:
       properties:
         AllowNoneIngressClass:
+          type: boolean
+        EnableNodeShell:
           type: boolean
         EnableResourceOverCommit:
           type: boolean
@@ -25610,11 +27024,7 @@ components:
         Ecr:
           $ref: '#/components/schemas/portainer.EcrData'
         Github:
-          allOf:
-          - $ref: '#/components/schemas/portaineree.GithubRegistryData'
-          description: 'TODO: remove this in 2.34.0 https://linear.app/portainer/issue/R8S-399/
-
-            this data is migrated in migrateGithubRegistry_2_32_0'
+          $ref: '#/components/schemas/portainer.GithubRegistryData'
         Gitlab:
           $ref: '#/components/schemas/portainer.GitlabRegistryData'
         Id:
@@ -26159,173 +27569,6 @@ components:
             be displayed in a subtle way
           type: boolean
       type: object
-    providers.AmazonProvisionPayload:
-      properties:
-        AmiType:
-          example: BOTTLEROCKET_x86_64
-          type: string
-        CredentialID:
-          example: 1
-          type: integer
-        InstanceType:
-          example: m5.large
-          type: string
-        KubernetesVersion:
-          example: '1.23'
-          type: string
-        Name:
-          example: myDevCluster
-          type: string
-        NetworkID:
-          example: 8465fb26-632e-4fa3-bb9b-21c449629026
-          type: string
-        NodeCount:
-          example: 3
-          type: integer
-        NodeSize:
-          example: g3.small
-          type: string
-        NodeVolumeSize:
-          example: 20
-          type: integer
-        Region:
-          example: NYC1
-          type: string
-        meta:
-          $ref: '#/components/schemas/types.EnvironmentMetadata'
-      required:
-      - AmiType
-      - CredentialID
-      - InstanceType
-      - KubernetesVersion
-      - Name
-      - NodeCount
-      - NodeSize
-      - Region
-      type: object
-    providers.AzureProvisionPayload:
-      properties:
-        CredentialID:
-          example: 1
-          type: integer
-        KubernetesVersion:
-          example: '1.23'
-          type: string
-        Name:
-          example: myDevCluster
-          type: string
-        NetworkID:
-          example: 8465fb26-632e-4fa3-bb9b-21c449629026
-          type: string
-        NodeCount:
-          example: 3
-          type: integer
-        NodeSize:
-          example: g3.small
-          type: string
-        Region:
-          example: NYC1
-          type: string
-        availabilityZones:
-          items:
-            type: string
-          type: array
-        dnsPrefix:
-          type: string
-        meta:
-          $ref: '#/components/schemas/types.EnvironmentMetadata'
-        poolName:
-          type: string
-        resourceGroup:
-          description: Azure specific fields
-          type: string
-        resourceGroupName:
-          type: string
-        tier:
-          type: string
-      required:
-      - CredentialID
-      - KubernetesVersion
-      - Name
-      - NodeCount
-      - NodeSize
-      - Region
-      type: object
-    providers.DefaultProvisionPayload:
-      properties:
-        CredentialID:
-          example: 1
-          type: integer
-        KubernetesVersion:
-          example: '1.23'
-          type: string
-        Name:
-          example: myDevCluster
-          type: string
-        NetworkID:
-          example: 8465fb26-632e-4fa3-bb9b-21c449629026
-          type: string
-        NodeCount:
-          example: 3
-          type: integer
-        NodeSize:
-          example: g3.small
-          type: string
-        Region:
-          example: NYC1
-          type: string
-        meta:
-          $ref: '#/components/schemas/types.EnvironmentMetadata'
-      required:
-      - CredentialID
-      - KubernetesVersion
-      - Name
-      - NodeCount
-      - NodeSize
-      - Region
-      type: object
-    providers.GKEProvisionPayload:
-      properties:
-        CPU:
-          example: 2
-          type: integer
-        CredentialID:
-          example: 1
-          type: integer
-        HDD:
-          example: 100
-          type: integer
-        KubernetesVersion:
-          example: '1.23'
-          type: string
-        Name:
-          example: myDevCluster
-          type: string
-        NetworkID:
-          example: 8465fb26-632e-4fa3-bb9b-21c449629026
-          type: string
-        NodeCount:
-          example: 3
-          type: integer
-        NodeSize:
-          example: g3.small
-          type: string
-        RAM:
-          example: 4
-          type: number
-        Region:
-          example: NYC1
-          type: string
-        meta:
-          $ref: '#/components/schemas/types.EnvironmentMetadata'
-      required:
-      - CredentialID
-      - KubernetesVersion
-      - Name
-      - NodeCount
-      - NodeSize
-      - Region
-      type: object
     recommendations.recommendationResponse:
       properties:
         actionLabel:
@@ -26429,7 +27672,7 @@ components:
           description: ECR specific details, required when type = 7
         Github:
           allOf:
-          - $ref: '#/components/schemas/portaineree.GithubRegistryData'
+          - $ref: '#/components/schemas/portainer.GithubRegistryData'
           description: Github specific details, required when type = 8
         Gitlab:
           allOf:
@@ -26543,7 +27786,7 @@ components:
         Ecr:
           $ref: '#/components/schemas/portainer.EcrData'
         Github:
-          $ref: '#/components/schemas/portaineree.GithubRegistryData'
+          $ref: '#/components/schemas/portainer.GithubRegistryData'
         Name:
           example: my-registry
           type: string
@@ -27100,9 +28343,6 @@ components:
           allOf:
           - $ref: '#/components/schemas/portaineree.GlobalDeploymentOptions'
           description: Deployment options for encouraging deployment as code
-        IsObservabilityEnabled:
-          description: Whether observability is enabled
-          type: boolean
         KubeconfigExpiry:
           default: '0'
           description: The expiry of a Kubeconfig
@@ -27152,14 +28392,10 @@ components:
       type: object
     settings.settingsAdditionalFunctionalityUpdatePayload:
       properties:
-        Observability:
-          example: true
-          type: boolean
         Policies:
           example: true
           type: boolean
       required:
-      - Observability
       - Policies
       type: object
     settings.settingsCACertResponse:
@@ -27325,13 +28561,6 @@ components:
       x-enum-varnames:
       - AuthTypeBasic
       - AuthTypeToken
-    sources.AutoUpdateInfo:
-      properties:
-        fetchInterval:
-          type: string
-        mechanism:
-          type: string
-      type: object
     sources.ConnectionTestResult:
       properties:
         error:
@@ -27345,6 +28574,8 @@ components:
           type: string
         provider:
           $ref: '#/components/schemas/sources.Provider'
+        sharedCredentialId:
+          type: integer
         type:
           $ref: '#/components/schemas/sources.AuthType'
         username:
@@ -27356,6 +28587,8 @@ components:
           type: string
         provider:
           $ref: '#/components/schemas/sources.Provider'
+        sharedCredentialId:
+          type: integer
         type:
           $ref: '#/components/schemas/sources.AuthType'
         username:
@@ -27368,6 +28601,8 @@ components:
           type: boolean
         authentication:
           $ref: '#/components/schemas/sources.GitAuthenticationPayload'
+        interval:
+          type: string
         name:
           type: string
         public:
@@ -27392,9 +28627,9 @@ components:
       properties:
         authentication:
           $ref: '#/components/schemas/sources.GitAuthenticationUpdatePayload'
-        name:
+        interval:
           type: string
-        referenceName:
+        name:
           type: string
         tlsSkipVerify:
           type: boolean
@@ -27427,6 +28662,9 @@ components:
           type: string
         id:
           type: integer
+        interval:
+          example: 5m
+          type: string
         lastSync:
           type: integer
         name:
@@ -27478,16 +28716,15 @@ components:
       properties:
         access:
           $ref: '#/components/schemas/sources.SourceAccess'
-        autoUpdate:
-          $ref: '#/components/schemas/sources.AutoUpdateInfo'
         connection:
           $ref: '#/components/schemas/sources.connectionInfo'
-        environments:
-          type: integer
         error:
           type: string
         id:
           type: integer
+        interval:
+          example: 5m
+          type: string
         lastSync:
           type: integer
         name:
@@ -27500,12 +28737,6 @@ components:
           $ref: '#/components/schemas/sources.SourceType'
         url:
           type: string
-        usedBy:
-          type: integer
-        workflows:
-          items:
-            $ref: '#/components/schemas/workflows.Workflow'
-          type: array
       required:
       - connection
       - id
@@ -27524,6 +28755,46 @@ components:
       - SourceTypeGit
       - SourceTypeHelm
       - SourceTypeOCI
+    sources.Status:
+      enum:
+      - unknown
+      - healthy
+      - error
+      type: string
+      x-enum-varnames:
+      - SourceStatusUnknown
+      - SourceStatusHealthy
+      - SourceStatusError
+    sources.Workflow:
+      properties:
+        creationDate:
+          type: integer
+        gitConfig:
+          $ref: '#/components/schemas/github_com_portainer_portainer_api_git_types.RepoConfig'
+        id:
+          type: integer
+        lastSyncDate:
+          type: integer
+        name:
+          type: string
+        platform:
+          $ref: '#/components/schemas/workflows.DeploymentPlatform'
+        sourceId:
+          type: integer
+        status:
+          $ref: '#/components/schemas/workflows.WorkflowStatusObject'
+        target:
+          $ref: '#/components/schemas/workflows.Target'
+        type:
+          $ref: '#/components/schemas/workflows.Type'
+      required:
+      - id
+      - name
+      - platform
+      - status
+      - target
+      - type
+      type: object
     sources.connectionInfo:
       properties:
         authentication:
@@ -27533,6 +28804,8 @@ components:
       type: object
     sources.gitAuthInfo:
       properties:
+        sharedCredentialId:
+          type: integer
         type:
           $ref: '#/components/schemas/sources.AuthType'
         username:
@@ -27798,6 +29071,11 @@ components:
       required:
       - Name
       type: object
+    stacks.createKubernetesStackResponse:
+      properties:
+        Output:
+          type: string
+      type: object
     stacks.kubernetesGitDeploymentPayload:
       properties:
         AdditionalFiles:
@@ -27935,10 +29213,14 @@ components:
           example: false
           type: boolean
         RepositoryAuthentication:
+          description: When true and RepositoryPassword is non-empty, stored credentials
+            are replaced.
           type: boolean
         RepositoryAuthorizationType:
           $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
         RepositoryPassword:
+          description: Non-empty value (with RepositoryAuthentication=true) replaces
+            stored credentials; leave blank to keep them.
           type: string
         RepositoryProvider:
           $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
@@ -28487,6 +29769,11 @@ components:
       type: object
     teams.teamCreatePayload:
       properties:
+        DenyPortainerAccess:
+          description: DenyPortainerAccess denies members of this team access to Portainer
+            itself
+          example: false
+          type: boolean
         Name:
           description: Name
           example: developers
@@ -28504,6 +29791,11 @@ components:
       type: object
     teams.teamUpdatePayload:
       properties:
+        DenyPortainerAccess:
+          description: DenyPortainerAccess denies members of this team access to Portainer
+            itself
+          example: false
+          type: boolean
         Name:
           description: Name
           example: developers
@@ -28535,21 +29827,6 @@ components:
           type: integer
         targetVersion:
           type: string
-      type: object
-    types.EnvironmentMetadata:
-      properties:
-        customTemplateContent:
-          type: string
-        customTemplateID:
-          type: integer
-        groupId:
-          type: integer
-        stackName:
-          type: string
-        tagIds:
-          items:
-            type: integer
-          type: array
       type: object
     types.UpdateSchedule:
       properties:
@@ -28689,6 +29966,43 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/portainer.Authorizations'
           type: object
+      type: object
+    users.CurrentUserInspectResponse:
+      properties:
+        Id:
+          description: User Identifier
+          example: 1
+          type: integer
+        PortainerAccessDenied:
+          description: 'PortainerAccessDenied is true when a team the user belongs
+            to denies
+
+            Portainer access, steering them to an add-on.'
+          type: boolean
+        PortainerAuthorizations:
+          $ref: '#/components/schemas/portainer.Authorizations'
+        Role:
+          allOf:
+          - $ref: '#/components/schemas/portainer.UserRole'
+          description: User role (1 for administrator account and 2 for regular account)
+          example: 1
+        ThemeSettings:
+          $ref: '#/components/schemas/portaineree.UserThemeSettings'
+        TokenIssueAt:
+          example: 1639408208
+          type: integer
+        UseCache:
+          example: true
+          type: boolean
+        Username:
+          example: bob
+          type: string
+        forceChangePassword:
+          type: boolean
+      required:
+      - Id
+      - Role
+      - Username
       type: object
     users.EffectiveAccessEntry:
       properties:
@@ -29964,6 +31278,12 @@ components:
             +required'
           type: string
       type: object
+    v1.FinalizerName:
+      enum:
+      - kubernetes
+      type: string
+      x-enum-varnames:
+      - FinalizerKubernetes
     v1.GRPCAction:
       properties:
         port:
@@ -30001,7 +31321,7 @@ components:
 
             +listType=atomic'
           items:
-            $ref: '#/components/schemas/v1.HTTPHeader'
+            $ref: '#/components/schemas/k8s_io_api_core_v1.HTTPHeader'
           type: array
         path:
           description: 'Path to access on the HTTP server.
@@ -30024,18 +31344,6 @@ components:
             Defaults to HTTP.
 
             +optional'
-      type: object
-    v1.HTTPHeader:
-      properties:
-        name:
-          description: 'The header field name.
-
-            This will be canonicalized upon output, so case-variant names will be
-            understood as the same header.'
-          type: string
-        value:
-          description: The header field value
-          type: string
       type: object
     v1.Lifecycle:
       properties:
@@ -30195,30 +31503,6 @@ components:
             +optional'
           type: string
       type: object
-    v1.LocalObjectReference:
-      properties:
-        name:
-          description: 'Name of the referent.
-
-            This field is effectively required, but due to backwards compatibility
-            is
-
-            allowed to be empty. Instances of this type with an empty value here are
-
-            almost certainly wrong.
-
-            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-
-            +optional
-
-            +default=""
-
-            +kubebuilder:default=""
-
-            TODO: Drop `kubebuilder:default` when controller-gen doesn''t need it
-            https://github.com/kubernetes-sigs/kubebuilder/issues/3896.'
-          type: string
-      type: object
     v1.ManagedFieldsEntry:
       properties:
         apiVersion:
@@ -30354,6 +31638,21 @@ components:
       x-enum-varnames:
       - NamespaceActive
       - NamespaceTerminating
+    v1.NamespaceSpec:
+      properties:
+        finalizers:
+          description: 'Finalizers is an opaque list of values that must be empty
+            to permanently remove object from storage.
+
+            More info: https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
+
+            +optional
+
+            +listType=atomic'
+          items:
+            $ref: '#/components/schemas/v1.FinalizerName'
+          type: array
+      type: object
     v1.NamespaceStatus:
       properties:
         conditions:
@@ -31243,75 +32542,6 @@ components:
             Read-only.
 
             More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#uids
-
-            +optional'
-          type: string
-      type: object
-    v1.ObjectReference:
-      properties:
-        apiVersion:
-          description: 'API version of the referent.
-
-            +optional'
-          type: string
-        fieldPath:
-          description: 'If referring to a piece of an object instead of an entire
-            object, this string
-
-            should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
-
-            For example, if the object reference is to a container within a pod, this
-            would take on a value like:
-
-            "spec.containers{name}" (where "name" refers to the name of the container
-            that triggered
-
-            the event) or if no container name is specified "spec.containers[2]" (container
-            with
-
-            index 2 in this pod). This syntax is chosen only to have some well-defined
-            way of
-
-            referencing a part of an object.
-
-            TODO: this design is not final and this field is subject to change in
-            the future.
-
-            +optional'
-          type: string
-        kind:
-          description: 'Kind of the referent.
-
-            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-
-            +optional'
-          type: string
-        name:
-          description: 'Name of the referent.
-
-            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-
-            +optional'
-          type: string
-        namespace:
-          description: 'Namespace of the referent.
-
-            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-
-            +optional'
-          type: string
-        resourceVersion:
-          description: 'Specific resourceVersion to which this reference is made,
-            if any.
-
-            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
-
-            +optional'
-          type: string
-        uid:
-          description: 'UID of the referent.
-
-            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
 
             +optional'
           type: string
@@ -32846,6 +34076,57 @@ components:
         RegistryID:
           type: integer
       type: object
+    workflows.ArtifactDetail:
+      properties:
+        autoUpdate:
+          $ref: '#/components/schemas/portainer.AutoUpdateSettings'
+        creationDate:
+          type: integer
+        files:
+          items:
+            $ref: '#/components/schemas/workflows.ArtifactFileDetail'
+          type: array
+        id:
+          type: integer
+        lastSyncDate:
+          type: integer
+        name:
+          type: string
+        platform:
+          $ref: '#/components/schemas/workflows.DeploymentPlatform'
+        status:
+          $ref: '#/components/schemas/workflows.WorkflowStatusObject'
+        target:
+          $ref: '#/components/schemas/workflows.Target'
+        type:
+          $ref: '#/components/schemas/workflows.Type'
+      required:
+      - id
+      - name
+      - type
+      type: object
+    workflows.ArtifactFileDetail:
+      properties:
+        hash:
+          example: abc123
+          type: string
+        path:
+          example: portainer.yaml
+          type: string
+        pathError:
+          type: string
+        pathStatus:
+          $ref: '#/components/schemas/sources.Status'
+        ref:
+          example: refs/heads/main
+          type: string
+        refError:
+          type: string
+        refStatus:
+          $ref: '#/components/schemas/sources.Status'
+        sourceId:
+          type: integer
+      type: object
     workflows.DeploymentPlatform:
       enum:
       - dockerStandalone
@@ -32898,33 +34179,24 @@ components:
       - TypeEdgeStack
     workflows.Workflow:
       properties:
-        autoUpdate:
-          $ref: '#/components/schemas/portainer.AutoUpdateSettings'
+        artifacts:
+          items:
+            $ref: '#/components/schemas/workflows.ArtifactDetail'
+          type: array
         creationDate:
           type: integer
-        gitConfig:
-          $ref: '#/components/schemas/github_com_portainer_portainer_api_git_types.RepoConfig'
         id:
           type: integer
         lastSyncDate:
           type: integer
         name:
           type: string
-        platform:
-          $ref: '#/components/schemas/workflows.DeploymentPlatform'
         status:
           $ref: '#/components/schemas/workflows.WorkflowStatusObject'
-        target:
-          $ref: '#/components/schemas/workflows.Target'
-        type:
-          $ref: '#/components/schemas/workflows.Type'
       required:
       - id
       - name
-      - platform
       - status
-      - target
-      - type
       type: object
     workflows.WorkflowPhaseStatus:
       properties:
@@ -32941,4 +34213,121 @@ components:
           $ref: '#/components/schemas/workflows.WorkflowPhaseStatus'
         target:
           $ref: '#/components/schemas/workflows.WorkflowPhaseStatus'
+      type: object
+    workflows.createPayload:
+      properties:
+        artifacts:
+          items:
+            $ref: '#/components/schemas/workflows.createPayloadArtifact'
+          type: array
+        name:
+          example: my-workflow
+          type: string
+      required:
+      - artifacts
+      - name
+      type: object
+    workflows.createPayloadArtifact:
+      properties:
+        config:
+          $ref: '#/components/schemas/workflows.createPayloadArtifactConfig'
+        deploymentType:
+          type: string
+        files:
+          items:
+            $ref: '#/components/schemas/workflows.createPayloadFile'
+          type: array
+        name:
+          type: string
+        targets:
+          $ref: '#/components/schemas/workflows.createPayloadArtifactTargets'
+      required:
+      - deploymentType
+      - files
+      - name
+      - targets
+      type: object
+    workflows.createPayloadArtifactConfig:
+      properties:
+        alwaysCloneGitRepoForRelativePath:
+          example: false
+          type: boolean
+        envVars:
+          items:
+            $ref: '#/components/schemas/portainer.Pair'
+          type: array
+        localFilesystemPath:
+          type: string
+        parallelConfig:
+          $ref: '#/components/schemas/workflows.createPayloadArtifactParallelConfig'
+        perDeviceConfigsGroupMatchType:
+          allOf:
+          - $ref: '#/components/schemas/portainer.PerDevConfigsFilterType'
+          enum:
+          - file
+          - dir
+          example: file
+        perDeviceConfigsMatchType:
+          allOf:
+          - $ref: '#/components/schemas/portainer.PerDevConfigsFilterType'
+          enum:
+          - file
+          - dir
+          example: file
+        perDeviceConfigsPath:
+          example: configs
+          type: string
+        prePullImage:
+          type: boolean
+        registries:
+          items:
+            type: integer
+          type: array
+        retryPeriod:
+          type: integer
+        useManifestNamespaces:
+          example: false
+          type: boolean
+      type: object
+    workflows.createPayloadArtifactParallelConfig:
+      properties:
+        batchCount:
+          description: When strictly positive, enables parallel deployment
+          type: integer
+        batchIncrementBy:
+          description: When strictly positive and BatchCount provided, enables incremental
+            parallel deployments
+          type: integer
+        delay:
+          type: string
+        failureAction:
+          type: string
+        timeout:
+          type: string
+      type: object
+    workflows.createPayloadArtifactTargets:
+      properties:
+        edgeGroups:
+          example:
+          - 1
+          items:
+            type: integer
+          type: array
+      required:
+      - edgeGroups
+      type: object
+    workflows.createPayloadFile:
+      properties:
+        path:
+          example: portainer.yaml
+          type: string
+        ref:
+          example: refs/heads/main
+          type: string
+        sourceId:
+          type: integer
+      required:
+      - path
+      - ref
+      - sourceId
       type: object

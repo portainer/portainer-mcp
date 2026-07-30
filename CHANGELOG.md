@@ -9,6 +9,21 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.44.0] — 2026-07-30
+
+Targets Portainer 2.44.x.
+
+### Changed
+
+- **Embedded spec bumped to Portainer EE 2.44.0** (was 2.43.0). Total
+  operations 412 → 428. Default `BASE,DOCKER,KUBERNETES,GITOPS` coverage
+  moves 205 → 211 and the six-profile union 344 → 350. New `addons` tag
+  (5 ops, cluster addon management) added to the orphan list in
+  [`docs/profiles.md`](docs/profiles.md). `kaas` shrinks 4 → 1 op as three
+  cloud-provisioning endpoints (`/cloud/amazon/provision`,
+  `/cloud/azure/provision`, `/cloud/gke/provision`) were removed upstream;
+  `cloud_credentials` grows 6 → 11 and `observability` grows 15 → 18.
+
 ### Security
 
 - **Dependency bumps clearing all open Dependabot alerts** (15 alerts, 8
