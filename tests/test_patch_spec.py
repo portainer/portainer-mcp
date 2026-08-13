@@ -24,29 +24,31 @@ def _spec(paths: dict | None = None, schemas: dict | None = None) -> dict:
 def test_excluded_operation_ids_are_removed():
     spec = _spec(
         paths={
-            "/cloud/{id}": {
-                "get": {"operationId": "providerInfo"},
-                "put": {"operationId": "provisionCluster"},
-                "delete": {"operationId": "UpdateKubernetesNamespaceDeprecated"},
+            "/kubernetes/{id}/namespaces": {
+                "put": {"operationId": "UpdateKubernetesNamespaceDeprecated"},
             },
         }
     )
     patch(spec)
     # Path is removed entirely once all its methods drop out.
-    assert "/cloud/{id}" not in spec["paths"]
+    assert "/kubernetes/{id}/namespaces" not in spec["paths"]
 
 
 def test_partial_method_drop_keeps_path():
+    # The live `UpdateKubernetesNamespace` shares no path with its deprecated
+    # twin, but sibling methods on the deprecated one's path must survive.
     spec = _spec(
         paths={
-            "/cloud/{id}": {
-                "get": {"operationId": "provisionCluster"},
-                "post": {"operationId": "KeepMe"},
+            "/kubernetes/{id}/namespaces": {
+                "put": {"operationId": "UpdateKubernetesNamespaceDeprecated"},
+                "get": {"operationId": "GetKubernetesNamespaces"},
             },
         }
     )
     patch(spec)
-    assert spec["paths"]["/cloud/{id}"] == {"post": {"operationId": "KeepMe"}}
+    assert spec["paths"]["/kubernetes/{id}/namespaces"] == {
+        "get": {"operationId": "GetKubernetesNamespaces"},
+    }
 
 
 def test_unrelated_operations_are_kept():

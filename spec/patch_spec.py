@@ -1,11 +1,15 @@
 """Apply spec-defect mitigations to a Portainer OpenAPI spec.
 
-Drops operations whose path/parameter shape is structurally broken,
-drops `/websocket/*` paths (protocol upgrades, not REST), and strips
-malformed `enum` blocks that defeat naive generators.
+Drops operations that shouldn't reach the tool surface (deprecated
+duplicates, edge-agent-only callbacks), drops `/websocket/*` paths (protocol
+upgrades, not REST), and strips malformed `enum` blocks that defeat naive
+generators.
 
-Also normalises stray tab characters in scalar text (swaggo occasionally
-emits a literal `\t` inside a description string, which PyYAML rejects).
+Also normalises stray tab characters in scalar text — swaggo occasionally
+emits a literal tab inside a description string. Current specs keep them
+inside block scalars, where YAML tolerates them, so this is hygiene for the
+generated tool descriptions plus insurance against one landing in an
+indentation position, where it *would* be a parse error.
 """
 
 from __future__ import annotations
@@ -16,11 +20,15 @@ from pathlib import Path
 
 import yaml
 
-EXCLUDED_OPERATION_IDS = {
-    "UpdateKubernetesNamespaceDeprecated",
-    "providerInfo",
-    "provisionCluster",
-}
+# `UpdateKubernetesNamespaceDeprecated` (PUT /kubernetes/{id}/namespaces) is
+# upstream's superseded twin of `UpdateKubernetesNamespace`
+# (PUT /kubernetes/{id}/namespaces/{namespace}); it takes the target namespace
+# from the body instead of the path. Dropping it keeps the namespace-update
+# surface unambiguous for the model. Through 2.42 it was *also* structurally
+# broken — it declared a required `namespace` path param absent from its own
+# template — but upstream fixed that in 2.43, so this is now a deliberate
+# policy exclusion, not a defect workaround. New defects get added here.
+EXCLUDED_OPERATION_IDS = {"UpdateKubernetesNamespaceDeprecated"}
 
 # Edge-agent-only callbacks under `/endpoints/{id}/edge/*` (heartbeat/status,
 # async poll, alert + chart status, edge stack/job sync). They 403 for any
@@ -35,7 +43,19 @@ EXCLUDED_TAGS = frozenset({"edge_agent"})
 
 EXCLUDED_PATH_PREFIXES = ("/websocket",)
 
-ENUM_STRIPS = (("policies.PolicyType",),)
+# Schemas whose `enum` lists every value twice (swaggo emits the varname list
+# a second time). The duplicates parse fine, but FastMCP folds the schema into
+# an `allOf` whose inner enum then contradicts the outer one — visible on
+# `PolicyUpdate`'s `Type` property. Dropping the enum leaves a plain string.
+# `images.Status` reaches only *output* schemas (`ServiceImageStatus`,
+# `containerImageStatus`, `stackImagesStatus`), so it's cosmetic there — listed
+# for consistency, since it's the same upstream defect.
+ENUM_STRIPS = frozenset(
+    {
+        "policies.PolicyType",
+        "github_com_portainer_portainer-ee_api_docker_images.Status",
+    }
+)
 
 DEFAULT_OUTPUT = (
     Path(__file__).resolve().parents[1]
@@ -70,10 +90,8 @@ def patch(spec: dict) -> dict:
             paths.pop(path)
 
     schemas = spec.get("components", {}).get("schemas", {})
-    for trail in ENUM_STRIPS:
-        node = schemas.get(trail[0])
-        for key in trail[1:]:
-            node = node.get(key) if isinstance(node, dict) else None
+    for name in ENUM_STRIPS:
+        node = schemas.get(name)
         if isinstance(node, dict):
             node.pop("enum", None)
     return spec
