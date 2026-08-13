@@ -18722,19 +18722,6 @@ components:
           type: string
       type: object
     github_com_portainer_portainer-ee_api_docker_images.Status:
-      enum:
-      - processing
-      - outdated
-      - updated
-      - skipped
-      - preparing
-      - error
-      - processing
-      - outdated
-      - updated
-      - skipped
-      - preparing
-      - error
       type: string
       x-enum-varnames:
       - Processing

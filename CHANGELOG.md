@@ -9,6 +9,33 @@ the MCP server.
 
 ## [Unreleased]
 
+### Changed
+
+- **Re-audited the spec-defect mitigations against upstream 2.44.0** — a step
+  the 2.44.0 release skipped. Upstream fixes its defects silently, so nothing
+  failed when the workarounds went stale. Two of the three
+  `EXCLUDED_OPERATION_IDS` entries (`providerInfo`, `provisionCluster`) were
+  dead code: their quoted-enum defect was fixed in 2.43 and the operations
+  were deleted outright in 2.44. `UpdateKubernetesNamespaceDeprecated` had its
+  structural defect (a required `namespace` path param absent from its own
+  template) fixed in 2.43 too, so it stays excluded as a deliberate policy
+  call — it's upstream's superseded twin of `UpdateKubernetesNamespace` — and
+  the comment now says so. `ENUM_STRIPS` loses a nested-trail walk that only
+  ever traversed one level. Still load-bearing on 2.44 and unchanged: the
+  `tag:yaml.org,2002:value` constructor (`portaineree.ConditionOperator` ships
+  a bare `=`; a pristine `SafeLoader` raises on it), the `policies.PolicyType`
+  enum strip, and the `/websocket` + `edge_agent` drops. Verified by
+  regenerating the spec: byte-identical output, so no tool-surface change.
+
+### Fixed
+
+- **`images.Status` duplicate enum stripped** for consistency with
+  `policies.PolicyType` — the same upstream swaggo defect (the varname list is
+  emitted twice, leaving 12 values with 6 duplicated). It reaches only the
+  output schemas of `ServiceImageStatus`, `containerImageStatus` and
+  `stackImagesStatus`, so the effect is cosmetic; operation count is unchanged
+  at 428.
+
 ## [2.44.0] — 2026-07-30
 
 Targets Portainer 2.44.x.

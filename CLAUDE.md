@@ -224,11 +224,19 @@ production, not relative paths). To regenerate:
 
 1. `make specs VERSION=<portainer-version>` — clones/refreshes
    `spec/upstream/` (sparse, single-version), then runs `spec/patch_spec.py`.
-2. `patch_spec.py` drops structurally broken operations (see
-   `EXCLUDED_OPERATION_IDS`), strips `/websocket/*` paths, normalises a
-   few malformed `enum` blocks, and rewrites stray tabs. Extend those
-   constants when the upstream spec ships new defects — don't hand-edit
-   `portainer-patched.yaml`.
+2. `patch_spec.py` drops operations that shouldn't reach the tool surface
+   (`EXCLUDED_OPERATION_IDS`, `EXCLUDED_TAGS`), strips `/websocket/*` paths,
+   normalises malformed `enum` blocks (`ENUM_STRIPS`), and rewrites stray
+   tabs. Extend those constants when the upstream spec ships new defects —
+   don't hand-edit `portainer-patched.yaml`.
+3. Re-audit the mitigations when the spec moves: upstream fixes its defects
+   silently, so entries go stale without failing anything. 2.43 fixed all
+   three original `EXCLUDED_OPERATION_IDS` defects and nobody noticed until
+   after the 2.44 release. The load-bearing ones as of 2.44: the `=`
+   value-tag constructor (`portaineree.ConditionOperator` still ships a bare
+   `=`, and a pristine `SafeLoader` raises on it), the `policies.PolicyType`
+   enum strip, and the websocket/`edge_agent` drops — those last two are
+   policy, not defect, so they stay regardless.
 
 ## Versioning
 
