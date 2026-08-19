@@ -29,6 +29,11 @@ the MCP server.
 
 ### Fixed
 
+- **Container healthcheck honours `PORTAINER_MCP_HTTP_PORT`** — the image
+  previously always probed `127.0.0.1:17717`, so overriding the MCP HTTP
+  port could report the wrong process as healthy or mark a healthy MCP
+  unhealthy. The probe now resolves the configured port at runtime. (#98)
+
 - **`images.Status` duplicate enum stripped** for consistency with
   `policies.PolicyType` — the same upstream swaggo defect (the varname list is
   emitted twice, leaving 12 values with 6 duplicated). It reaches only the

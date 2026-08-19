@@ -41,6 +41,6 @@ USER portainer
 EXPOSE 17717
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', 17717)); s.close()"
+  CMD python -c "import os, socket; port=int(os.environ.get('PORTAINER_MCP_HTTP_PORT', '17717')); s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', port)); s.close()"
 
 ENTRYPOINT ["mcp-portainer"]
