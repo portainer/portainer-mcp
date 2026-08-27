@@ -162,6 +162,47 @@ def test_enum_strip_missing_schema_is_noop():
     assert spec["components"]["schemas"] == {}
 
 
+# --- SCHEMA_PROPERTY_FIXES ---------------------------------------------------
+
+
+def test_bare_object_payload_gets_properties_injected():
+    spec = _spec(
+        schemas={
+            "policies.policyCreatePayload": {"type": "object"},
+            "policies.policyConflictsPayload": {"type": "object"},
+        }
+    )
+    patch(spec)
+    schemas = spec["components"]["schemas"]
+    assert set(schemas["policies.policyCreatePayload"]["properties"]) == {
+        "AllowOverride", "Data", "EnvironmentGroups", "Name", "Type",
+    }
+    assert set(schemas["policies.policyConflictsPayload"]["properties"]) == {
+        "EnvironmentGroups", "Type",
+    }
+
+
+def test_schema_property_fix_missing_schema_is_noop():
+    # Future spec versions may drop the schema entirely — patcher must not crash.
+    spec = _spec(schemas={})
+    patch(spec)
+    assert spec["components"]["schemas"] == {}
+
+
+def test_schema_property_fix_does_not_override_real_properties():
+    # If upstream ever documents these payloads for real, don't clobber it.
+    spec = _spec(
+        schemas={
+            "policies.policyCreatePayload": {
+                "type": "object",
+                "properties": {"Upstream": {"type": "string"}},
+            },
+        }
+    )
+    patch(spec)
+    assert set(spec["components"]["schemas"]["policies.policyCreatePayload"]["properties"]) == {"Upstream"}
+
+
 # --- yaml `=` constructor ---------------------------------------------------
 
 

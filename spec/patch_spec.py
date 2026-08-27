@@ -2,8 +2,10 @@
 
 Drops operations that shouldn't reach the tool surface (deprecated
 duplicates, edge-agent-only callbacks), drops `/websocket/*` paths (protocol
-upgrades, not REST), and strips malformed `enum` blocks that defeat naive
-generators.
+upgrades, not REST), strips malformed `enum` blocks that defeat naive
+generators, and injects real properties into undocumented bare-object
+request-body schemas that would otherwise collapse into a single opaque
+tool parameter FastMCP mis-serializes.
 
 Also normalises stray tab characters in scalar text — swaggo occasionally
 emits a literal tab inside a description string. Current specs keep them
@@ -57,6 +59,59 @@ ENUM_STRIPS = frozenset(
     }
 )
 
+# `policies.policyCreatePayload` and `policies.policyConflictsPayload` — the
+# request-body schemas for `PolicyCreate` (POST /policies) and
+# `PolicyConflicts` (POST /policies/conflicts) — are undocumented upstream:
+# swaggo emits a bare `{"type": "object"}` with no declared properties. With
+# nothing to flatten, FastMCP falls back to a single opaque `body` tool
+# parameter for the whole payload, but then serializes the call *wrapped*
+# under that parameter's own name (`{"body": {...}}`) instead of using its
+# value as the literal request body — Portainer never sees the real fields,
+# so every call fails with a generic 400 ("Policy name is required and
+# cannot be empty" / "Policy type must be one of the valid types") no
+# matter what's supplied. `PolicyUpdate`'s payload schema *does* declare
+# real properties, so it flattens (and works) correctly — this defect is
+# specific to the two bare-object schemas. The shapes below were confirmed
+# by hand against a live 2.45.0 server: Create mirrors `policyUpdatePayload`
+# (same underlying fields, minus the update-only path context); Conflicts
+# only needs `Type` + `EnvironmentGroups`.
+SCHEMA_PROPERTY_FIXES = {
+    "policies.policyCreatePayload": {
+        "AllowOverride": {"type": "boolean", "example": False},
+        "Data": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": (
+                "Data contains the policy-type-specific configuration. Namespace "
+                "fields on RBAC/Registry/Network Security policies are lowercased "
+                "automatically and must be valid RFC 1123 DNS labels; values still "
+                "invalid after lowercasing are rejected with a 400."
+            ),
+        },
+        "EnvironmentGroups": {"type": "array", "items": {"type": "integer"}},
+        "Name": {"type": "string", "example": "Development Policy"},
+        "Type": {
+            "allOf": [{"$ref": "#/components/schemas/policies.PolicyType"}],
+            "enum": [
+                "rbac-k8s", "rbac-docker", "security-k8s", "security-docker",
+                "setup-k8s", "setup-docker", "registry-k8s", "registry-docker",
+                "change-confirmation", "observability-k8s",
+            ],
+        },
+    },
+    "policies.policyConflictsPayload": {
+        "EnvironmentGroups": {"type": "array", "items": {"type": "integer"}},
+        "Type": {
+            "allOf": [{"$ref": "#/components/schemas/policies.PolicyType"}],
+            "enum": [
+                "rbac-k8s", "rbac-docker", "security-k8s", "security-docker",
+                "setup-k8s", "setup-docker", "registry-k8s", "registry-docker",
+                "change-confirmation", "observability-k8s",
+            ],
+        },
+    },
+}
+
 DEFAULT_OUTPUT = (
     Path(__file__).resolve().parents[1]
     / "src"
@@ -94,6 +149,11 @@ def patch(spec: dict) -> dict:
         node = schemas.get(name)
         if isinstance(node, dict):
             node.pop("enum", None)
+
+    for name, properties in SCHEMA_PROPERTY_FIXES.items():
+        node = schemas.get(name)
+        if isinstance(node, dict) and not node.get("properties"):
+            node["properties"] = properties
     return spec
 
 

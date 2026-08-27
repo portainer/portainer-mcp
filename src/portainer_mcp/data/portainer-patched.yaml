@@ -26013,6 +26013,25 @@ components:
       type: object
     policies.policyConflictsPayload:
       type: object
+      properties:
+        EnvironmentGroups:
+          type: array
+          items:
+            type: integer
+        Type:
+          allOf:
+          - $ref: '#/components/schemas/policies.PolicyType'
+          enum:
+          - rbac-k8s
+          - rbac-docker
+          - security-k8s
+          - security-docker
+          - setup-k8s
+          - setup-docker
+          - registry-k8s
+          - registry-docker
+          - change-confirmation
+          - observability-k8s
     policies.policyConflictsResponse:
       properties:
         conflicts:
@@ -26032,6 +26051,38 @@ components:
       type: object
     policies.policyCreatePayload:
       type: object
+      properties:
+        AllowOverride:
+          type: boolean
+          example: false
+        Data:
+          type: object
+          additionalProperties: {}
+          description: Data contains the policy-type-specific configuration. Namespace
+            fields on RBAC/Registry/Network Security policies are lowercased automatically
+            and must be valid RFC 1123 DNS labels; values still invalid after lowercasing
+            are rejected with a 400.
+        EnvironmentGroups:
+          type: array
+          items:
+            type: integer
+        Name:
+          type: string
+          example: Development Policy
+        Type:
+          allOf:
+          - $ref: '#/components/schemas/policies.PolicyType'
+          enum:
+          - rbac-k8s
+          - rbac-docker
+          - security-k8s
+          - security-docker
+          - setup-k8s
+          - setup-docker
+          - registry-k8s
+          - registry-docker
+          - change-confirmation
+          - observability-k8s
     policies.policyListResponse:
       properties:
         policies:

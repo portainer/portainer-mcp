@@ -55,6 +55,20 @@ Targets Portainer 2.45.x.
   output schemas of `ServiceImageStatus`, `containerImageStatus` and
   `stackImagesStatus`, so the effect is cosmetic; it left the then-current
   operation count unchanged at 428.
+- **`PolicyCreate` and `PolicyConflicts` were completely broken** — their
+  request-body schemas (`policies.policyCreatePayload`,
+  `policies.policyConflictsPayload`) are undocumented upstream (a bare
+  `{"type": "object"}` with no properties), so FastMCP had nothing to
+  flatten and fell back to a single opaque `body` parameter — then
+  serialized the call *wrapped* under that parameter's own name
+  (`{"body": {...}}`) instead of using it as the literal request body.
+  Portainer never saw the real fields, so every call failed with a generic
+  400 regardless of what was supplied. Fixed by injecting the real property
+  shapes (confirmed by hand against a live server) into both schemas —
+  `PolicyCreate` mirrors `PolicyUpdate`'s already-correct payload shape,
+  `PolicyConflicts` gets the minimal `Type`/`EnvironmentGroups` it actually
+  needs. `PolicyUpdate` itself was never affected — its schema already
+  declares real properties.
 
 ## [2.44.0] — 2026-07-30
 
