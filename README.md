@@ -190,6 +190,7 @@ For restricting or expanding this set of capabilities, see [`docs/profiles.md`](
 | `2.44.x`       | `2.44.x`            |
 | `2.43.x`       | `2.43.x`            |
 | `2.42.x`       | `2.42.x`            |
+| `2.41.x`       | `2.41.x`            |
 
 For more information about the versioning policy, see [`docs/versioning.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/versioning.md).
 

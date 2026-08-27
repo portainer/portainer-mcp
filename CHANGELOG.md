@@ -11,24 +11,29 @@ the MCP server.
 
 ## [2.45.0] — 2026-08-27
 
-### Added
-
-- **Regenerated the embedded spec against upstream Portainer 2.45.0**
-  (`make specs VERSION=2.45.0`) — 428→466 operations. Re-audited every
-  spec-defect mitigation against the new spec: all five (the
-  `UpdateKubernetesNamespaceDeprecated` exclusion, the `edge_agent` tag
-  drop, the `/websocket` path drop, the `policies.PolicyType` and
-  `images.Status` duplicate-enum strips, and the `portaineree.ConditionOperator`
-  bare-`=` value-tag workaround) are still load-bearing and unchanged —
-  none of the underlying upstream defects were fixed in 2.45. `addons`
-  grew 5→17 ops and `omni` grew 13→14; default profile coverage
-  (`BASE,DOCKER,KUBERNETES,GITOPS`) is now 233 ops, six-profile union 372.
+Targets Portainer 2.45.x.
 
 ### Changed
 
+- **Embedded spec bumped to Portainer EE 2.45.0** (was 2.44.0). Total
+  operations 428 → 466. `kubernetes` grows 95 → 119 — the largest delta by
+  far, and the only one landing in the default profile; the orphan tags
+  `addons` (5 → 17) and `omni` (13 → 14) account for most of the rest.
+  Default `BASE,DOCKER,KUBERNETES,GITOPS` coverage moves 211 → 236 and the
+  six-profile union 350 → 375. Upstream added and removed no tags this
+  minor, so [`docs/profiles.md`](docs/profiles.md)'s orphan table needed
+  only the two recounts. Re-audited every spec-defect mitigation against
+  the new spec: all six (the `UpdateKubernetesNamespaceDeprecated`
+  exclusion, the `edge_agent` tag drop, the `/websocket` path drop, the
+  `policies.PolicyType` and `images.Status` duplicate-enum strips, and the
+  `portaineree.ConditionOperator` bare-`=` value-tag workaround) are still
+  load-bearing and unchanged — none of the underlying upstream defects were
+  fixed in 2.45.
+
 - **Re-audited the spec-defect mitigations against upstream 2.44.0** — a step
-  the 2.44.0 release skipped. Upstream fixes its defects silently, so nothing
-  failed when the workarounds went stale. Two of the three
+  the 2.44.0 release skipped. (This landed mid-cycle, before the spec bump
+  above; its operation counts refer to 2.44.0.) Upstream fixes its defects
+  silently, so nothing failed when the workarounds went stale. Two of the three
   `EXCLUDED_OPERATION_IDS` entries (`providerInfo`, `provisionCluster`) were
   dead code: their quoted-enum defect was fixed in 2.43 and the operations
   were deleted outright in 2.44. `UpdateKubernetesNamespaceDeprecated` had its
@@ -48,8 +53,8 @@ the MCP server.
   `policies.PolicyType` — the same upstream swaggo defect (the varname list is
   emitted twice, leaving 12 values with 6 duplicated). It reaches only the
   output schemas of `ServiceImageStatus`, `containerImageStatus` and
-  `stackImagesStatus`, so the effect is cosmetic; operation count is unchanged
-  at 428.
+  `stackImagesStatus`, so the effect is cosmetic; it left the then-current
+  operation count unchanged at 428.
 
 ## [2.44.0] — 2026-07-30
 
