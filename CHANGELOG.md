@@ -9,6 +9,21 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.45.0] — 2026-08-27
+
+### Added
+
+- **Regenerated the embedded spec against upstream Portainer 2.45.0**
+  (`make specs VERSION=2.45.0`) — 428→466 operations. Re-audited every
+  spec-defect mitigation against the new spec: all five (the
+  `UpdateKubernetesNamespaceDeprecated` exclusion, the `edge_agent` tag
+  drop, the `/websocket` path drop, the `policies.PolicyType` and
+  `images.Status` duplicate-enum strips, and the `portaineree.ConditionOperator`
+  bare-`=` value-tag workaround) are still load-bearing and unchanged —
+  none of the underlying upstream defects were fixed in 2.45. `addons`
+  grew 5→17 ops and `omni` grew 13→14; default profile coverage
+  (`BASE,DOCKER,KUBERNETES,GITOPS`) is now 233 ops, six-profile union 372.
+
 ### Changed
 
 - **Re-audited the spec-defect mitigations against upstream 2.44.0** — a step

@@ -232,11 +232,12 @@ production, not relative paths). To regenerate:
 3. Re-audit the mitigations when the spec moves: upstream fixes its defects
    silently, so entries go stale without failing anything. 2.43 fixed all
    three original `EXCLUDED_OPERATION_IDS` defects and nobody noticed until
-   after the 2.44 release. The load-bearing ones as of 2.44: the `=`
-   value-tag constructor (`portaineree.ConditionOperator` still ships a bare
-   `=`, and a pristine `SafeLoader` raises on it), the `policies.PolicyType`
-   enum strip, and the websocket/`edge_agent` drops — those last two are
-   policy, not defect, so they stay regardless.
+   after the 2.44 release. The load-bearing ones as of 2.45 (re-audited,
+   unchanged from 2.44): the `=` value-tag constructor (`portaineree.ConditionOperator`
+   still ships a bare `=`, and a pristine `SafeLoader` raises on it), the
+   `policies.PolicyType` and `images.Status` duplicate-enum strips, and the
+   websocket/`edge_agent` drops — those last two are policy, not defect, so
+   they stay regardless.
 
 ## Versioning
 
