@@ -228,18 +228,20 @@ production, not relative paths). To regenerate:
    (`EXCLUDED_OPERATION_IDS`, `EXCLUDED_TAGS`), strips `/websocket/*` paths,
    normalises malformed `enum` blocks (`ENUM_STRIPS`), injects real
    properties into undocumented bare-object request-body schemas
-   (`SCHEMA_PROPERTY_FIXES` — without properties to flatten, FastMCP falls
+   (`_policy_payload_fixes` — without properties to flatten, FastMCP falls
    back to a single opaque `body` parameter and mis-serializes it, so the
-   call can never succeed no matter what's supplied), and rewrites stray
+   call can never succeed no matter what's supplied; its `Type`/`type`
+   enum is read from `policies.PolicyType` before `ENUM_STRIPS` empties it,
+   not hand-copied, so it can't silently drift), and rewrites stray
    tabs. Extend those constants when the upstream spec ships new defects —
    don't hand-edit `portainer-patched.yaml`.
 3. Re-audit the mitigations when the spec moves: upstream fixes its defects
    silently, so entries go stale without failing anything. 2.43 fixed all
    three original `EXCLUDED_OPERATION_IDS` defects and nobody noticed until
    after the 2.44 release. The load-bearing ones as of 2.45 (re-audited,
-   unchanged from 2.44 except the new `SCHEMA_PROPERTY_FIXES` entries): the
-   `=` value-tag constructor (`portaineree.ConditionOperator` still ships a
-   bare `=`, and a pristine `SafeLoader` raises on it), the
+   unchanged from 2.44 except the new policy-payload property injection):
+   the `=` value-tag constructor (`portaineree.ConditionOperator` still
+   ships a bare `=`, and a pristine `SafeLoader` raises on it), the
    `policies.PolicyType` and `images.Status` duplicate-enum strips, the
    `policies.policyCreatePayload`/`policies.policyConflictsPayload`
    property injections, and the websocket/`edge_agent` drops — those last

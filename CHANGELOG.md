@@ -65,10 +65,17 @@ Targets Portainer 2.45.x.
   Portainer never saw the real fields, so every call failed with a generic
   400 regardless of what was supplied. Fixed by injecting the real property
   shapes (confirmed by hand against a live server) into both schemas —
-  `PolicyCreate` mirrors `PolicyUpdate`'s already-correct payload shape,
-  `PolicyConflicts` gets the minimal `Type`/`EnvironmentGroups` it actually
-  needs. `PolicyUpdate` itself was never affected — its schema already
-  declares real properties.
+  `PolicyCreate` mirrors `PolicyUpdate`'s fields, `PolicyConflicts` uses
+  the server's actual lowercase JSON tags (`policyId`, `type`,
+  `environmentGroups`) rather than the capitalised names that happen to
+  decode anyway. Both `Type`/`type` enums are read from
+  `policies.PolicyType`'s own enum at patch time rather than hand-copied,
+  so they can't silently drift out of sync with the real catalog the way
+  `PolicyUpdate`'s own local enum already has (missing `cleanup-docker`,
+  `network-security-k8s`, `pod-security-standards-k8s` — upstream's
+  pre-existing omission, not fixed here). `PolicyUpdate` itself was never
+  affected by the original defect — its schema already declared real
+  properties.
 
 ## [2.44.0] — 2026-07-30
 

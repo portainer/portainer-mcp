@@ -26014,24 +26014,32 @@ components:
     policies.policyConflictsPayload:
       type: object
       properties:
-        EnvironmentGroups:
+        environmentGroups:
           type: array
           items:
             type: integer
-        Type:
-          allOf:
-          - $ref: '#/components/schemas/policies.PolicyType'
+        policyId:
+          type: integer
+          description: "The policy being edited, if any \u2014 excluded from its own\
+            \ conflicts so an update-preview doesn't flag itself."
+        type: &id001
+          type: string
           enum:
-          - rbac-k8s
-          - rbac-docker
-          - security-k8s
-          - security-docker
-          - setup-k8s
-          - setup-docker
-          - registry-k8s
-          - registry-docker
           - change-confirmation
+          - cleanup-docker
+          - network-security-k8s
           - observability-k8s
+          - pod-security-standards-k8s
+          - rbac-docker
+          - rbac-k8s
+          - registry-docker
+          - registry-k8s
+          - security-docker
+          - security-k8s
+          - setup-docker
+          - setup-k8s
+      required:
+      - type
     policies.policyConflictsResponse:
       properties:
         conflicts:
@@ -26069,20 +26077,10 @@ components:
         Name:
           type: string
           example: Development Policy
-        Type:
-          allOf:
-          - $ref: '#/components/schemas/policies.PolicyType'
-          enum:
-          - rbac-k8s
-          - rbac-docker
-          - security-k8s
-          - security-docker
-          - setup-k8s
-          - setup-docker
-          - registry-k8s
-          - registry-docker
-          - change-confirmation
-          - observability-k8s
+        Type: *id001
+      required:
+      - Name
+      - Type
     policies.policyListResponse:
       properties:
         policies:
