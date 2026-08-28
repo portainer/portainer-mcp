@@ -162,6 +162,117 @@ def test_enum_strip_missing_schema_is_noop():
     assert spec["components"]["schemas"] == {}
 
 
+# --- policy request-body property injection ---------------------------------
+
+
+_POLICY_TYPES_WITH_DUPES = [
+    # Mirrors the real defect: every value listed twice.
+    "rbac-k8s", "change-confirmation", "cleanup-docker",
+    "rbac-k8s", "change-confirmation", "cleanup-docker",
+]
+_POLICY_TYPES_DEDUPED = ["change-confirmation", "cleanup-docker", "rbac-k8s"]
+
+
+def test_bare_object_payload_gets_properties_injected():
+    spec = _spec(
+        schemas={
+            "policies.PolicyType": {"enum": _POLICY_TYPES_WITH_DUPES},
+            "policies.policyCreatePayload": {"type": "object"},
+            "policies.policyConflictsPayload": {"type": "object"},
+        }
+    )
+    patch(spec)
+    schemas = spec["components"]["schemas"]
+
+    create = schemas["policies.policyCreatePayload"]
+    assert set(create["properties"]) == {
+        "AllowOverride", "Data", "EnvironmentGroups", "Name", "Type",
+    }
+    assert create["required"] == ["Name", "Type"]
+    assert create["properties"]["Type"] == {
+        "type": "string", "enum": _POLICY_TYPES_DEDUPED,
+    }
+
+    conflicts = schemas["policies.policyConflictsPayload"]
+    # Lowercase, matching the server's actual JSON tags — not the create
+    # payload's PascalCase.
+    assert set(conflicts["properties"]) == {"environmentGroups", "policyId", "type"}
+    assert conflicts["required"] == ["type"]
+    assert conflicts["properties"]["type"] == {
+        "type": "string", "enum": _POLICY_TYPES_DEDUPED,
+    }
+
+
+def test_policy_type_enum_is_read_before_enum_strips_empties_it():
+    # `ENUM_STRIPS` empties `policies.PolicyType`'s own enum in the same
+    # `patch()` call — the payload fixes must read it first, not end up
+    # with an empty/absent enum because of ordering.
+    spec = _spec(
+        schemas={
+            "policies.PolicyType": {"enum": _POLICY_TYPES_WITH_DUPES},
+            "policies.policyCreatePayload": {"type": "object"},
+        }
+    )
+    patch(spec)
+    schemas = spec["components"]["schemas"]
+    assert schemas["policies.PolicyType"] == {}  # ENUM_STRIPS still applies
+    assert schemas["policies.policyCreatePayload"]["properties"]["Type"]["enum"] == (
+        _POLICY_TYPES_DEDUPED
+    )
+
+
+def test_policy_type_property_has_no_ref_or_allof():
+    # The `allOf: [$ref policies.PolicyType]` shape is what ENUM_STRIPS
+    # exists to unwind — the injected `Type`/`type` must be a plain
+    # `type: string` + `enum`, never coupled back to that schema.
+    spec = _spec(
+        schemas={
+            "policies.PolicyType": {"enum": _POLICY_TYPES_WITH_DUPES},
+            "policies.policyCreatePayload": {"type": "object"},
+            "policies.policyConflictsPayload": {"type": "object"},
+        }
+    )
+    patch(spec)
+    schemas = spec["components"]["schemas"]
+    for schema_name, field in [
+        ("policies.policyCreatePayload", "Type"),
+        ("policies.policyConflictsPayload", "type"),
+    ]:
+        prop = schemas[schema_name]["properties"][field]
+        assert "$ref" not in prop and "allOf" not in prop
+
+
+def test_policy_type_enum_missing_falls_back_to_plain_string():
+    # If `policies.PolicyType` is ever missing or has no enum, don't inject
+    # an empty (impossible-to-satisfy) enum — fall back to an unconstrained
+    # string, same as ENUM_STRIPS's own fallback.
+    spec = _spec(schemas={"policies.policyCreatePayload": {"type": "object"}})
+    patch(spec)
+    prop = spec["components"]["schemas"]["policies.policyCreatePayload"]["properties"]["Type"]
+    assert prop == {"type": "string"}
+
+
+def test_schema_property_fix_missing_schema_is_noop():
+    # Future spec versions may drop the schema entirely — patcher must not crash.
+    spec = _spec(schemas={})
+    patch(spec)
+    assert spec["components"]["schemas"] == {}
+
+
+def test_schema_property_fix_does_not_override_real_properties():
+    # If upstream ever documents these payloads for real, don't clobber it.
+    spec = _spec(
+        schemas={
+            "policies.policyCreatePayload": {
+                "type": "object",
+                "properties": {"Upstream": {"type": "string"}},
+            },
+        }
+    )
+    patch(spec)
+    assert set(spec["components"]["schemas"]["policies.policyCreatePayload"]["properties"]) == {"Upstream"}
+
+
 # --- yaml `=` constructor ---------------------------------------------------
 
 

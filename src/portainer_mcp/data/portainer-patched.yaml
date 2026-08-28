@@ -26013,6 +26013,33 @@ components:
       type: object
     policies.policyConflictsPayload:
       type: object
+      properties:
+        environmentGroups:
+          type: array
+          items:
+            type: integer
+        policyId:
+          type: integer
+          description: "The policy being edited, if any \u2014 excluded from its own\
+            \ conflicts so an update-preview doesn't flag itself."
+        type: &id001
+          type: string
+          enum:
+          - change-confirmation
+          - cleanup-docker
+          - network-security-k8s
+          - observability-k8s
+          - pod-security-standards-k8s
+          - rbac-docker
+          - rbac-k8s
+          - registry-docker
+          - registry-k8s
+          - security-docker
+          - security-k8s
+          - setup-docker
+          - setup-k8s
+      required:
+      - type
     policies.policyConflictsResponse:
       properties:
         conflicts:
@@ -26032,6 +26059,28 @@ components:
       type: object
     policies.policyCreatePayload:
       type: object
+      properties:
+        AllowOverride:
+          type: boolean
+          example: false
+        Data:
+          type: object
+          additionalProperties: {}
+          description: Data contains the policy-type-specific configuration. Namespace
+            fields on RBAC/Registry/Network Security policies are lowercased automatically
+            and must be valid RFC 1123 DNS labels; values still invalid after lowercasing
+            are rejected with a 400.
+        EnvironmentGroups:
+          type: array
+          items:
+            type: integer
+        Name:
+          type: string
+          example: Development Policy
+        Type: *id001
+      required:
+      - Name
+      - Type
     policies.policyListResponse:
       properties:
         policies:

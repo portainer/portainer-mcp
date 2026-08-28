@@ -2,8 +2,10 @@
 
 Drops operations that shouldn't reach the tool surface (deprecated
 duplicates, edge-agent-only callbacks), drops `/websocket/*` paths (protocol
-upgrades, not REST), and strips malformed `enum` blocks that defeat naive
-generators.
+upgrades, not REST), strips malformed `enum` blocks that defeat naive
+generators, and injects real properties into undocumented bare-object
+request-body schemas that would otherwise collapse into a single opaque
+tool parameter FastMCP mis-serializes.
 
 Also normalises stray tab characters in scalar text — swaggo occasionally
 emits a literal tab inside a description string. Current specs keep them
@@ -57,6 +59,88 @@ ENUM_STRIPS = frozenset(
     }
 )
 
+# `policies.policyCreatePayload` and `policies.policyConflictsPayload` — the
+# request-body schemas for `PolicyCreate` (POST /policies) and
+# `PolicyConflicts` (POST /policies/conflicts) — are undocumented upstream:
+# swaggo emits a bare `{"type": "object"}` with no declared properties. With
+# nothing to flatten, FastMCP falls back to a single opaque `body` tool
+# parameter for the whole payload, but then serializes the call *wrapped*
+# under that parameter's own name (`{"body": {...}}`) instead of using its
+# value as the literal request body — Portainer never sees the real fields,
+# so every call fails with a generic 400 ("Policy name is required and
+# cannot be empty" / "Policy type must be one of the valid types") no
+# matter what's supplied. `PolicyUpdate`'s payload schema *does* declare
+# real properties, so it flattens (and works) correctly — this defect is
+# specific to the two bare-object schemas. Field shapes confirmed by hand
+# against a live 2.45.0 server: Create mirrors `policyUpdatePayload`'s
+# fields; Conflicts uses the server's actual lowercase JSON tags
+# (`policyId`, `type`, `environmentGroups`) — capitalised names would still
+# decode (Go's `encoding/json` matches case-insensitively) but would
+# advertise names the API doesn't use. `policyId` lets a conflict check
+# exclude the policy being edited from its own results (the update-preview
+# case); omitting it would silently limit the tool to create-preview only.
+#
+# `Type` is built by `_policy_type_property` as a plain `type: string` +
+# `enum` — never `allOf: [$ref policies.PolicyType]`. That shape is exactly
+# what `ENUM_STRIPS` exists to unwind (an inner enum on the referenced
+# schema contradicting an outer one), and it would only *appear* to work
+# here because `ENUM_STRIPS` happens to run first in `patch()` and empties
+# `policies.PolicyType`'s enum before this runs — nothing pins that
+# ordering. The enum values are read from `policies.PolicyType`'s own enum
+# in `patch()` before `ENUM_STRIPS` empties it (deduplicated, since that's
+# the very defect `ENUM_STRIPS` targets), not hand-copied, so they can't
+# silently drift the way `policyUpdatePayload`'s own local enum already
+# has — it's missing three policy types added in 2.43/2.44
+# (`cleanup-docker`, `network-security-k8s`, `pod-security-standards-k8s`).
+# That's upstream's pre-existing omission on a schema this project doesn't
+# patch (`PolicyUpdate` isn't part of this defect), not fixed here.
+def _policy_type_property(policy_types: list[str]) -> dict:
+    prop: dict = {"type": "string"}
+    if policy_types:
+        prop["enum"] = policy_types
+    return prop
+
+
+def _policy_payload_fixes(policy_types: list[str]) -> dict:
+    type_property = _policy_type_property(policy_types)
+    data_property = {
+        "type": "object",
+        "additionalProperties": {},
+        "description": (
+            "Data contains the policy-type-specific configuration. Namespace "
+            "fields on RBAC/Registry/Network Security policies are lowercased "
+            "automatically and must be valid RFC 1123 DNS labels; values still "
+            "invalid after lowercasing are rejected with a 400."
+        ),
+    }
+    return {
+        "policies.policyCreatePayload": {
+            "properties": {
+                "AllowOverride": {"type": "boolean", "example": False},
+                "Data": data_property,
+                "EnvironmentGroups": {"type": "array", "items": {"type": "integer"}},
+                "Name": {"type": "string", "example": "Development Policy"},
+                "Type": type_property,
+            },
+            "required": ["Name", "Type"],
+        },
+        "policies.policyConflictsPayload": {
+            "properties": {
+                "environmentGroups": {"type": "array", "items": {"type": "integer"}},
+                "policyId": {
+                    "type": "integer",
+                    "description": (
+                        "The policy being edited, if any — excluded from its own "
+                        "conflicts so an update-preview doesn't flag itself."
+                    ),
+                },
+                "type": type_property,
+            },
+            "required": ["type"],
+        },
+    }
+
+
 DEFAULT_OUTPUT = (
     Path(__file__).resolve().parents[1]
     / "src"
@@ -90,10 +174,24 @@ def patch(spec: dict) -> dict:
             paths.pop(path)
 
     schemas = spec.get("components", {}).get("schemas", {})
+
+    # Read the deduplicated policy-type list before ENUM_STRIPS empties
+    # `policies.PolicyType`'s own (duplicated) enum below — see
+    # `_policy_type_property` for why this must happen first.
+    policy_types = sorted(
+        set((schemas.get("policies.PolicyType") or {}).get("enum") or [])
+    )
+
     for name in ENUM_STRIPS:
         node = schemas.get(name)
         if isinstance(node, dict):
             node.pop("enum", None)
+
+    for name, fix in _policy_payload_fixes(policy_types).items():
+        node = schemas.get(name)
+        if isinstance(node, dict) and not node.get("properties"):
+            node["properties"] = fix["properties"]
+            node["required"] = fix["required"]
     return spec
 
 
