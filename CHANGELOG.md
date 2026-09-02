@@ -9,6 +9,15 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.45.1] — 2026-09-02
+
+Targets Portainer 2.45.x.
+
+### Changed
+
+- **cryptography bumped 48.0.1 → 50.0.0** (Dependabot, #96). Direct
+  production dependency; no behaviour change on our side.
+
 ### Fixed
 
 - **`endpointId` is now a required argument on `StackGitRedeploy`,
