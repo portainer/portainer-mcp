@@ -17,6 +17,7 @@ from fastmcp.exceptions import ToolError
 from portainer_mcp.proxy import (
     _apply_select,
     _call,
+    _coerce_body,
     _coerce_param_map,
     _validate_headers,
     _validate_path,
@@ -202,6 +203,36 @@ def test_coerce_param_map_rejects_non_object(value: str):
         _coerce_param_map(value)
 
 
+# --- _coerce_body -----------------------------------------------------------
+
+
+def test_coerce_body_none_and_plain_strings_pass_through():
+    assert _coerce_body(None) is None
+    assert _coerce_body('{"a": 1}') == '{"a": 1}'
+    assert _coerce_body("not json at all") == "not json at all"
+
+
+def test_coerce_body_serializes_object_and_array():
+    assert json.loads(_coerce_body({"Cmd": ["true"], "Tty": False})) == {
+        "Cmd": ["true"],
+        "Tty": False,
+    }
+    assert _coerce_body([1, 2]) == "[1, 2]"
+
+
+def test_coerce_body_rejects_double_encoded_json():
+    # The #105 signature: the payload stringified twice reaches Docker as a
+    # JSON string literal and fails with an opaque unmarshal error upstream.
+    with pytest.raises(ValueError, match="encoded twice"):
+        _coerce_body(json.dumps('{"AttachStdout": true}'))
+
+
+def test_coerce_body_keeps_json_string_literal_of_non_json():
+    # Only a string *containing JSON* is a double-encode; a quoted plain word
+    # is left alone rather than second-guessed.
+    assert _coerce_body('"hello"') == '"hello"'
+
+
 # --- end-to-end: BeforeValidator survives FastMCP arg validation ------------
 
 
@@ -230,6 +261,33 @@ async def test_proxy_coerces_query_params_end_to_end():
         }
     )
     assert captured["params"] == {"all": "true"}
+
+
+async def test_proxy_object_body_reaches_upstream_as_json():
+    captured: dict = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["body"] = request.content
+        captured["content_type"] = request.headers.get("content-type")
+        return httpx.Response(201, json={"Id": "x"})
+
+    client = httpx.AsyncClient(
+        base_url="http://test", transport=httpx.MockTransport(handler)
+    )
+    mcp = FastMCP("test")
+    register(mcp, client, read_only=False)
+    tool = await mcp.get_tool("docker_proxy")
+
+    await tool.run(
+        {
+            "environment_id": 1,
+            "path": "/containers/abc/exec",
+            "method": "POST",
+            "body": {"AttachStdout": True, "Cmd": ["true"]},
+        }
+    )
+    assert json.loads(captured["body"]) == {"AttachStdout": True, "Cmd": ["true"]}
+    assert captured["content_type"] == "application/json"
 
 
 # --- _call HTTP error handling ----------------------------------------------
@@ -279,3 +337,61 @@ async def test_call_returns_body_on_success():
         body=None,
     )
     assert json.loads(out) == {"ok": True}
+
+
+
+def _client_capturing(captured: dict) -> httpx.AsyncClient:
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["headers"] = dict(request.headers)
+        captured["body"] = request.content
+        return httpx.Response(200, json={})
+
+    return httpx.AsyncClient(
+        base_url="http://test", transport=httpx.MockTransport(handler)
+    )
+
+
+async def test_call_defaults_content_type_when_body_present():
+    captured: dict = {}
+    await _call(
+        _client_capturing(captured),
+        kind="docker",
+        environment_id=1,
+        method="POST",
+        path="/containers/abc/exec",
+        query_params=None,
+        headers=None,
+        body='{"Cmd": ["true"]}',
+    )
+    assert captured["headers"]["content-type"] == "application/json"
+    assert captured["body"] == b'{"Cmd": ["true"]}'
+
+
+async def test_call_keeps_explicit_content_type_any_case():
+    captured: dict = {}
+    await _call(
+        _client_capturing(captured),
+        kind="kubernetes",
+        environment_id=1,
+        method="PATCH",
+        path="/apis/apps/v1/namespaces/default/deployments/web",
+        query_params=None,
+        headers={"content-type": "application/merge-patch+json"},
+        body='{"spec": {"replicas": 0}}',
+    )
+    assert captured["headers"]["content-type"] == "application/merge-patch+json"
+
+
+async def test_call_adds_no_content_type_without_body():
+    captured: dict = {}
+    await _call(
+        _client_capturing(captured),
+        kind="docker",
+        environment_id=1,
+        method="GET",
+        path="/containers/json",
+        query_params=None,
+        headers=None,
+        body=None,
+    )
+    assert "content-type" not in captured["headers"]

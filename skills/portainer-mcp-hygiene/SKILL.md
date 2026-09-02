@@ -325,6 +325,17 @@ kubernetes_proxy(environment_id=N, method="PATCH",
 
 Scale to `0`, confirm the pod is gone, then back to the target count. For any workload that must not run two copies at once — anything writing to a single shared volume, such as a game server, a database, or any app with non-shared backing storage — this scale-to-zero-then-up cycle is the *only* safe restart. Never raise replicas above one to "roll" such a workload: two pods writing the same volume can corrupt it.
 
+**JSON bodies on the proxy tools — send the object, don't stringify twice.**
+`docker_proxy` and `kubernetes_proxy` accept `body` as a JSON object directly
+(serialized server-side) or as a raw string forwarded verbatim. When a body is
+sent without a `Content-Type`, the server adds `application/json` — Docker
+otherwise rejects it with `malformed Content-Type header (): mime: no media
+type`. Set `headers` only when the media type is *not* JSON, as in the
+merge-patch example above. If a call fails with `cannot unmarshal string into
+Go value`, the payload was encoded twice (a JSON string containing JSON); the
+server now rejects that shape up front with an `encoded twice` error — resend
+the object itself.
+
 ## Tool selection cheatsheet
 
 - Environment-level summary (counts, status, reachability) → `EndpointList` with snapshot projection, or `EndpointSummaryCounts`/`dockerDashboard` if the question is purely aggregate.

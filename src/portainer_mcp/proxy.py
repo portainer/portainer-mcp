@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Annotated
+from typing import Annotated, Any
 
 import httpx
 from fastmcp import FastMCP
@@ -26,6 +26,12 @@ logger = logging.getLogger("portainer_mcp")
 # is the operator's Portainer credential; the others are common bypass /
 # auth-confusion vectors that have no realistic Docker/K8s use case.
 _BLOCKED_HEADERS = frozenset({"x-api-key", "authorization", "cookie", "host"})
+
+BODY_DESCRIPTION = (
+    "Request body for POST/PUT/PATCH: pass the JSON object directly, or a raw "
+    "string forwarded as-is. Content-Type defaults to application/json when a "
+    "body is sent without one; set `headers` to override (e.g. merge-patch)."
+)
 
 
 def _apply_select(text: str, select: str | None) -> str:
@@ -99,6 +105,41 @@ def _coerce_param_map(value: object) -> object:
     }
 
 
+def _coerce_body(value: object) -> str | None:
+    """Normalize the request body into the raw string that goes on the wire.
+
+    A JSON object or array is serialized here so the model can send the
+    payload natively instead of hand-stringifying it. A string is forwarded
+    verbatim — except one shape that is never intended: a JSON *string
+    literal* whose content is itself a JSON object/array, i.e. the payload
+    was stringified twice. Docker rejects that with an opaque "cannot
+    unmarshal string into Go value" (issue #105); name the fix instead.
+    """
+    if value is None:
+        return None
+    if isinstance(value, (dict, list)):
+        return json.dumps(value)
+    if not isinstance(value, str):
+        raise ValueError(
+            f"expected a string or JSON object, got {type(value).__name__}"
+        )
+    try:
+        inner = json.loads(value)
+    except json.JSONDecodeError:
+        return value
+    if isinstance(inner, str):
+        try:
+            nested = json.loads(inner)
+        except json.JSONDecodeError:
+            return value
+        if isinstance(nested, (dict, list)):
+            raise ValueError(
+                "body is a JSON-encoded string containing JSON (encoded "
+                "twice); send the object itself, or a string encoded once"
+            )
+    return value
+
+
 async def _call(
     client: httpx.AsyncClient,
     *,
@@ -112,6 +153,13 @@ async def _call(
 ) -> str:
     _validate_path(path)
     _validate_headers(headers)
+    headers = dict(headers or {})
+    if body and not any(k.lower() == "content-type" for k in headers):
+        # Docker refuses a body without a media type ("malformed Content-Type
+        # header (): mime: no media type") rather than assuming JSON, and both
+        # upstream APIs speak JSON; a caller sending anything else sets the
+        # header explicitly.
+        headers["Content-Type"] = "application/json"
     url = f"/endpoints/{environment_id}/{kind}{path}"
     response = await client.request(
         method.upper(),
@@ -178,8 +226,9 @@ def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> Non
             Field(description="Extra request headers"),
         ] = None,
         body: Annotated[
-            str | None,
-            Field(description="Raw request body string (e.g. JSON for POST)"),
+            str | dict[str, Any] | list[Any] | None,
+            BeforeValidator(_coerce_body),
+            Field(description=BODY_DESCRIPTION),
         ] = None,
         select: Annotated[str | None, Field(description=SELECT_DESCRIPTION)] = None,
     ) -> str:
@@ -226,8 +275,9 @@ def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> Non
             Field(description="Extra request headers"),
         ] = None,
         body: Annotated[
-            str | None,
-            Field(description="Raw request body string (e.g. JSON manifest for POST)"),
+            str | dict[str, Any] | list[Any] | None,
+            BeforeValidator(_coerce_body),
+            Field(description=BODY_DESCRIPTION),
         ] = None,
         select: Annotated[str | None, Field(description=SELECT_DESCRIPTION)] = None,
     ) -> str:
