@@ -11,6 +11,18 @@ the MCP server.
 
 ### Fixed
 
+- **Proxy tools accept a JSON object `body` and default `Content-Type` to
+  `application/json`.** `docker_proxy` / `kubernetes_proxy` declared `body`
+  as string-only, so a model sending the payload as an object was rejected
+  and typically retried by stringifying it again — which Docker then refused
+  with `cannot unmarshal string into Go value`. A body sent without a
+  `Content-Type` was also refused by Docker (`malformed Content-Type header
+  (): mime: no media type`), so any JSON POST needed an explicit header to
+  work at all. Objects and arrays are now serialized server-side, strings are
+  still forwarded verbatim, an explicit `Content-Type` is always preserved,
+  and a body that is a JSON string containing JSON (encoded twice) is
+  rejected at the tool boundary with an `encoded twice` hint instead of
+  reaching the daemon. (#105)
 - **Container healthcheck follows `PORTAINER_MCP_HTTP_PORT` and
   `PORTAINER_MCP_HTTP_HOST`** — the image always probed `127.0.0.1:17717`, so
   overriding the port marked a healthy server unhealthy, and under
