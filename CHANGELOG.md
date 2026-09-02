@@ -9,6 +9,16 @@ the MCP server.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Container healthcheck follows `PORTAINER_MCP_HTTP_PORT` and
+  `PORTAINER_MCP_HTTP_HOST`** — the image always probed `127.0.0.1:17717`, so
+  overriding the port marked a healthy server unhealthy, and under
+  `--network host` could report whatever else sat on 17717 as healthy. The
+  probe now resolves both variables with the server's own fallback semantics
+  (an empty value behaves like an unset one), and maps a wildcard bind to its
+  loopback. (#98; approach from #99 by @paulcakeface)
+
 ## [2.45.0] — 2026-08-27
 
 Targets Portainer 2.45.x.
