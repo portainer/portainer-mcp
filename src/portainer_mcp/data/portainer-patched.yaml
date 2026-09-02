@@ -15524,13 +15524,14 @@ paths:
         required: true
         schema:
           type: integer
-      - description: Stacks created before version 1.18.0 might not have an associated
-          environment(endpoint) identifier. Use this optional parameter to set the
-          environment(endpoint) identifier used by the stack.
+      - description: 'Environment (endpoint) identifier of the stack. Required: the
+          server rejects the call without it. Read it from StackInspect/StackList
+          (EndpointId).'
         in: query
         name: endpointId
         schema:
           type: integer
+        required: true
       requestBody:
         content:
           application/json:
@@ -15572,13 +15573,14 @@ paths:
         required: true
         schema:
           type: integer
-      - description: Stacks created before version 1.18.0 might not have an associated
-          environment(endpoint) identifier. Use this optional parameter to set the
-          environment(endpoint) identifier used by the stack.
+      - description: 'Environment (endpoint) identifier of the stack. Required: the
+          server rejects the call without it. Read it from StackInspect/StackList
+          (EndpointId).'
         in: query
         name: endpointId
         schema:
           type: integer
+        required: true
       requestBody:
         content:
           application/json:
@@ -15658,13 +15660,14 @@ paths:
         required: true
         schema:
           type: integer
-      - description: Stacks created before version 1.18.0 might not have an associated
-          environment(endpoint) identifier. Use this optional parameter to set the
-          environment(endpoint) identifier used by the stack.
+      - description: 'Environment (endpoint) identifier of the stack. Required: the
+          server rejects the call without it. Read it from StackInspect/StackList
+          (EndpointId).'
         in: query
         name: endpointId
         schema:
           type: integer
+        required: true
       requestBody:
         content:
           application/json:

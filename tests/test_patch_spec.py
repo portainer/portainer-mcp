@@ -6,9 +6,11 @@ Inputs are hand-rolled minimal specs — no live Portainer YAML required.
 
 from __future__ import annotations
 
+import copy
+
 import yaml
 
-from patch_spec import patch
+from patch_spec import ENDPOINT_ID_DESCRIPTION, patch
 
 
 def _spec(paths: dict | None = None, schemas: dict | None = None) -> dict:
@@ -160,6 +162,67 @@ def test_enum_strip_missing_schema_is_noop():
     spec = _spec(schemas={})
     patch(spec)
     assert spec["components"]["schemas"] == {}
+
+
+# --- endpointId required on the stack git/migrate operations ----------------
+
+
+_LEGACY_ENDPOINT_ID_TEXT = (
+    "Stacks created before version 1.18.0 might not have an associated "
+    "environment(endpoint) identifier."
+)
+
+
+def _stack_op(operation_id: str, required: bool | None = None) -> dict:
+    param = {
+        "name": "endpointId",
+        "in": "query",
+        "schema": {"type": "integer"},
+        "description": _LEGACY_ENDPOINT_ID_TEXT,
+    }
+    if required is not None:
+        param["required"] = required
+    return {
+        "operationId": operation_id,
+        "parameters": [
+            {"name": "id", "in": "path", "required": True, "schema": {"type": "integer"}},
+            param,
+        ],
+    }
+
+
+def _endpoint_id(op: dict) -> dict:
+    return next(p for p in op["parameters"] if p["name"] == "endpointId")
+
+
+def test_endpoint_id_becomes_required_on_affected_operations():
+    ops = {
+        ("/stacks/{id}/git/redeploy", "put"): "StackGitRedeploy",
+        ("/stacks/{id}/git", "post"): "StackUpdateGit",
+        ("/stacks/{id}/migrate", "post"): "StackMigrate",
+    }
+    spec = _spec(paths={p: {m: _stack_op(oid)} for (p, m), oid in ops.items()})
+    patch(spec)
+    for (path, method) in ops:
+        param = _endpoint_id(spec["paths"][path][method])
+        assert param["required"] is True
+        assert param["description"] == ENDPOINT_ID_DESCRIPTION
+        # The path param is untouched.
+        assert spec["paths"][path][method]["parameters"][0]["name"] == "id"
+
+
+def test_endpoint_id_untouched_on_other_operations():
+    spec = _spec(
+        paths={
+            # Already required upstream — nothing to fix.
+            "/stacks/{id}": {"delete": _stack_op("StackDelete", required=True)},
+            # Genuinely optional elsewhere; the fix is per-operation, not per-name.
+            "/stacks/{id}/file": {"get": _stack_op("StackFileInspect")},
+        }
+    )
+    before = copy.deepcopy(spec)
+    patch(spec)
+    assert spec == before
 
 
 # --- policy request-body property injection ---------------------------------

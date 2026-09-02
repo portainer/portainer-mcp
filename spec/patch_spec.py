@@ -45,6 +45,25 @@ EXCLUDED_TAGS = frozenset({"edge_agent"})
 
 EXCLUDED_PATH_PREFIXES = ("/websocket",)
 
+# `endpointId` on these stack operations is documented as an optional fallback
+# for pre-1.18 stacks that carry no environment id, but the handlers read a
+# missing value as 0 and assign it to the stack *unconditionally* before the
+# environment lookup, so every call without it fails with `Object not found
+# inside the database (bucket=endpoints, key=0)` whatever the stack's age
+# (portainer-mcp #106; CE and EE handlers match as of 2.45.0). The web UI
+# always sends it, which is how it survived. Marking it required makes FastMCP
+# enforce the tool argument instead of relying on the model to read prose.
+# Stale-check: drop an entry once upstream ships it `required: true` or the
+# "before version 1.18.0" wording leaves its description.
+REQUIRED_ENDPOINT_ID_OPERATIONS = frozenset(
+    {"StackGitRedeploy", "StackUpdateGit", "StackMigrate"}
+)
+ENDPOINT_ID_DESCRIPTION = (
+    "Environment (endpoint) identifier of the stack. Required: the server "
+    "rejects the call without it. Read it from StackInspect/StackList "
+    "(EndpointId)."
+)
+
 # Schemas whose `enum` lists every value twice (swaggo emits the varname list
 # a second time). The duplicates parse fine, but FastMCP folds the schema into
 # an `allOf` whose inner enum then contradicts the outer one — visible on
@@ -156,6 +175,13 @@ yaml.SafeLoader.add_constructor(
 )
 
 
+def _require_endpoint_id(op: dict) -> None:
+    for param in op.get("parameters") or ():
+        if param.get("in") == "query" and param.get("name") == "endpointId":
+            param["required"] = True
+            param["description"] = ENDPOINT_ID_DESCRIPTION
+
+
 def patch(spec: dict) -> dict:
     paths = spec.setdefault("paths", {})
     for path in list(paths):
@@ -170,6 +196,9 @@ def patch(spec: dict) -> dict:
                 EXCLUDED_TAGS.intersection(op.get("tags") or ())
             ):
                 paths[path].pop(method)
+                continue
+            if op.get("operationId") in REQUIRED_ENDPOINT_ID_OPERATIONS:
+                _require_endpoint_id(op)
         if not paths[path]:
             paths.pop(path)
 

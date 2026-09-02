@@ -63,6 +63,14 @@ Key things to internalise before changing code:
   OpenAPI responses as `{"result": …}` to fit MCP's structured-content
   schema. `_select_wrapper` unwraps that single-key envelope before
   projecting, so callers write `[].Id` rather than `result[].Id`.
+- **Empty JSON bodies go out as `{}`.** `json_body.install()` swaps every
+  OpenAPI tool's request director for `JsonBodyDirector`, which sends `{}`
+  when a route declares an `application/json` body and the model supplied
+  no body fields. FastMCP would otherwise send no body at all, and
+  Portainer's bare `json.Decoder` answers `400 … EOF` (a no-arg
+  `StackGitRedeploy` could never succeed). It runs right after
+  `from_openapi`, before `SelectArgTransform` wraps the tools; routes
+  without a declared body are untouched.
 - **Env values redacted before projection.** `redaction.redact_envs()`
   walks the parsed response in `_select_wrapper` and in the proxy tools
   *before* JMESPath `select` runs — so `select="Env[0].value"` lands on
@@ -232,20 +240,26 @@ production, not relative paths). To regenerate:
    back to a single opaque `body` parameter and mis-serializes it, so the
    call can never succeed no matter what's supplied; its `Type`/`type`
    enum is read from `policies.PolicyType` before `ENUM_STRIPS` empties it,
-   not hand-copied, so it can't silently drift), and rewrites stray
-   tabs. Extend those constants when the upstream spec ships new defects —
-   don't hand-edit `portainer-patched.yaml`.
+   not hand-copied, so it can't silently drift), marks `endpointId`
+   required on the three stack operations whose handlers fail without it
+   (`REQUIRED_ENDPOINT_ID_OPERATIONS`), and rewrites stray tabs. Extend
+   those constants when the upstream spec ships new defects — don't
+   hand-edit `portainer-patched.yaml`.
 3. Re-audit the mitigations when the spec moves: upstream fixes its defects
    silently, so entries go stale without failing anything. 2.43 fixed all
    three original `EXCLUDED_OPERATION_IDS` defects and nobody noticed until
    after the 2.44 release. The load-bearing ones as of 2.45 (re-audited,
-   unchanged from 2.44 except the new policy-payload property injection):
+   unchanged from 2.44 except the policy-payload property injection and
+   the `endpointId` required-flip):
    the `=` value-tag constructor (`portaineree.ConditionOperator` still
    ships a bare `=`, and a pristine `SafeLoader` raises on it), the
    `policies.PolicyType` and `images.Status` duplicate-enum strips, the
    `policies.policyCreatePayload`/`policies.policyConflictsPayload`
-   property injections, and the websocket/`edge_agent` drops — those last
-   two are policy, not defect, so they stay regardless.
+   property injections, the `endpointId` required-flip on
+   `StackGitRedeploy`/`StackUpdateGit`/`StackMigrate` (the tell that
+   upstream fixed it is the "before version 1.18.0" wording leaving the
+   parameter description), and the websocket/`edge_agent` drops — those
+   last two are policy, not defect, so they stay regardless.
 
 ## Versioning
 
