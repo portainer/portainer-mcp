@@ -20,7 +20,7 @@ The server will not start if `PORTAINER_URL` is missing, if `PORTAINER_API_KEY` 
 |---|---|---|
 | `PORTAINER_MCP_TRANSPORT` | `stdio` | `stdio` or `http`. The container image overrides to `http`. |
 | `PORTAINER_MCP_HTTP_HOST` | `127.0.0.1` | Bind address when `transport=http`. Container image overrides to `0.0.0.0` so it's reachable from outside the container. |
-| `PORTAINER_MCP_HTTP_PORT` | `17717` | Bind port when `transport=http`. |
+| `PORTAINER_MCP_HTTP_PORT` | `17717` | Bind port when `transport=http`. The container image's healthcheck follows this and `PORTAINER_MCP_HTTP_HOST`. |
 | `PORTAINER_MCP_AUTH_TOKEN` | _required for http_ | Shared bearer **gate** secret. ≥32 ASCII-printable characters, no whitespace. Generate with `openssl rand -hex 32`. Ignored under stdio. Admits the request; the caller's own Portainer key is then validated and forwarded (see below). The one alternative is the [trust-proxy auth posture](#auth-posture-identity-aware-proxies); setting both refuses to boot. |
 | `PORTAINER_MCP_TRUST_PROXY_AUTH` | `0` | Replace the gate-token compare with per-request **proxy attestation**, for identity-aware proxies that own the `Authorization` header (e.g. Pomerium in MCP server mode). See [Auth posture](#auth-posture-identity-aware-proxies). |
 | `PORTAINER_MCP_TRUSTED_PROXY_AUTH_IPS` | _unset_ | Socket-peer allowlist (IPs/CIDRs) backing `PORTAINER_MCP_TRUST_PROXY_AUTH` when **this server terminates TLS itself**. Behind a TLS-terminating proxy leave it unset — the `PORTAINER_MCP_FORWARDED_ALLOW_IPS` attestation is inherited. `*` refuses to boot. |

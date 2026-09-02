@@ -40,7 +40,9 @@ ENV PATH="/app/.venv/bin:$PATH" \
 USER portainer
 EXPOSE 17717
 
+# The probe mirrors server.py's bind resolution (`or` fallbacks, so an empty
+# value behaves like an unset one) and maps a wildcard bind to its loopback.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', 17717)); s.close()"
+  CMD python -c "import os, socket; h=os.environ.get('PORTAINER_MCP_HTTP_HOST') or '127.0.0.1'; h={'0.0.0.0': '127.0.0.1', '::': '::1'}.get(h, h); socket.create_connection((h, int(os.environ.get('PORTAINER_MCP_HTTP_PORT') or 17717)), timeout=2).close()"
 
 ENTRYPOINT ["mcp-portainer"]
