@@ -11,6 +11,20 @@ the MCP server.
 
 ### Fixed
 
+- **`endpointId` is now a required argument on `StackGitRedeploy`,
+  `StackUpdateGit` and `StackMigrate`.** Upstream documents it as an
+  optional fallback for stacks created before Portainer 1.18, but the
+  handlers apply a missing value as environment 0, so every call without it
+  failed with `Object not found inside the database (bucket=endpoints,
+  key=0)` regardless of the stack's age. The patched spec marks it required
+  so the argument is enforced at the tool boundary. (#106)
+- **Write tools with all-optional body fields send `{}` instead of no
+  body.** FastMCP sends no request body when the model supplies no body
+  fields, and Portainer rejects that with `400 Invalid request payload:
+  EOF`, so a bare `StackGitRedeploy` ("pull and re-apply as configured")
+  could never succeed without a decoy field. Routes that declare an
+  `application/json` body now go out as an empty object, and the hygiene
+  guide's `Prune: false` workaround is gone. (#106)
 - **Proxy tools accept a JSON object `body` and default `Content-Type` to
   `application/json`.** `docker_proxy` / `kubernetes_proxy` declared `body`
   as string-only, so a model sending the payload as an object was rejected

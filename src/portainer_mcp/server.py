@@ -80,6 +80,7 @@ from portainer_mcp import (
     auth_posture,
     guidance,
     http_security,
+    json_body,
     passthrough,
     profiles,
     proxy,
@@ -419,6 +420,12 @@ def build_server() -> FastMCP:
         auth=auth_provider,
         instructions=INSTRUCTIONS,
     )
+    # Before the proxy tools are registered and before SelectArgTransform wraps
+    # anything: install() only touches OpenAPI tools and needs the originals.
+    patched = asyncio.run(json_body.install(mcp))
+    if not patched:
+        raise RuntimeError("JsonBodyDirector reached no OpenAPI tools")
+    logger.info("empty JSON bodies sent as `{}` on %d tools", patched)
     if no_proxy:
         logger.info("proxy tools skipped (PORTAINER_NO_PROXY=1)")
     else:

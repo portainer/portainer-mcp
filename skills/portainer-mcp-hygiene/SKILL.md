@@ -276,14 +276,17 @@ endpoint is strong end-to-end evidence; a health check alone is necessary, not
 sufficient. The response is whatever the app returns — often non-JSON, so
 `select` may not apply (see *Non-JSON endpoints*).
 
-**A mutation call with no body fields can be rejected with `400 … EOF`.** If
-every body field of a write tool is optional and you supply none, the server
-receives *no request body at all*, and some Portainer handlers refuse to decode
-that — the signature is `Invalid request payload` with details `EOF`. The
-canonical case is `StackGitRedeploy`, where a bare redeploy ("pull the
-configured ref and re-apply") conceptually needs no arguments: pass one
-harmless body field to make the request well-formed, e.g. `Prune: false`.
-Read that error as "send at least one body field", not as a broken tool.
+**A bare `StackGitRedeploy` is a valid call — and `endpointId` is required.**
+"Pull the configured ref and re-apply" needs no body fields: omitted fields
+keep the stack's stored ref, env and Git credentials, and the server sends an
+empty JSON object on your behalf (Portainer rejects a *missing* body with
+`400 … EOF`, so there is no need for a decoy field such as `Prune: false`).
+What *is* mandatory is the `endpointId` argument, on `StackGitRedeploy`,
+`StackUpdateGit` and `StackMigrate` alike. Upstream documents it as an optional
+fallback for pre-1.18 stacks, but the handler applies a missing value as
+environment 0, so every call without it fails with `Object not found inside
+the database (bucket=endpoints, key=0)` whatever the stack's age. Read it off
+`StackInspect` or `StackList` (`EndpointId`).
 
 **`StackUpdateGit` changes the Git *settings*, not the running deployment —
 and its response looks like it already redeployed.** Repointing a ref or
