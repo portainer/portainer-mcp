@@ -221,4 +221,4 @@ For more information about the MCP server configuration, refer to [`docs/configu
 
 Portainer MCP has no official support channel. Issues may be filed on GitHub, but doing so does not create any obligation on the project to respond, triage, or fix them.
 
-There is no supported version of Portainer MCP, it is provided as-is and without warranty.
+There is no supported version of Portainer MCP; it is provided as-is and without warranty.
