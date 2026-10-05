@@ -3,7 +3,7 @@
 MCP server for Portainer, generated from the Portainer OpenAPI spec via [FastMCP](https://github.com/PrefectHQ/fastmcp).
 
 > [!IMPORTANT]
-> **Portainer MCP is no longer the supported way to use an LLM with Portainer.** That is [Portainer Command](https://github.com/portainer/portainer-command).
+> **Portainer MCP is no longer the supported way to use an LLM with Portainer.** That is [Portainer Command](https://portainer.ai/products/portainer-command), available to Portainer Business Edition customers (including the free 3-node license).
 >
 > This server remains available as-is for people who want to keep using it, but it is provided without support, warranty or SLA, and is **not recommended for production environments**. This repository may be archived in the future.
 
@@ -17,7 +17,7 @@ Match the MCP server's minor version to your Portainer instance's minor — e.g.
 
 Portainer MCP is intended for evaluation, homelabs, and other non-production use. It is not supported in business, production, or any other environment where uptime, security posture, or data integrity matter. There is no SLA, no guaranteed response to issues, no further feature development, and no roadmap commitment. If you run it, you are choosing to self-support.
 
-For a supported way to use an LLM with Portainer, use [Portainer Command](https://github.com/portainer/portainer-command).
+For a supported way to use an LLM with Portainer, use [Portainer Command](https://portainer.ai/products/portainer-command) (Business Edition, including the free 3-node license).
 
 ## Getting started
 
@@ -221,6 +221,4 @@ For more information about the MCP server configuration, refer to [`docs/configu
 
 Portainer MCP has no official support channel. Issues may be filed on GitHub, but doing so does not create any obligation on the project to respond, triage, or fix them.
 
-## Security
-
-There is no supported version of Portainer MCP. For information about reporting security vulnerabilities, see the [Security Policy](SECURITY.md).
+There is no supported version of Portainer MCP, it is provided as-is and without warranty.
