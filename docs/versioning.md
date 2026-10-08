@@ -7,7 +7,7 @@
   granularity.
 - Spec cadence: regenerate `src/portainer_mcp/data/portainer-patched.yaml` against the
   **latest patch** of the targeted Portainer minor (e.g. `make specs
-  VERSION=2.45.0` when 2.45.0 is current).
+  VERSION=2.45.2` when 2.45.2 is current).
 - MCP-internal iterations (shaping fixes, new profiles, transform changes,
   dep bumps, doc-only changes) burn the patch slot — e.g. `2.45.1` is an
   MCP-only release still targeting Portainer 2.45.x.

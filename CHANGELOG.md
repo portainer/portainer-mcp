@@ -9,6 +9,42 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.45.2] — 2026-10-08
+
+Targets Portainer 2.45.x.
+
+### Changed
+
+- **Embedded spec bumped to Portainer EE 2.45.2** (was 2.45.0), per the
+  latest-patch spec cadence in [`docs/versioning.md`](docs/versioning.md).
+  Total operations 466 → 472; nothing removed, renamed or re-tagged. Three
+  new `kubernetes` operations land in the default profile —
+  `CreateKubernetesScopedKubeconfig`, `GetKubernetesScopedKubeconfig` and
+  `DeleteKubernetesScopedKubeconfig`, which issue, read and revoke a
+  short-lived, namespace-scoped kubeconfig (optionally including Secrets
+  access) — so default `BASE,DOCKER,KUBERNETES,GITOPS` coverage moves
+  236 → 239 and the six-profile union 375 → 378. The orphan `addons` tag
+  grows 17 → 20 (`AddonCatalog`, `AddonCatalogRefresh`,
+  `AddonStoreCapabilities`). Re-audited every spec-defect mitigation
+  against the raw 2.45.2 spec: all eight (the
+  `UpdateKubernetesNamespaceDeprecated` exclusion, the `edge_agent` tag
+  drop, the `/websocket` path drop, the `policies.PolicyType` and
+  `images.Status` duplicate-enum strips, the
+  `portaineree.ConditionOperator` bare-`=` value-tag workaround, the
+  `policyCreatePayload`/`policyConflictsPayload` property injections, and
+  the `endpointId` required-flip on `StackGitRedeploy`/`StackUpdateGit`/
+  `StackMigrate`) are still load-bearing and unchanged — 2.45.2 fixed none
+  of the underlying upstream defects.
+
+### Fixed
+
+- **`SharedGitCreate` and `SharedGitUpdate` now take the credential
+  fields.** Upstream 2.45.0 declared no request body on either operation,
+  so the tools exposed no arguments for the credential itself; 2.45.2
+  documents the payload (`name`, `urlPattern`, `provider`,
+  `authorizationType`, `username`, `password`), which comes through with
+  the spec bump. Both sit under the orphan `cloud_credentials` tag.
+
 ## [2.45.1] — 2026-09-02
 
 Targets Portainer 2.45.x.

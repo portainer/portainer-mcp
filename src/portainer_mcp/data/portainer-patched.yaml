@@ -34,8 +34,37 @@ info:
     \ repository was created.\n\nExample encoded value:\n\n```\neyJyZWdpc3RyeUlkIjoxfQ==\n\
     ```\n"
   title: PortainerEE API
-  version: 2.45.0
+  version: 2.45.2
 paths:
+  /addon-store/v1/capabilities:
+    get:
+      description: 'List the add-on features this Portainer supports, sorted by name.
+        An add-on uses
+
+        a feature only when its name is listed, and falls back otherwise.
+
+        A 404 from this path means the empty list: Portainer releases that predate
+        it
+
+        return 404. A name keeps its meaning once shipped and is not removed within
+        a
+
+        major version. Clients must ignore names they do not know.
+
+        **Access policy**: addon instance token'
+      operationId: AddonStoreCapabilities
+      responses:
+        '200':
+          description: Capabilities of this Portainer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addons.capabilitiesResponse'
+        '401':
+          description: Unauthorized
+      summary: List the add-on capabilities of this Portainer
+      tags:
+      - addons
   /addon-store/v1/config:
     get:
       description: 'Read the configuration the calling addon has stored. The addon
@@ -166,9 +195,9 @@ paths:
 
         Pass view=switcher for the lightweight app-switcher listing: only
 
-        the installed, enabled addons the caller may launch, without the
+        the installed, enabled addons the caller may launch, with their
 
-        record, available versions or health probe.
+        health status but without the record or available versions.
 
         **Access policy**: authenticated'
       operationId: AddonList
@@ -697,6 +726,62 @@ paths:
       - ApiKeyAuth: []
         jwt: []
       summary: Repair an addon's credential
+      tags:
+      - addons
+  /addons/catalog:
+    get:
+      description: 'Return the add-on catalog document as published at the configured
+
+        catalog URL, for a gateway that builds its add-on routes from it.
+
+        The response carries catalog content only: no add-on records, no
+
+        install state and no environment data.
+
+        When the source cannot be reached the last known good copy is
+
+        returned with the X-Portainer-Addon-Catalog-Stale header set. With
+
+        no copy to serve the response is 503, so a caller falls back to its
+
+        own rather than caching an empty catalog as current.
+
+        **Access policy**: public'
+      operationId: AddonCatalog
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addonproxy.Catalog'
+        '503':
+          description: The add-on catalog could not be loaded and no copy was cached
+      summary: Retrieve the add-on catalog
+      tags:
+      - addons
+  /addons/catalog/refresh:
+    post:
+      description: 'Drop the cached add-on catalog, so the next read loads it from
+        the
+
+        configured source. The last known good copy is kept and still serves
+
+        when that load fails.
+
+        **Access policy**: administrator'
+      operationId: AddonCatalogRefresh
+      responses:
+        '204':
+          description: Success
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Refresh the add-on catalog
       tags:
       - addons
   /addons/environment:
@@ -1474,6 +1559,13 @@ paths:
 
         **Access policy**: Administrator only.'
       operationId: SharedGitCreate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/git.gitCredentialCreatePayload'
+        description: Git credential details
+        required: true
       responses:
         '201':
           description: Success
@@ -1562,6 +1654,13 @@ paths:
         required: true
         schema:
           type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/git.gitCredentialUpdatePayload'
+        description: Git credential details
+        required: true
       responses:
         '200':
           description: Success
@@ -4154,6 +4253,8 @@ paths:
                 $ref: '#/components/schemas/portainer.EndpointGroup'
         '400':
           description: Invalid request
+        '403':
+          description: Renaming the default 'Unassigned' group is not allowed
         '404':
           description: EndpointGroup not found
         '500':
@@ -5902,6 +6003,8 @@ paths:
                 $ref: '#/components/schemas/gitops.fileResponse'
         '400':
           description: Invalid request
+        '403':
+          description: Access denied
         '404':
           description: Source not found
         '500':
@@ -5943,6 +6046,8 @@ paths:
                 type: array
         '400':
           description: Invalid request
+        '403':
+          description: Access denied
         '500':
           description: Server error
       security:
@@ -5974,6 +6079,8 @@ paths:
                 $ref: '#/components/schemas/gitops.helmValuesPreviewResponse'
         '400':
           description: Invalid request
+        '403':
+          description: Access denied
         '404':
           description: Source not found
         '500':
@@ -6016,6 +6123,8 @@ paths:
                 type: array
         '400':
           description: Invalid request
+        '403':
+          description: Access denied
         '500':
           description: Server error
       security:
@@ -11795,6 +11904,170 @@ paths:
       summary: Delete roles
       tags:
       - kubernetes
+  /kubernetes/{id}/scoped_kubeconfig:
+    post:
+      description: 'Issue a read-only kubeconfig for the named namespaces of a single
+        environment, always within the caller''s own access.
+
+        Omitting namespaces covers every namespace the caller can view. Secrets are
+        included only when includeSecrets is set
+
+        and the caller can view secrets in those namespaces.
+
+        The portainer and portainer-addon-* namespaces hold Portainer''s credentials:
+        they are covered only when named, and never with secrets.
+
+        The credential is returned once and cannot be retrieved again.
+
+        **Access policy**: Authenticated user.'
+      operationId: CreateKubernetesScopedKubeconfig
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/kubernetes.scopedKubeconfigPayload'
+        description: Namespaces, whether to include secrets, lifetime in seconds and
+          description for the scoped kubeconfig
+        required: true
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/kubernetes.scopedKubeconfigResponse'
+        '400':
+          description: Invalid request payload, such as missing required fields or
+            fields not meeting validation criteria.
+        '401':
+          description: Unauthorized access - the user is not authenticated or does
+            not have the necessary permissions. Ensure that you have provided a valid
+            API key or JWT token, and that you have the required permissions.
+        '403':
+          description: Permission denied - the user is authenticated but does not
+            have the necessary permissions to access the requested resource or perform
+            the specified operation. Check your user roles and permissions.
+        '404':
+          description: Unable to find an environment with the specified identifier.
+        '500':
+          description: Server error occurred while attempting to issue the scoped
+            kubeconfig.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Issue a kubeconfig scoped below the caller's own access
+      tags:
+      - kubernetes
+  /kubernetes/{id}/scoped_kubeconfig/{scopedKubeconfigId}:
+    delete:
+      description: 'Revoke a scoped kubeconfig, removing its Kubernetes service account
+        and role bindings.
+
+        The credential stops working immediately, even if the environment is unreachable
+        and the
+
+        cluster objects cannot be removed. Only the user who issued it, or an administrator,
+        may revoke it.
+
+        **Access policy**: Authenticated user.'
+      operationId: DeleteKubernetesScopedKubeconfig
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: Scoped kubeconfig identifier
+        in: path
+        name: scopedKubeconfigId
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid scoped kubeconfig identifier.
+        '401':
+          description: Unauthorized access - the user is not authenticated or does
+            not have the necessary permissions. Ensure that you have provided a valid
+            API key or JWT token, and that you have the required permissions.
+        '403':
+          description: Permission denied - the user is authenticated but does not
+            have the necessary permissions to access the requested resource or perform
+            the specified operation. Check your user roles and permissions.
+        '404':
+          description: Unable to find an environment or scoped kubeconfig with the
+            specified identifier.
+        '500':
+          description: The credential was revoked but its Kubernetes objects could
+            not be removed.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Revoke a scoped kubeconfig
+      tags:
+      - kubernetes
+    get:
+      description: 'Return a scoped kubeconfig''s scope and whether it is still active.
+        It stops being active once it
+
+        expires or is revoked. A revoked scoped kubeconfig is not found once its Kubernetes
+        objects are removed.
+
+        Only the user who issued it, or an administrator, may view it.
+
+        **Access policy**: Authenticated user.'
+      operationId: GetKubernetesScopedKubeconfig
+      parameters:
+      - description: Environment identifier
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - description: Scoped kubeconfig identifier
+        in: path
+        name: scopedKubeconfigId
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/kubernetes.scopedKubeconfigStatusResponse'
+        '400':
+          description: Invalid scoped kubeconfig identifier.
+        '401':
+          description: Unauthorized access - the user is not authenticated or does
+            not have the necessary permissions. Ensure that you have provided a valid
+            API key or JWT token, and that you have the required permissions.
+        '403':
+          description: Permission denied - the user is authenticated but does not
+            have the necessary permissions to access the requested resource or perform
+            the specified operation. Check your user roles and permissions.
+        '404':
+          description: Unable to find an environment or scoped kubeconfig with the
+            specified identifier.
+        '500':
+          description: Server error occurred while attempting to read the scoped kubeconfig.
+      security:
+      - ApiKeyAuth: []
+        jwt: []
+      summary: Check the status of a scoped kubeconfig
+      tags:
+      - kubernetes
   /kubernetes/{id}/secrets:
     get:
       description: 'Get a list of Secrets for a given namespace. If isUsed is set
@@ -14426,6 +14699,8 @@ paths:
                 $ref: '#/components/schemas/portaineree.Registry'
         '400':
           description: Invalid request
+        '403':
+          description: Registry type not available in FIPS mode
         '409':
           description: Another registry with either the same name or same URL & credeintials
             already exists
@@ -18594,6 +18869,73 @@ components:
       - AddonStatusFailed
       - AddonStatusUnknown
       - AddonStatusUninstalling
+    addon.Operation:
+      enum:
+      - install
+      - upgrade
+      - uninstall
+      type: string
+      x-enum-varnames:
+      - OperationInstall
+      - OperationUpgrade
+      - OperationUninstall
+    addonproxy.Addon:
+      properties:
+        description:
+          type: string
+        displayName:
+          type: string
+        healthCheckPath:
+          description: 'HealthCheckPath is appended to ServiceURL and probed for the
+            addon''s
+
+            health. It must be a dedicated readiness endpoint (convention: /readyz)
+
+            returning 2xx only when the addon is ready to serve, not a UI/catch-all
+
+            route. Required; validated in buildRoutes.'
+          type: string
+        helmChartRepository:
+          type: string
+        icon:
+          type: string
+        id:
+          type: string
+        path:
+          type: string
+        serviceUrl:
+          type: string
+        shortDescription:
+          description: 'ShortDescription is a one-line tagline for space-constrained
+            UI (the app
+
+            switcher); Description is the full summary shown in management views.'
+          type: string
+        tlsVerify:
+          description: 'TLSVerify turns on verification of the TLS certificate presented
+            by the
+
+            registry HelmChartRepository points at. It defaults to false, because
+            a
+
+            catalog is authored for one deployment and an air-gapped one usually mirrors
+
+            its charts into a registry serving a certificate no public CA signed.
+            An
+
+            entry pointing at a registry with a publicly signed certificate should
+            set
+
+            it, so a chart pulled over the internet is not accepted from an impostor.'
+          type: boolean
+      type: object
+    addonproxy.Catalog:
+      properties:
+        addons:
+          items:
+            $ref: '#/components/schemas/addonproxy.Addon'
+          type: array
+      type: object
     addons.addonAccessResponse:
       properties:
         enabled:
@@ -18660,6 +19002,16 @@ components:
           description: Enabled reports whether the addon is enabled (installed and
             switched on).
           type: boolean
+        failedOperation:
+          allOf:
+          - $ref: '#/components/schemas/addon.Operation'
+          description: 'FailedOperation names the operation LifecycleStatusMessage
+            reports the
+
+            failure of (install, upgrade or uninstall), so an installed addon can
+            say
+
+            which one failed. Empty when there is no message.'
         healthMessage:
           description: 'HealthMessage explains an "unhealthy" result (the HTTP status
             the probe
@@ -18715,10 +19067,9 @@ components:
           description: 'LifecycleStatusMessage explains a failure: why a fresh install
             failed, or
 
-            (when LifecycleStatus is "installed") that the last upgrade failed and
-            was
+            (when LifecycleStatus is "installed") that the last upgrade or uninstall
 
-            rolled back to the version still running. Empty on a clean install/upgrade.'
+            failed while a release is still running. Empty on a clean install/upgrade.'
           type: string
         path:
           type: string
@@ -18817,6 +19168,17 @@ components:
 
             disabled) is surfaced rather than silently reported as "no upgrade".'
           type: string
+      type: object
+    addons.capabilitiesResponse:
+      properties:
+        capabilities:
+          example:
+          - addon-data
+          - on-behalf-of
+          - scoped-kubeconfig
+          items:
+            type: string
+          type: array
       type: object
     addons.chartSourceStatusResponse:
       properties:
@@ -20844,6 +21206,54 @@ components:
         Permissions:
           type: integer
       type: object
+    git.gitCredentialCreatePayload:
+      properties:
+        authorizationType:
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
+        name:
+          example: my-credential
+          type: string
+        password:
+          type: string
+        provider:
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
+        urlPattern:
+          example: github.com/portainer/*
+          type: string
+        username:
+          type: string
+      required:
+      - authorizationType
+      - name
+      - password
+      - provider
+      - urlPattern
+      - username
+      type: object
+    git.gitCredentialUpdatePayload:
+      properties:
+        authorizationType:
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitCredentialAuthType'
+        name:
+          example: my-git-credential
+          type: string
+        password:
+          type: string
+        provider:
+          $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
+        urlPattern:
+          example: github.com/portainer/*
+          type: string
+        username:
+          type: string
+      required:
+      - authorizationType
+      - name
+      - password
+      - provider
+      - urlPattern
+      - username
+      type: object
     git.shadowedGitCredential:
       properties:
         authorizationType:
@@ -20866,6 +21276,9 @@ components:
           - $ref: '#/components/schemas/github_com_portainer_portainer-ee_api_git_types.GitProvider'
           description: Shadow to include Provider even if it's empty
           example: 0
+        urlPattern:
+          example: github.com/portainer/*
+          type: string
         username:
           type: string
       type: object
@@ -23798,6 +24211,70 @@ components:
           items:
             type: string
           type: array
+      type: object
+    kubernetes.scopedKubeconfigPayload:
+      properties:
+        description:
+          example: agent session
+          type: string
+        expirySeconds:
+          example: 3600
+          type: integer
+        includeSecrets:
+          example: false
+          type: boolean
+        namespaces:
+          example:
+          - team-a
+          - kyverno
+          items:
+            type: string
+          type: array
+      required:
+      - expirySeconds
+      type: object
+    kubernetes.scopedKubeconfigResponse:
+      properties:
+        expiresAt:
+          type: integer
+        id:
+          type: integer
+        includeSecrets:
+          type: boolean
+        kubeconfig:
+          example: 'apiVersion: v1
+
+            kind: Config
+
+            ...'
+          type: string
+        namespaces:
+          items:
+            type: string
+          type: array
+        serviceAccount:
+          type: string
+      type: object
+    kubernetes.scopedKubeconfigStatusResponse:
+      properties:
+        active:
+          description: Active is false once the scoped kubeconfig has expired or been
+            revoked.
+          type: boolean
+        description:
+          type: string
+        expiresAt:
+          type: integer
+        id:
+          type: integer
+        includeSecrets:
+          type: boolean
+        namespaces:
+          items:
+            type: string
+          type: array
+        serviceAccount:
+          type: string
       type: object
     ldap.adminGroupsPayload:
       properties:
