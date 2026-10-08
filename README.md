@@ -1,12 +1,23 @@
 # Portainer MCP
 
-Official MCP server for Portainer, generated from the Portainer OpenAPI spec via [FastMCP](https://github.com/PrefectHQ/fastmcp).
+MCP server for Portainer, generated from the Portainer OpenAPI spec via [FastMCP](https://github.com/PrefectHQ/fastmcp).
+
+> [!IMPORTANT]
+> **Portainer MCP is no longer the supported way to use an LLM with Portainer.** That is [Portainer Command](https://portainer.ai/products/portainer-command), available to Portainer Business Edition customers (including the free 3-node license).
+>
+> This server remains available as-is for people who want to keep using it, but it is provided without support, warranty or SLA, and is **not recommended for production environments**. This repository may be archived in the future.
 
 ## Overview
 
 This MCP server exposes the Portainer REST API as MCP tools: list and inspect environments, manage GitOps workflows, troubleshoot Docker and Kubernetes resources. It also supports proxying requests to the underlying Docker and K8s APIs of each environment.
 
 Match the MCP server's minor version to your Portainer instance's minor — e.g. MCP server 2.45.x with Portainer 2.45.x. See [Version compatibility](#version-compatibility) for details.
+
+## Intended use
+
+Portainer MCP is intended for evaluation, homelabs, and other non-production use. It is not supported in business, production, or any other environment where uptime, security posture, or data integrity matter. There is no SLA, no guaranteed response to issues, no further feature development, and no roadmap commitment. If you run it, you are choosing to self-support.
+
+For a supported way to use an LLM with Portainer, use [Portainer Command](https://portainer.ai/products/portainer-command) (Business Edition, including the free 3-node license).
 
 ## Getting started
 
@@ -22,7 +33,7 @@ Use the `uvx` approach or the MCP bundle to explore the MCP capabilities locally
 
 ### MCP bundle (one-click install)
 
-The recommended way to test the MCP server locally. Your client must support [MCP bundles](https://github.com/modelcontextprotocol/mcpb):
+A convenient way to try the MCP server locally. Your client must support [MCP bundles](https://github.com/modelcontextprotocol/mcpb):
 
 1. Fetch the self-contained `.mcpb` bundle for your platform from the [latest release](https://github.com/portainer/portainer-mcp/releases/latest)
 2. Double-click to install
@@ -52,7 +63,7 @@ For other clients, see
 
 ### Team deployment (container)
 
-The recommended way to have multiple users interacting with your Portainer instance via MCP. Deployed as a [`container`](https://hub.docker.com/r/portainer/portainer-mcp) inside your infrastructure, accessed by users from their workstations over HTTPS. A shared secret gates the MCP server and every client also forwards its own Portainer API key so that each user acts under their own Portainer identity.
+A way to have multiple users interacting with your Portainer instance via MCP. Deployed as a [`container`](https://hub.docker.com/r/portainer/portainer-mcp) inside your infrastructure, accessed by users from their workstations over HTTPS. A shared secret gates the MCP server and every client also forwards its own Portainer API key so that each user acts under their own Portainer identity.
 
 > [!IMPORTANT]
 > Both the gate secret and each user Portainer API key are sent across the wire. The container deployment requires you to declare a transport posture: bring your own TLS certificates, attest a TLS-terminating reverse proxy setup or explicitly opt-in to plaintext. 
@@ -205,3 +216,9 @@ The MCP server exposes different capabilities such as:
 * Logging configuration
 
 For more information about the MCP server configuration, refer to [`docs/configuration.md`](https://github.com/portainer/portainer-mcp/blob/main/docs/configuration.md).
+
+## Getting help
+
+Portainer MCP has no official support channel. Issues may be filed on GitHub, but doing so does not create any obligation on the project to respond, triage, or fix them.
+
+There is no supported version of Portainer MCP; it is provided as-is and without warranty.
