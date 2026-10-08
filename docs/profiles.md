@@ -40,8 +40,8 @@ when you need them, or switch to `ALL`:
 
 | Count | Tag | Notes |
 |---:|---|---|
+| 20 | `addons` | Cluster addon management (new in Portainer 2.44). |
 | 18 | `observability` | Container/pod logs, metrics, stats. |
-| 17 | `addons` | Cluster addon management (new in Portainer 2.44). |
 | 14 | `omni` | Talos Kubernetes cluster management. |
 | 11 | `cloud_credentials` | Cloud provider credentials. |
 | 10 | `custom_templates` | User-defined app templates. |
