@@ -684,6 +684,7 @@ name = "mcp-portainer"
 version = "2.45.3"
 source = { editable = "." }
 dependencies = [
+    { name = "certifi" },
     { name = "cryptography" },
     { name = "fastmcp" },
     { name = "httpx" },
@@ -702,6 +703,7 @@ mcpb = [
 
 [package.metadata]
 requires-dist = [
+    { name = "certifi", specifier = ">=2026.10.19" },
     { name = "cryptography", specifier = ">=42" },
     { name = "fastmcp", specifier = ">=3.4.2,<4" },
     { name = "httpx", specifier = ">=0.27" },

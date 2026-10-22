@@ -17,7 +17,9 @@ shipped as part of this release).
 
 ### Security
 
-- **certifi bumped 2026.4.22 → 2026.10.19** in the lock file. Removes the
+- **certifi bumped 2026.4.22 → 2026.10.19** in the lock file, and declared
+  as a direct dependency with a `>=2026.10.19` floor so wheel installs from
+  PyPI get it too, not just the container image and `.mcpb` bundle. Removes the
   "emSign ECC Root CA - G3" root following the eMudhra / emSign CA key
   compromise, so the server no longer trusts certificates chaining to it.
   Affects every distribution: the PyPI wheel, the container image and the
