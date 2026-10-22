@@ -34,6 +34,8 @@ shipped as part of this release).
 - **`astral-sh/setup-uv` bumped v8.1.0 → v10.3.2** in all workflows, so CI
   and release builds use uv ≥ 0.13.4 and the 20261021 CPython builds, which
   ship the same corrected trust store.
+- **anyio bumped 4.13.0 → 4.14.2** (transitive, via fastmcp/httpx; folds in
+  Dependabot #113).
 - **Embedded spec bumped to Portainer EE 2.45.2** (was 2.45.0), per the
   latest-patch spec cadence in [`docs/versioning.md`](docs/versioning.md).
   Total operations 466 → 472; nothing removed, renamed or re-tagged. Three
