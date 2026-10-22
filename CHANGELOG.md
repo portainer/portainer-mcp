@@ -22,8 +22,10 @@ shipped as part of this release).
   PyPI get it too, not just the container image and `.mcpb` bundle. Removes the
   "emSign ECC Root CA - G3" root following the eMudhra / emSign CA key
   compromise, so the server no longer trusts certificates chaining to it.
-  Affects every distribution: the PyPI wheel, the container image and the
-  `.mcpb` bundle all carry the locked certifi.
+  Applies to every distribution, by different routes: the container image
+  and the `.mcpb` bundle embed the locked certifi, while the PyPI wheel
+  does not bundle dependencies and instead relies on the `>=2026.10.19`
+  floor so a normal install resolves it.
 
 ### Changed
 
