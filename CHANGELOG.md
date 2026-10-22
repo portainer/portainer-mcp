@@ -9,12 +9,31 @@ the MCP server.
 
 ## [Unreleased]
 
-## [2.45.2] — 2026-10-08
+## [2.45.3] — 2026-10-23
 
-Targets Portainer 2.45.x.
+Targets Portainer 2.45.x. The patch number is aligned with Portainer 2.45.3;
+there is no 2.45.2 release of this package (the 2.45.2 spec bump below
+shipped as part of this release).
+
+### Security
+
+- **certifi bumped 2026.4.22 → 2026.10.19** in the lock file. Removes the
+  "emSign ECC Root CA - G3" root following the eMudhra / emSign CA key
+  compromise, so the server no longer trusts certificates chaining to it.
+  Affects every distribution: the PyPI wheel, the container image and the
+  `.mcpb` bundle all carry the locked certifi.
 
 ### Changed
 
+- **Embedded spec bumped again, 2.45.2 → 2.45.3.** No operations added or
+  removed (still 472). `GitOpsWorkflowDestroy` and `GitOpsWorkflowDetach`
+  are now documented as administrator-only (were "authenticated"), and the
+  edge-stack git update payload gains `RelativePath` /
+  `AlwaysCloneGitRepoForRelativePath`. Spec-defect mitigations re-checked:
+  all eight still apply unchanged.
+- **`astral-sh/setup-uv` bumped v8.1.0 → v10.3.2** in all workflows, so CI
+  and release builds use uv ≥ 0.13.4 and the 20261021 CPython builds, which
+  ship the same corrected trust store.
 - **Embedded spec bumped to Portainer EE 2.45.2** (was 2.45.0), per the
   latest-patch spec cadence in [`docs/versioning.md`](docs/versioning.md).
   Total operations 466 → 472; nothing removed, renamed or re-tagged. Three

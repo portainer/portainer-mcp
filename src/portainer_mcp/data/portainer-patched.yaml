@@ -34,7 +34,7 @@ info:
     \ repository was created.\n\nExample encoded value:\n\n```\neyJyZWdpc3RyeUlkIjoxfQ==\n\
     ```\n"
   title: PortainerEE API
-  version: 2.45.2
+  version: 2.45.3
 paths:
   /addon-store/v1/capabilities:
     get:
@@ -6741,7 +6741,7 @@ paths:
       description: 'Tears down each of the workflow''s artifacts then deletes the
         workflow record.
 
-        **Access policy**: authenticated'
+        **Access policy**: administrator'
       operationId: GitOpsWorkflowDestroy
       parameters:
       - description: Workflow identifier
@@ -6774,7 +6774,7 @@ paths:
 
         unlinked from GitOps.
 
-        **Access policy**: authenticated'
+        **Access policy**: administrator'
       operationId: GitOpsWorkflowDetach
       parameters:
       - description: Workflow identifier
@@ -20193,6 +20193,11 @@ components:
           items:
             type: integer
           type: array
+        RelativePath:
+          allOf:
+          - $ref: '#/components/schemas/edgestacks.stackGitUpdateRelativePath'
+          description: RelativePath updates the relative path settings of a stack
+            that already uses relative paths
         RepullImageAndRedeploy:
           description: RepullImageAndRedeploy indicates whether the edge stack is
             manually forced to redeploy
@@ -20214,6 +20219,14 @@ components:
             (Pull and update stack),
 
             if it is false, it indicates that the stack is being updated (Update settings)'
+          type: boolean
+      type: object
+    edgestacks.stackGitUpdateRelativePath:
+      properties:
+        AlwaysCloneGitRepoForRelativePath:
+          description: Whether the agent must refresh the stack files on the device
+            at every redeployment
+          example: false
           type: boolean
       type: object
     edgestacks.updateEdgeStackHelmRepositoryPayload:
@@ -43999,6 +44012,14 @@ components:
       type: object
     workflows.updateArtifactConfigPayload:
       properties:
+        alwaysCloneGitRepoForRelativePath:
+          description: 'AlwaysCloneGitRepoForRelativePath makes the agent refresh
+            the stack files on
+
+            the device at every redeployment. Only applies to an Edge stack that uses
+
+            relative paths. Omitting it leaves the recorded choice alone.'
+          type: boolean
         envVars:
           items:
             $ref: '#/components/schemas/portainer.Pair'
