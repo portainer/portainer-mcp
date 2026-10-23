@@ -9,6 +9,67 @@ the MCP server.
 
 ## [Unreleased]
 
+## [2.45.3] — 2026-10-23
+
+Targets Portainer 2.45.x. The patch number is aligned with Portainer 2.45.3;
+there is no 2.45.2 release of this package (the 2.45.2 spec bump below
+shipped as part of this release).
+
+### Security
+
+- **certifi bumped 2026.4.22 → 2026.10.19** in the lock file, and declared
+  as a direct dependency with a `>=2026.10.19` floor so wheel installs from
+  PyPI get it too, not just the container image and `.mcpb` bundle. Removes the
+  "emSign ECC Root CA - G3" root following the eMudhra / emSign CA key
+  compromise, so the server no longer trusts certificates chaining to it.
+  Applies to every distribution, by different routes: the container image
+  and the `.mcpb` bundle embed the locked certifi, while the PyPI wheel
+  does not bundle dependencies and instead relies on the `>=2026.10.19`
+  floor so a normal install resolves it.
+
+### Changed
+
+- **Embedded spec bumped again, 2.45.2 → 2.45.3.** No operations added or
+  removed (still 472). `GitOpsWorkflowDestroy` and `GitOpsWorkflowDetach`
+  are now documented as administrator-only (were "authenticated"), and the
+  edge-stack git update payload gains `RelativePath` /
+  `AlwaysCloneGitRepoForRelativePath`. Spec-defect mitigations re-checked:
+  all eight still apply unchanged.
+- **`astral-sh/setup-uv` bumped v8.1.0 → v10.3.2** in all workflows, so CI
+  and release builds use uv ≥ 0.13.4 and the 20261021 CPython builds, which
+  ship the same corrected trust store.
+- **anyio bumped 4.13.0 → 4.14.2** (transitive, via fastmcp/httpx; folds in
+  Dependabot #113).
+- **Embedded spec bumped to Portainer EE 2.45.2** (was 2.45.0), per the
+  latest-patch spec cadence in [`docs/versioning.md`](docs/versioning.md).
+  Total operations 466 → 472; nothing removed, renamed or re-tagged. Three
+  new `kubernetes` operations land in the default profile —
+  `CreateKubernetesScopedKubeconfig`, `GetKubernetesScopedKubeconfig` and
+  `DeleteKubernetesScopedKubeconfig`, which issue, read and revoke a
+  short-lived, namespace-scoped kubeconfig (optionally including Secrets
+  access) — so default `BASE,DOCKER,KUBERNETES,GITOPS` coverage moves
+  236 → 239 and the six-profile union 375 → 378. The orphan `addons` tag
+  grows 17 → 20 (`AddonCatalog`, `AddonCatalogRefresh`,
+  `AddonStoreCapabilities`). Re-audited every spec-defect mitigation
+  against the raw 2.45.2 spec: all eight (the
+  `UpdateKubernetesNamespaceDeprecated` exclusion, the `edge_agent` tag
+  drop, the `/websocket` path drop, the `policies.PolicyType` and
+  `images.Status` duplicate-enum strips, the
+  `portaineree.ConditionOperator` bare-`=` value-tag workaround, the
+  `policyCreatePayload`/`policyConflictsPayload` property injections, and
+  the `endpointId` required-flip on `StackGitRedeploy`/`StackUpdateGit`/
+  `StackMigrate`) are still load-bearing and unchanged — 2.45.2 fixed none
+  of the underlying upstream defects.
+
+### Fixed
+
+- **`SharedGitCreate` and `SharedGitUpdate` now take the credential
+  fields.** Upstream 2.45.0 declared no request body on either operation,
+  so the tools exposed no arguments for the credential itself; 2.45.2
+  documents the payload (`name`, `urlPattern`, `provider`,
+  `authorizationType`, `username`, `password`), which comes through with
+  the spec bump. Both sit under the orphan `cloud_credentials` tag.
+
 ## [2.45.1] — 2026-09-02
 
 Targets Portainer 2.45.x.
