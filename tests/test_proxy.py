@@ -395,3 +395,71 @@ async def test_call_adds_no_content_type_without_body():
         body=None,
     )
     assert "content-type" not in captured["headers"]
+
+
+# --- container_recreate -------------------------------------------------------
+
+
+def _recreate_client(captured: dict) -> httpx.AsyncClient:
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["url"] = str(request.url)
+        captured["method"] = request.method
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(
+            200,
+            json={
+                "Id": "584313e03016",
+                "Name": "/web",
+                "Image": "nginx:latest",
+                "State": {"Status": "running"},
+                "Config": {
+                    "Env": ["Duplex_Database__Password=super-secret", "PATH=/bin"]
+                },
+            },
+        )
+
+    return httpx.AsyncClient(
+        base_url="http://test", transport=httpx.MockTransport(handler)
+    )
+
+
+async def test_container_recreate_hits_native_endpoint_and_scrubs_envs():
+    captured: dict = {}
+    client = _recreate_client(captured)
+    mcp = FastMCP("test")
+    register(mcp, client, read_only=False)
+    tool = await mcp.get_tool("container_recreate")
+
+    out = await tool.run(
+        {"environment_id": 3, "container_id": "584313e03016", "pull_image": True}
+    )
+    text = out.content[0].text
+
+    # The native recreate handler lives under /api/docker/{id}/..., not the
+    # /api/endpoints/{id}/docker/... proxy path Docker rejects as 404.
+    assert captured["method"] == "POST"
+    assert captured["url"] == "http://test/docker/3/containers/584313e03016/recreate"
+    assert captured["body"] == {"PullImage": True}
+
+    result = json.loads(text)
+    assert result == {
+        "Id": "584313e03016",
+        "Name": "/web",
+        "Image": "nginx:latest",
+        "State": "running",
+    }
+    # Environment variables from the inspect payload must never surface.
+    assert "super-secret" not in text
+    assert "Env" not in text
+
+
+async def test_container_recreate_rejected_in_read_only_mode():
+    client = _recreate_client({})
+    mcp = FastMCP("test")
+    register(mcp, client, read_only=True)
+    tool = await mcp.get_tool("container_recreate")
+
+    with pytest.raises(ValueError, match="read-only mode"):
+        await tool.run(
+            {"environment_id": 3, "container_id": "584313e03016", "pull_image": False}
+        )

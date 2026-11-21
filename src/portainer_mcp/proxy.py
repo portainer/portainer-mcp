@@ -246,6 +246,50 @@ def register(mcp: FastMCP, client: httpx.AsyncClient, *, read_only: bool) -> Non
         )
         return _apply_select(text, select)
 
+    # The recreate endpoint mutates the target container in every mode, so it
+    # must never advertise itself as read-only.
+    recreate_annotations = ToolAnnotations(readOnlyHint=False, destructiveHint=True)
+
+    @mcp.tool(
+        name="container_recreate",
+        annotations=recreate_annotations,
+        description=(
+            "Recreate a container using Portainer's native recreate endpoint "
+            "(the same action as the Portainer UI Recreate button). Optionally "
+            "force-pulls the latest image before recreating. Returns only the "
+            "new container identity fields; environment variables are never "
+            "echoed back."
+        ),
+    )
+    async def container_recreate(
+        environment_id: Annotated[int, Field(description="Portainer environment ID")],
+        container_id: Annotated[str, Field(description="Container ID")],
+        pull_image: Annotated[
+            bool, Field(description="Force pull the latest image before recreating")
+        ] = True,
+    ) -> str:
+        if read_only:
+            raise ValueError("only GET requests are allowed in read-only mode")
+        _validate_path(f"/containers/{container_id}/recreate")
+        url = f"/docker/{environment_id}/containers/{container_id}/recreate"
+        response = await client.post(url, json={"PullImage": pull_image})
+        if response.is_error:
+            raise ToolError(
+                f"recreate failed (HTTP {response.status_code}): {response.text[:2000]}"
+            )
+        # The recreate response embeds the full container inspect, including
+        # environment variables. Echo only the identity fields the caller
+        # needs so secrets never leave Portainer.
+        data = response.json()
+        return json.dumps(
+            {
+                "Id": data.get("Id"),
+                "Name": data.get("Name"),
+                "Image": data.get("Image"),
+                "State": data.get("State", {}).get("Status"),
+            }
+        )
+
     @mcp.tool(
         name="kubernetes_proxy",
         annotations=proxy_annotations,
